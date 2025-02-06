@@ -9,8 +9,7 @@ plugins {
     application
     id("org.jetbrains.dokka") version "1.9.20"
     id("io.gitlab.arturbosch.detekt") version "1.23.7"
-    id("org.jetbrains.kotlinx.kover") version "0.6.1"
-
+    id("org.jetbrains.kotlinx.kover") version "0.9.1"
 }
 
 group = "edu.udo.cs.sopra"
@@ -71,16 +70,12 @@ detekt {
     config.from("detektConfig.yml")
 }
 
-tasks.detekt {
-    reports {
-        html {
-            required.set(true)
-            reportsDir.set(file("public/detekt"))
-        }
-        sarif {
-            required.set(false)
-        }
-    }
+tasks.detektMain {
+    reports.html.outputLocation.set(file("public/detekt/main.html"))
+}
+
+tasks.detektTest {
+    reports.html.outputLocation.set(file("public/detekt/test.html"))
 }
 
 tasks.dokkaHtml.configure {
@@ -97,17 +92,20 @@ tasks.register("verify") {
         val testResultsDir = layout.buildDirectory.dir("test-results/test")
         val xmlFiles = testResultsDir.get().asFile.listFiles { file -> file.extension == "xml" }
         val parser = XmlParser()
-        xmlFiles?.forEach { xmlFile ->
-            println("Processing ${xmlFile.name}")
-            val parsedXml = parser.parse(xmlFile)
-            val suit = parsedXml.parseTestSuite()
-            val failedCases = suit?.cases?.filter { it.failure != null }
-            val failed = failedCases?.any { it.failure?.type != "org.opentest4j.AssertionFailedError" } ?: true
-            println(failedCases)
-            if (failed) {
-                throw GradleException()
+        xmlFiles
+            ?.filter { xmlFile -> !xmlFile.startsWith("TEST-Gradle") }
+            ?.forEach { xmlFile ->
+                println("Processing ${xmlFile.name}")
+                val parsedXml = parser.parse(xmlFile)
+                val suit = parsedXml.parseTestSuite()
+                val failedCases = suit?.cases?.filter { it.failure != null }
+                val failed =
+                    failedCases?.any { it.failure?.type != "org.opentest4j.AssertionFailedError" } ?: true
+                println(failedCases)
+                if (failed) {
+                    throw GradleException()
+                }
             }
-        }
     }
 }
 
