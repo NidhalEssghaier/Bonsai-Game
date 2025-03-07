@@ -1,4 +1,4 @@
-package service
+package gui
 
 import entity.CardSuit
 import entity.CardValue
