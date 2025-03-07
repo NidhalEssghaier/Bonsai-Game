@@ -30,9 +30,9 @@ application {
 
 dependencies {
     testImplementation(kotlin("test-junit5"))
-    implementation(group = "tools.aqua", name = "bgw-gui", version = "0.9-9-5ef7d86-SNAPSHOT")
-    implementation(group = "tools.aqua", name = "bgw-net-common", version = "0.9-9-5ef7d86-SNAPSHOT")
-    implementation(group = "tools.aqua", name = "bgw-net-client", version = "0.9-9-5ef7d86-SNAPSHOT")
+    implementation(group = "tools.aqua", name = "bgw-gui", version = "0.9-17-b7de59c-SNAPSHOT")
+    implementation(group = "tools.aqua", name = "bgw-net-common", version = "0.9-17-b7de59c-SNAPSHOT")
+    implementation(group = "tools.aqua", name = "bgw-net-client", version = "0.9-17-b7de59c-SNAPSHOT")
 }
 
 tasks.distZip {
@@ -111,10 +111,16 @@ tasks.register("verify") {
 
 gradle.buildFinished {
     try {
-        val applicationPIDs = file("build/application.pid").readText().split(",").map { it.toLong() }.toSet()
+        val applicationPIDs =
+            file("build/application.pid")
+                .readText()
+                .split(",")
+                .map { it.toLong() }
+                .toSet()
         println("Created JCEF_Helper PIDs: $applicationPIDs")
         killJcefHelperProcesses(applicationPIDs)
-    } catch (e: Exception) {}
+    } catch (e: Exception) {
+    }
 }
 
 // Function to kill JCEF helper processes
@@ -161,7 +167,7 @@ data class TestSuite(
 )
 
 data class TestCase(
-    val failure: Failure?
+    val failure: Failure?,
 )
 
 data class Failure(
