@@ -1,6 +1,12 @@
 package entity
 
+/**
+ * Entity to represent a goal card
+ *
+ * @property points The number of points the player gains, if the card is acquired.
+ * @property color Indicates which goals are part of the same group.
+ */
 class GoalCard(
-    points: Int,
-    color: GoalColor
+    val points: Int,
+    val color: GoalColor
 )
