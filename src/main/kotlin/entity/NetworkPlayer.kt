@@ -1,7 +1,6 @@
 package entity
 
 import tools.aqua.bgw.util.Stack
-import java.util.*
 
 /**
  * Entity to represent the player type "Network"
@@ -19,21 +18,21 @@ import java.util.*
 class NetworkPlayer(
     name: String,
     supplyTileLimit: Int,
-    treeTileLimit: Dictionary<TileType, Int>,
+    treeTileLimit: Map<TileType, Int>,
     declinedGoals: List<GoalCard>,
     seishiTool: Stack<ZenCard>,
     seishiGrowth: Stack<ZenCard>,
     hiddenDeck: List<ZenCard>,
     supply: List<BonsaiTile>,
-    bonsai: Bonsai
+    bonsai: Bonsai,
 ) : Player(
-    name,
-    supplyTileLimit,
-    treeTileLimit,
-    declinedGoals,
-    seishiTool,
-    seishiGrowth,
-    hiddenDeck,
-    supply,
-    bonsai
-)
+        name,
+        supplyTileLimit,
+        treeTileLimit,
+        declinedGoals,
+        seishiTool,
+        seishiGrowth,
+        hiddenDeck,
+        supply,
+        bonsai,
+    )

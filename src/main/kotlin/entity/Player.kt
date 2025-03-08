@@ -1,7 +1,6 @@
 package entity
 
 import tools.aqua.bgw.util.Stack
-import java.util.Dictionary
 
 /**
  * Abstract Entity to represent the player
@@ -19,11 +18,11 @@ import java.util.Dictionary
 abstract class Player(
     val name: String,
     val supplyTileLimit: Int,
-    val treeTileLimit: Dictionary<TileType, Int>,
+    val treeTileLimit: Map<TileType, Int>,
     val declinedGoals: List<GoalCard>,
     val seishiTool: Stack<ZenCard>,
     val seishiGrowth: Stack<ZenCard>,
     val hiddenDeck: List<ZenCard>,
     val supply: List<BonsaiTile>,
-    val bonsai: Bonsai
+    val bonsai: Bonsai,
 )
