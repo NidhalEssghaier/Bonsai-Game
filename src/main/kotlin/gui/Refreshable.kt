@@ -1,3 +1,6 @@
+package gui
+
+import service.AbstractRefreshingService
 
 /**
  * This interface provides a mechanism for the service layer classes to communicate
