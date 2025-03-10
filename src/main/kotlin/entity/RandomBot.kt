@@ -1,7 +1,5 @@
 package entity
 
-import tools.aqua.bgw.util.Stack
-
 /**
  * Entity to represent a bot, based on random behaviour
  *
@@ -16,9 +14,7 @@ import tools.aqua.bgw.util.Stack
  * @property bonsai The bonsai of the player
  */
 class RandomBot(
-    name: String,
-    bonsai: Bonsai,
+    name: String
 ) : Player(
-        name,
-        bonsai,
+        name
     )

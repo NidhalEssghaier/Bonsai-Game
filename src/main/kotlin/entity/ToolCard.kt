@@ -5,4 +5,4 @@ package entity
  *
  * @property number The number of tiles the player can additionally place in the bonsai
  */
-class ToolCard(val number: Int) : ZenCard
+class ToolCard() : ZenCard

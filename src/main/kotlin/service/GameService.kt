@@ -1,7 +1,8 @@
 package service
 
 import AbstractRefreshingService
-import entity.BonsaiGame
+import entity.*
+import tools.aqua.bgw.util.Stack
 
 class GameService(rootService:RootService):AbstractRefreshingService() {
 
@@ -37,9 +38,90 @@ class GameService(rootService:RootService):AbstractRefreshingService() {
      *
      * @sample startNewGame(mutableListOf(Pair("Max Mustermann",0)),3,false)
      */
-    fun startNewGame(players: List<Pair<String, Int>>, speed: Int, remote: Boolean) {
+    fun startNewGame(players: List<Pair<String, Int>>, speed: Int, goalCards: List<GoalCard>) {
+        val drawStack = prepareCards(players.size)
+        val openCards = drawStack.popAll(4)
+        val playerList = mutableListOf<Player>()
+        for(pair in players) {
+            when(pair.second) {
+                0 -> playerList.add(LocalPlayer(pair.first))
+                1 -> playerList.add(NetworkPlayer(pair.first))
+                2 -> playerList.add(RandomBot(pair.first))
+                3 -> playerList.add(SmartBot(pair.first))
+            }
+        }
 
+        val rootService = RootService()
+        rootService.currentGame = BonsaiGame(speed,playerList,goalCards,drawStack,openCards)
         onAllRefreshables { refreshAfterStartNewGame() }
+    }
+
+    private fun prepareCards(playerCount: Int) : Stack<ZenCard> {
+        val cardStack = Stack<ZenCard>()
+
+        //growth cards
+        repeat(2) {
+            cardStack.push(GrowthCard(TileType.WOOD))
+            cardStack.push(GrowthCard(TileType.LEAF))
+            cardStack.push(GrowthCard(TileType.FLOWER))
+            cardStack.push(GrowthCard(TileType.FRUIT))
+        }
+        if(playerCount>2) {
+            cardStack.push(GrowthCard(TileType.WOOD))
+            cardStack.push(GrowthCard(TileType.LEAF))
+            cardStack.push(GrowthCard(TileType.LEAF))
+            cardStack.push(GrowthCard(TileType.FLOWER))
+        }
+        if (playerCount>3) {
+            cardStack.push(GrowthCard(TileType.FLOWER))
+            cardStack.push(GrowthCard(TileType.FRUIT))
+        }
+
+        //tool cards
+        val toolCardCount = when(playerCount) {
+            2 -> 3
+            3 -> 5
+            else -> 6
+        }
+        repeat(toolCardCount) {
+            cardStack.push(ToolCard())
+        }
+
+        //master cards
+        cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.WOOD)))
+        cardStack.push(MasterCard(listOf(TileType.LEAF,TileType.LEAF)))
+        cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF)))
+        cardStack.push(MasterCard(listOf(TileType.GENERIC)))
+        cardStack.push(MasterCard(listOf(TileType.GENERIC)))
+        cardStack.push(MasterCard(listOf(TileType.LEAF,TileType.LEAF)))
+        cardStack.push(MasterCard(listOf(TileType.LEAF,TileType.FRUIT)))
+        if(playerCount>2) {
+            cardStack.push(MasterCard(listOf(TileType.GENERIC)))
+            cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF)))
+            cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF)))
+            cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF,TileType.FLOWER)))
+            cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF,TileType.FRUIT)))
+        }
+        if(playerCount>3) {
+            cardStack.push((MasterCard(listOf(TileType.LEAF,TileType.FLOWER,TileType.FLOWER))))
+        }
+
+        //helper cards
+        repeat(3) {cardStack.push(HelperCard(listOf(TileType.GENERIC,TileType.WOOD)))}
+        repeat(2) {cardStack.push(HelperCard(listOf(TileType.GENERIC,TileType.LEAF)))}
+        cardStack.push(HelperCard(listOf(TileType.GENERIC,TileType.FLOWER)))
+        cardStack.push(HelperCard(listOf(TileType.GENERIC,TileType.FRUIT)))
+
+        //parchment cards
+        cardStack.push(ParchmentCard(2,ParchmentCardType.MASTER))
+        cardStack.push(ParchmentCard(2,ParchmentCardType.GROWTH))
+        cardStack.push(ParchmentCard(2,ParchmentCardType.HELPER))
+        cardStack.push(ParchmentCard(2,ParchmentCardType.FLOWER))
+        cardStack.push(ParchmentCard(2,ParchmentCardType.FRUIT))
+        cardStack.push(ParchmentCard(1,ParchmentCardType.LEAF))
+        cardStack.push(ParchmentCard(1,ParchmentCardType.WOOD))
+
+        return cardStack
     }
 
 

@@ -1,5 +1,7 @@
 package entity
 
+import tools.aqua.bgw.components.container.HexagonGrid
+import tools.aqua.bgw.components.gamecomponentviews.HexagonView
 import tools.aqua.bgw.util.Stack
 
 /**
@@ -16,14 +18,14 @@ import tools.aqua.bgw.util.Stack
  * @property bonsai The bonsai of the player
  */
 abstract class Player(
-    val name: String,
-    val bonsai: Bonsai,
+    val name: String
     )
 {
+    val bonsai: Bonsai = Bonsai(emptyMap<HexagonGrid<HexagonView>,BonsaiTile>(), listOf<BonsaiTile>())
     var supplyTileLimit: Int = 5
     val treeTileLimit: Map<TileType, Int> = mapOf()
     val declinedGoals: List<GoalCard> = mutableListOf()
-    val seishiTool: Stack<ZenCard> =Stack()
+    val seishiTool: Stack<ZenCard> = Stack()
     val seishiGrowth: Stack<ZenCard> = Stack()
     val hiddenDeck: List<ZenCard> = mutableListOf()
     val supply: List<BonsaiTile> = mutableListOf()
