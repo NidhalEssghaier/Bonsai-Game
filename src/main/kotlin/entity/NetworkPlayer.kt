@@ -1,7 +1,5 @@
 package entity
 
-import tools.aqua.bgw.util.Stack
-
 /**
  * Entity to represent the player type "Network"
  *
@@ -16,9 +14,7 @@ import tools.aqua.bgw.util.Stack
  * @property bonsai The bonsai of the player
  */
 class NetworkPlayer(
-    name: String,
-    bonsai: Bonsai,
+    name: String
 ) : Player(
-        name,
-        bonsai,
+        name
     )

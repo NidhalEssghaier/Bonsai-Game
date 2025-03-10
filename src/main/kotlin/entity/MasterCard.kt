@@ -5,6 +5,4 @@ package entity
  *
  * @property tiles The tiles the player is allowed to take with this card
  */
-class MasterCard(
-    val tiles: Map<TileType, Int>,
-) : ZenCard
+class MasterCard(val tiles: List<TileType>) : ZenCard

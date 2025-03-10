@@ -1,4 +1,6 @@
+package service
 
+import gui.Refreshable
 
 /**
  * Abstract service class that handles multiples [Refreshable]s (usually UI elements, such as

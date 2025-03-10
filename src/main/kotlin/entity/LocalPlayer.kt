@@ -1,7 +1,5 @@
 package entity
 
-import tools.aqua.bgw.util.Stack
-
 /**
  * Entity to represent the player type "Local"
  *
@@ -17,10 +15,8 @@ import tools.aqua.bgw.util.Stack
  */
 class LocalPlayer(
     name: String,
-    bonsai: Bonsai,
 ) : Player(
-        name,
-        bonsai,
+        name
     ){
 
 }

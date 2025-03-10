@@ -1,12 +1,9 @@
 package service
 
-import AbstractRefreshingService
 import entity.*
-import tools.aqua.bgw.components.container.HexagonGrid
-import tools.aqua.bgw.components.gamecomponentviews.HexagonView
 import tools.aqua.bgw.util.Stack
 
-class GameService(private val rootService:RootService):AbstractRefreshingService() {
+class GameService(rootService:RootService):AbstractRefreshingService() {
 
     /**
      * Starts a new game and prepares different game elements
@@ -40,40 +37,92 @@ class GameService(private val rootService:RootService):AbstractRefreshingService
      *
      * @sample startNewGame(mutableListOf(Pair("Max Mustermann",0)),3,false)
      */
-    fun startNewGame(players: List<Pair<String, Int>>, speed: Int, remote: Boolean, goalCards: List<GoalCard>) {
+    fun startNewGame(players: List<Pair<String, Int>>, speed: Int, goalCards: List<GoalCard>) {
+        val drawStack = prepareCards(players.size)
+        val openCards = drawStack.popAll(4)
+        val playerList = mutableListOf<Player>()
+        for(pair in players) {
+            when(pair.second) {
+                0 -> playerList.add(LocalPlayer(pair.first))
+                1 -> playerList.add(NetworkPlayer(pair.first))
+                2 -> playerList.add(RandomBot(pair.first))
+                3 -> playerList.add(SmartBot(pair.first))
+            }
+        }
 
-        //prepare zen Cards
-        val zenCards = listOf<ZenCard>(ParchmentCard(ParchmentCardType.MASTER),
-            ParchmentCard(ParchmentCardType.GROWTH),
-            ParchmentCard(ParchmentCardType.HELPER),
-            ParchmentCard(ParchmentCardType.FLOWER),
-            ParchmentCard(ParchmentCardType.FRUIT),
-            ParchmentCard(ParchmentCardType.LEAF),
-            ParchmentCard(ParchmentCardType.WOOD))
-
-        //sort players
-        val sortedPlayers = createPlayers(players)
-
-        //start new game
-        val bonsaiGame = BonsaiGame(speed, sortedPlayers)
-        bonsaiGame.drawStack.pushAll(zenCards)
-        rootService.currentGame =bonsaiGame
-
+        val rootService = RootService()
+        rootService.currentGame = BonsaiGame(speed,playerList,goalCards,drawStack,openCards)
         onAllRefreshables { refreshAfterStartNewGame() }
     }
 
-    private fun createPlayers(players: List<Pair<String, Int>>): List<Player> {
-        val sortedPlayers = players.sortedBy { it.first }
+    private fun prepareCards(playerCount: Int) : Stack<ZenCard> {
+        val cardStack = Stack<ZenCard>()
 
-        return sortedPlayers.map { (name, _) ->
-            val grid = mapOf<HexagonGrid<HexagonView>, BonsaiTile>()
-            val tiles = listOf<BonsaiTile>()
-            val playerBonsai = Bonsai(grid, tiles)
-
-            // should add logic for which types of player is it but have no info
-            LocalPlayer(name, playerBonsai)
+        //growth cards
+        repeat(2) {
+            cardStack.push(GrowthCard(TileType.WOOD))
+            cardStack.push(GrowthCard(TileType.LEAF))
+            cardStack.push(GrowthCard(TileType.FLOWER))
+            cardStack.push(GrowthCard(TileType.FRUIT))
         }
+        if(playerCount>2) {
+            cardStack.push(GrowthCard(TileType.WOOD))
+            cardStack.push(GrowthCard(TileType.LEAF))
+            cardStack.push(GrowthCard(TileType.LEAF))
+            cardStack.push(GrowthCard(TileType.FLOWER))
+        }
+        if (playerCount>3) {
+            cardStack.push(GrowthCard(TileType.FLOWER))
+            cardStack.push(GrowthCard(TileType.FRUIT))
+        }
+
+        //tool cards
+        val toolCardCount = when(playerCount) {
+            2 -> 3
+            3 -> 5
+            else -> 6
+        }
+        repeat(toolCardCount) {
+            cardStack.push(ToolCard())
+        }
+
+        //master cards
+        cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.WOOD)))
+        cardStack.push(MasterCard(listOf(TileType.LEAF,TileType.LEAF)))
+        cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF)))
+        cardStack.push(MasterCard(listOf(TileType.GENERIC)))
+        cardStack.push(MasterCard(listOf(TileType.GENERIC)))
+        cardStack.push(MasterCard(listOf(TileType.LEAF,TileType.LEAF)))
+        cardStack.push(MasterCard(listOf(TileType.LEAF,TileType.FRUIT)))
+        if(playerCount>2) {
+            cardStack.push(MasterCard(listOf(TileType.GENERIC)))
+            cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF)))
+            cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF)))
+            cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF,TileType.FLOWER)))
+            cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF,TileType.FRUIT)))
+        }
+        if(playerCount>3) {
+            cardStack.push((MasterCard(listOf(TileType.LEAF,TileType.FLOWER,TileType.FLOWER))))
+        }
+
+        //helper cards
+        repeat(3) {cardStack.push(HelperCard(listOf(TileType.GENERIC,TileType.WOOD)))}
+        repeat(2) {cardStack.push(HelperCard(listOf(TileType.GENERIC,TileType.LEAF)))}
+        cardStack.push(HelperCard(listOf(TileType.GENERIC,TileType.FLOWER)))
+        cardStack.push(HelperCard(listOf(TileType.GENERIC,TileType.FRUIT)))
+
+        //parchment cards
+        cardStack.push(ParchmentCard(2,ParchmentCardType.MASTER))
+        cardStack.push(ParchmentCard(2,ParchmentCardType.GROWTH))
+        cardStack.push(ParchmentCard(2,ParchmentCardType.HELPER))
+        cardStack.push(ParchmentCard(2,ParchmentCardType.FLOWER))
+        cardStack.push(ParchmentCard(2,ParchmentCardType.FRUIT))
+        cardStack.push(ParchmentCard(1,ParchmentCardType.LEAF))
+        cardStack.push(ParchmentCard(1,ParchmentCardType.WOOD))
+
+        return cardStack
     }
+
 
     /**
      * Ends the game and evaluates which player won.
