@@ -1,6 +1,5 @@
 package service
 
-import AbstractRefreshingService
 import entity.*
 import tools.aqua.bgw.util.Stack
 
