@@ -1,5 +1,7 @@
 package service
 
+import entity.BonsaiTile
+
 class PlayerActionService(rootService: RootService):AbstractRefreshingService(){
     /**
      * Ends the active players turn and advances the game to the next player.
@@ -116,6 +118,12 @@ class PlayerActionService(rootService: RootService):AbstractRefreshingService(){
      */
     fun medidate() {
         // Method implementation
+    }
+
+    private fun removeTile(tile: BonsaiTile){
+
+        //is tile in current player bonsia
+
     }
 
 }
