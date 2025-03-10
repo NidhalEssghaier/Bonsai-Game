@@ -17,22 +17,10 @@ import tools.aqua.bgw.util.Stack
  */
 class LocalPlayer(
     name: String,
-    supplyTileLimit: Int,
-    treeTileLimit: Map<TileType, Int>,
-    declinedGoals: List<GoalCard>,
-    seishiTool: Stack<ZenCard>,
-    seishiGrowth: Stack<ZenCard>,
-    hiddenDeck: List<ZenCard>,
-    supply: List<BonsaiTile>,
     bonsai: Bonsai,
 ) : Player(
         name,
-        supplyTileLimit,
-        treeTileLimit,
-        declinedGoals,
-        seishiTool,
-        seishiGrowth,
-        hiddenDeck,
-        supply,
         bonsai,
-    )
+    ){
+
+}

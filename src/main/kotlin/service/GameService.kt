@@ -1,6 +1,9 @@
 package service
 
-class GameService {
+import AbstractRefreshingService
+import entity.BonsaiGame
+
+class GameService(rootService:RootService):AbstractRefreshingService() {
 
     /**
      * Starts a new game and prepares different game elements
@@ -35,8 +38,10 @@ class GameService {
      * @sample startNewGame(mutableListOf(Pair("Max Mustermann",0)),3,false)
      */
     fun startNewGame(players: List<Pair<String, Int>>, speed: Int, remote: Boolean) {
-        //Method implementation
+
+        onAllRefreshables { refreshAfterStartNewGame() }
     }
+
 
     /**
      * Ends the game and evaluates which player won.
@@ -59,6 +64,7 @@ class GameService {
      *
      * @sample endGame()
      */
+
     fun endGame() {
         // Method implementation
     }

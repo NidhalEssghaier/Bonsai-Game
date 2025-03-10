@@ -1,6 +1,8 @@
 package service
 
-class PlayerActionService {
+import AbstractRefreshingService
+
+class PlayerActionService(rootService: RootService):AbstractRefreshingService(){
     /**
      * Ends the active players turn and advances the game to the next player.
      *
