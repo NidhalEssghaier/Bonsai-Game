@@ -19,8 +19,8 @@ class BonsaiGame(
 
     val gameSpeed: Int,
     val players: List<Player>,
-    val goalCards: List<GoalCard>
 ){
+    val goalCards: List<GoalCard> = mutableListOf()
     var currentPlayer: Int =0
     var endGameCounter: Int =0
     val drawStack: Stack<ZenCard> = Stack()

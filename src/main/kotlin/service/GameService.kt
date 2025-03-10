@@ -1,9 +1,12 @@
 package service
 
 import AbstractRefreshingService
-import entity.BonsaiGame
+import entity.*
+import tools.aqua.bgw.components.container.HexagonGrid
+import tools.aqua.bgw.components.gamecomponentviews.HexagonView
+import tools.aqua.bgw.util.Stack
 
-class GameService(rootService:RootService):AbstractRefreshingService() {
+class GameService(private val rootService:RootService):AbstractRefreshingService() {
 
     /**
      * Starts a new game and prepares different game elements
@@ -37,11 +40,40 @@ class GameService(rootService:RootService):AbstractRefreshingService() {
      *
      * @sample startNewGame(mutableListOf(Pair("Max Mustermann",0)),3,false)
      */
-    fun startNewGame(players: List<Pair<String, Int>>, speed: Int, remote: Boolean) {
+    fun startNewGame(players: List<Pair<String, Int>>, speed: Int, remote: Boolean, goalCards: List<GoalCard>) {
+
+        //prepare zen Cards
+        val zenCards = listOf<ZenCard>(ParchmentCard(ParchmentCardType.MASTER),
+            ParchmentCard(ParchmentCardType.GROWTH),
+            ParchmentCard(ParchmentCardType.HELPER),
+            ParchmentCard(ParchmentCardType.FLOWER),
+            ParchmentCard(ParchmentCardType.FRUIT),
+            ParchmentCard(ParchmentCardType.LEAF),
+            ParchmentCard(ParchmentCardType.WOOD))
+
+        //sort players
+        val sortedPlayers = createPlayers(players)
+
+        //start new game
+        val bonsaiGame = BonsaiGame(speed, sortedPlayers)
+        bonsaiGame.drawStack.pushAll(zenCards)
+        rootService.currentGame =bonsaiGame
 
         onAllRefreshables { refreshAfterStartNewGame() }
     }
 
+    private fun createPlayers(players: List<Pair<String, Int>>): List<Player> {
+        val sortedPlayers = players.sortedBy { it.first }
+
+        return sortedPlayers.map { (name, _) ->
+            val grid = mapOf<HexagonGrid<HexagonView>, BonsaiTile>()
+            val tiles = listOf<BonsaiTile>()
+            val playerBonsai = Bonsai(grid, tiles)
+
+            // should add logic for which types of player is it but have no info
+            LocalPlayer(name, playerBonsai)
+        }
+    }
 
     /**
      * Ends the game and evaluates which player won.
