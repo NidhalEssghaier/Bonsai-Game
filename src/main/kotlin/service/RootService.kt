@@ -1,6 +1,6 @@
 package service
 
-import Refreshable
+import gui.Refreshable
 import entity.BonsaiGame
 
 /**
