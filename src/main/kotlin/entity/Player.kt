@@ -1,8 +1,5 @@
 package entity
 
-import helper.copy
-import tools.aqua.bgw.components.container.HexagonGrid
-import tools.aqua.bgw.components.gamecomponentviews.HexagonView
 import tools.aqua.bgw.util.Stack
 
 /**
@@ -32,5 +29,5 @@ abstract class Player(
     val supply: MutableList<BonsaiTile> = mutableListOf()
     )
 {
-    abstract fun copy()
+    abstract fun copy(): Player
 }
