@@ -3,6 +3,7 @@ package helper
 import tools.aqua.bgw.components.container.HexagonGrid
 import tools.aqua.bgw.components.gamecomponentviews.HexagonView
 import tools.aqua.bgw.util.BidirectionalMap
+import tools.aqua.bgw.util.Stack
 
 /**
  * Copy a BidirectionalMap
@@ -31,4 +32,12 @@ fun <T : HexagonView> HexagonGrid<T>.copy(): HexagonGrid<T> {
         }
     }
     return copy
+}
+
+/**
+ * Copy a Stack
+ * @return a copy of the original Stack
+ */
+fun <T> Stack<T>.copy(): Stack<T> {
+    return Stack(this.peekAll())
 }
