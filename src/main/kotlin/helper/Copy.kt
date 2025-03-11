@@ -53,5 +53,5 @@ fun <T : HexagonView> HexagonGrid<T>.copy(): HexagonGrid<T> {
  * @return a copy of the original Stack
  */
 fun <T> Stack<T>.copy(): Stack<T> {
-    return Stack(this.peekAll())
+    return Stack(this.peekAll().asReversed())
 }
