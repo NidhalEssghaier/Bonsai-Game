@@ -1,5 +1,8 @@
 package entity
 
+import helper.copy
+import tools.aqua.bgw.util.Stack
+
 /**
  * Entity to represent the player type "Local"
  *
@@ -15,8 +18,41 @@ package entity
  */
 class LocalPlayer(
     name: String,
-) : Player(
-        name
-    ){
 
+    bonsai: Bonsai = Bonsai(),
+    supplyTileLimit: Int = 5,
+    treeTileLimit: MutableMap<TileType, Int> = mutableMapOf(),
+    declinedGoals: MutableList<GoalCard> = mutableListOf(),
+    acceptedGoals: MutableList<GoalCard> = mutableListOf(),
+    seishiTool: Stack<ZenCard> = Stack(),
+    seishiGrowth: Stack<ZenCard> = Stack(),
+    hiddenDeck: MutableList<ZenCard> = mutableListOf(),
+    supply: MutableList<BonsaiTile> = mutableListOf()
+): Player(
+    name,
+    bonsai,
+    supplyTileLimit,
+    treeTileLimit,
+    declinedGoals,
+    acceptedGoals,
+    seishiTool,
+    seishiGrowth,
+    hiddenDeck,
+    supply
+)
+{
+    override fun copy(): LocalPlayer {
+        return LocalPlayer(
+            name,
+            bonsai.copy(),
+            supplyTileLimit,
+            treeTileLimit.toMutableMap(),
+            declinedGoals.toMutableList(),
+            acceptedGoals.toMutableList(),
+            seishiTool.copy(),
+            seishiGrowth.copy(),
+            hiddenDeck.toMutableList(),
+            supply.toMutableList()
+        )
+    }
 }
