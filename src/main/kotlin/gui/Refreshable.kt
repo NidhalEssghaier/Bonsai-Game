@@ -20,4 +20,14 @@ interface Refreshable {
      */
     fun refreshAfterStartNewGame() {}
 
+    /**
+     * Refresh affected GUI Elements after a turn has ended.
+     */
+    fun refreshAfterEndTurn() {}
+
+    /**
+     * Select a tile to discard.
+     */
+    fun refreshAfterDiscardTile() {}
+
 }
