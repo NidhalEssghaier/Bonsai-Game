@@ -10,6 +10,6 @@ import tools.aqua.bgw.components.gamecomponentviews.HexagonView
  * @property tiles Saves used tiles as list.
  */
 class Bonsai(
-    val grid: Map<HexagonGrid<HexagonView>,BonsaiTile>,
+    val grid: MutableMap<HexagonGrid<HexagonView>,BonsaiTile>,
     val tiles: Map<TileType,Int>
 )

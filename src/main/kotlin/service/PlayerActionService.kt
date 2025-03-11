@@ -1,8 +1,11 @@
 package service
 
 import entity.BonsaiTile
+import entity.TileType
+import tools.aqua.bgw.components.container.HexagonGrid
+import tools.aqua.bgw.components.gamecomponentviews.HexagonView
 
-class PlayerActionService(rootService: RootService):AbstractRefreshingService(){
+class PlayerActionService(private val rootService: RootService):AbstractRefreshingService() {
     /**
      * Ends the active players turn and advances the game to the next player.
      *
@@ -120,10 +123,88 @@ class PlayerActionService(rootService: RootService):AbstractRefreshingService(){
         // Method implementation
     }
 
-    private fun removeTile(tile: BonsaiTile){
+    fun removeTile(tile: BonsaiTile) {
 
-        //is tile in current player bonsia
+        //check gamme is running
+        val game = rootService.currentGame
+        checkNotNull(game) { "there is no active game" }
 
+        //is tile in current player bonsai
+        val currentPlayer = game.players[game.currentPlayer]
+        val currentPlayerBonsaiTiles = currentPlayer.bonsai.tiles
+        check(currentPlayerBonsaiTiles.contains(tile)) { "cant remove a tile not in players bonsai" }
+
+        //is it possible to play wood tile
+        check(!currentPlayerBonsaiTiles.any { bonsaiTile -> bonsaiTile.type == TileType.WOOD
+                && bonsaiTile.neighbors.size < 6
+        }) { "player can play wood" }
+
+        //is it part of the least number of tiles to be removed to make placing a wood possible
+        check(leastGroupOfTilesToBeRemoved(currentPlayerBonsaiTiles).contains(tile))
+        {"tile not part of the least number of tiles to be removed to make placing a wood possible"}
+
+        //remove tile from bonsai tree
+        currentPlayer.bonsai.tiles.remove(tile)
+        val keyToRemove:HexagonGrid<HexagonView>? = currentPlayer.bonsai.grid.entries.find { it.value.equals(tile) }?.key
+        if (keyToRemove != null) {
+            currentPlayer.bonsai.grid.remove(keyToRemove)
+        }
+
+        //add tile to player supply
+        currentPlayer.supply.add(tile)
     }
 
+    private fun leastGroupOfTilesToBeRemoved(tiles: List<BonsaiTile>): List<BonsaiTile> {
+        return tiles.filter { tile ->
+            //tile is not neighbor to wood
+            if (tile.neighbors.any { neighbor -> neighbor.type == TileType.WOOD }) return@filter false
+            //tile is wood
+            if (tile.type.equals(TileType.WOOD)) return@filter false
+            //tile is surrounded
+            if (tile.neighbors.size == 6) return@filter false
+            //tile is fruit or flower
+            if (tile.type.equals(TileType.FLOWER) || tile.type.equals(TileType.FRUIT)) return@filter true
+
+            //tile is leaf
+            if (tile.type == TileType.LEAF) {
+                val neighborFruits = tile.neighbors.filter { neighbor -> neighbor.type == TileType.FRUIT }
+                val neighborFlowers = tile.neighbors.filter { neighbor -> neighbor.type == TileType.FLOWER }
+
+                //has no fruit or flower neighbors
+                if (neighborFlowers.isEmpty() && neighborFruits.isEmpty()) return@filter true
+
+                //neighbor flower have less then 2 leaves
+                else if (
+                    neighborFlowers.any { flower ->
+                        (flower.neighbors.filter { neighbor -> neighbor.type == TileType.LEAF }.size) < 2
+                    }
+                ) { return@filter false }
+
+
+                //neighbor fruit has no 2 adjacent leafs after deletion
+                for (fruit in neighborFruits) {
+                    val fruitLeafNeighbors = fruit.neighbors
+                        .filter { neighbor -> neighbor.type == TileType.LEAF && !neighbor.equals(tile) }
+                    if(!hasAdjacentPair(fruitLeafNeighbors)){
+                        return@filter false
+                    }
+                }
+                return@filter true
+            }
+            return@filter false
+        }
+    }
+
+    private fun hasAdjacentPair(leafTiles: List<BonsaiTile>): Boolean {
+        for (leaf in leafTiles) {
+            if (leaf.neighbors.any { it in leafTiles }) {
+                return true
+            }
+        }
+        return false
+    }
 }
+
+
+
+
