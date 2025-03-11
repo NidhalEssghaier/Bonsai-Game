@@ -20,4 +20,9 @@ interface Refreshable {
      */
     fun refreshAfterStartNewGame() {}
 
+    /**
+     * perform refreshes that are necessary after undo / redo
+     */
+    fun refreshAfterUndoRedo() {}
+
 }
