@@ -150,7 +150,7 @@ class GameService(private val rootService:RootService):AbstractRefreshingService
     fun endGame() {
         val game = rootService.currentGame
         checkNotNull(game)
-        val playerList = game.players
+        val playerList = game.currentState.players
 
         val pointsPerPlayer = mutableMapOf<Player,Int>()
         for(player in playerList) {
