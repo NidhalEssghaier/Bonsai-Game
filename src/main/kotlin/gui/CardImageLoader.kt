@@ -1,8 +1,7 @@
 package gui
-
+/*
 import entity.CardSuit
 import entity.CardValue
-
 /**
  * The full raster image containing the suits as rows (plus one special row for blank/back)
  * and values as columns (starting with the ace). As the ordering in the image is not the same
@@ -48,3 +47,4 @@ private val CardValue.column get() = when (this) {
     CardValue.QUEEN -> 11
     CardValue.KING -> 12
 }
+*/
