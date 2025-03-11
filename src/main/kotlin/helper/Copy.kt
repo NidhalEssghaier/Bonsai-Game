@@ -1,3 +1,5 @@
+package helper
+
 import tools.aqua.bgw.components.container.HexagonGrid
 import tools.aqua.bgw.components.gamecomponentviews.HexagonView
 import tools.aqua.bgw.util.BidirectionalMap
