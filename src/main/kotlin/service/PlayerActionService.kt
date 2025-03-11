@@ -1,6 +1,8 @@
 package service
+import entity.*
+import gui.*
 
-class PlayerActionService(rootService: RootService):AbstractRefreshingService(){
+abstract class PlayerActionService(private val rootService: RootService):AbstractRefreshingService(){
     /**
      * Ends the active players turn and advances the game to the next player.
      *
@@ -114,8 +116,147 @@ class PlayerActionService(rootService: RootService):AbstractRefreshingService(){
      * @throws IllegalStateException If the Game's stacks are empty.
      *
      */
-    fun medidate() {
-        // Method implementation
+    fun meditate(card: ZenCard) {
+        val game = rootService.currentGame ?: throw IllegalStateException("No active game")
+        val currentPlayer = game.players[game.currentPlayer]
+
+        if (game.openCards.isEmpty()) throw IllegalStateException("No available cards to draw")
+
+        // Find the card in openCards and ensure it's valid
+        val cardIndex = game.openCards.indexOf(card)
+        if (cardIndex == -1) throw IllegalStateException("The selected card is not in openCards")
+
+        // Draw the card and mark its position as taken
+        drawCard(cardIndex)
+
+        // Process card effects based on type
+        when (card) {
+            is GrowthCard -> currentPlayer.seishiGrowth.push(card)
+            is ToolCard -> {
+                currentPlayer.seishiTool.push(card)
+                currentPlayer.supplyTileLimit += 2 // Increase tile limit for future turns
+            }
+            is MasterCard -> {
+                currentPlayer.supply += card.tiles.map { BonsaiTile(it) } // Add tiles to supply
+                // Store the card in the hidden deck; tile limit checks will be enforced at the end of the turn
+                currentPlayer.hiddenDeck += card
+            }
+            is ParchmentCard, is HelperCard ->
+                currentPlayer.hiddenDeck += card // Store card within hiddenDeck
+        }
+
+        val placeholderCard = object : ZenCard {}
+        game.openCards[cardIndex] = placeholderCard
+        // Shift remaining cards and enforce game constraints
+        shiftBoardAndRefill(cardIndex)
+
+    }
+
+    fun placeTile(tile: TileType, r: Int, q: Int){
+
+    }
+    /**
+     * Draws a card from the draw stack and processes it according to its type.
+     *
+     * **Preconditions:**
+     * - A game must be active.
+     * - The `openCards` list must not be empty.
+     *
+     * **Postconditions:**
+     * - The selected card is drawn and its effects are applied.
+     * - If the card position grants bonsai tiles, they are added to the player's supply.
+     * - The UI is updated to reflect the drawn card.
+     *
+     * @param cardStack The position in the stack to draw from.
+     */
+    fun drawCard(cardStack: Int) {
+
+        val game = rootService.currentGame ?: throw IllegalStateException("No active game")
+
+        if (game.openCards.isEmpty()) throw IllegalStateException("No available cards to draw")
+
+        // Assign bonsai tiles based on the drawn card's board position
+        val acquiredTiles = when (cardStack) {
+            0 -> emptyList()
+            1 -> {
+                // Allow the player to choose between WOOD or LEAF
+                val choice = getUserTileChoice()
+                require(choice == TileType.WOOD  || choice == TileType.LEAF  )
+                listOf(BonsaiTile(choice))
+            }
+            2 -> listOf(BonsaiTile(TileType.WOOD), BonsaiTile(TileType.FLOWER))
+            3 -> listOf(BonsaiTile(TileType.LEAF), BonsaiTile(TileType.FRUIT))
+            else -> emptyList()
+        }
+
+        val currentPlayer = game.players[game.currentPlayer]
+        currentPlayer.supply += acquiredTiles
+        onAllRefreshables { refreshAfterDrawCard(game.openCards[cardStack])}
+    }
+
+    /**
+     * Allows the player to choose a tile when drawing from a specific board position.
+     *
+     * **Preconditions:**
+     * - This function is called when a tile choice is required (e.g., when drawing from position 1).
+     * - The player must be presented with a choice between two specific tile types.
+     *
+     * **Postconditions:**
+     * - Returns a valid tile type (either WOOD or LEAF).
+     * - The selected tile is used in the draw process.
+     *
+     * @return The TileType chosen by the player.
+     */
+    abstract fun getUserTileChoice(): TileType
+
+    /**
+     * Handles the placement of tiles when a HelperCard is drawn.
+     *
+     * This function will be directly triggered in the GUI when the player selects a HelperCard.
+     * It ensures that at least one tile is placed according to the HelperCard's rules.
+     *
+     * @param card The HelperCard being processed.
+     * @param tile The tile selected by the player.
+     * @param r The row coordinate where the tile should be placed.
+     * @param q The column coordinate where the tile should be placed.
+     */
+     fun handleHelperCardPlacement(card: HelperCard, tile: TileType, r: Int ,q: Int ) {
+
+        val game = rootService.currentGame ?: throw IllegalStateException("No active game")
+        val currentPlayer = game.players[game.currentPlayer]
+
+        // Check if the chosen tile is different from the one shown on the HelperCard
+        // and ensure that the player has not already placed a chosen tile
+
+        if (tile != card.tiles[1] && !card.hasPlacedChosenTile )
+        {   placeTile(tile, r,q)  // Place the chosen tile on the board
+            card.hasPlacedChosenTile = true // Mark the chosen tile as placed
+
+        }
+        // Check if the selected tile matches the shown tile on the HelperCard
+        // and ensure that the player has this tile in their supply and has not placed it yet
+
+        else if (tile == card.tiles[1] && currentPlayer.supply.contains(BonsaiTile(tile)) && !card.hasPlacedShownTile)
+        { placeTile(tile, r,q)
+            card.hasPlacedShownTile = true
+        }
+
+    }
+
+    /**
+     * Shifts all face-up cards to the right and fills the empty position with a new card.
+     */
+    fun shiftBoardAndRefill(cardStack: Int) {
+        val game = rootService.currentGame ?: throw IllegalStateException("No active game")
+
+        if (game.drawStack.isEmpty()) return
+
+        for (i in cardStack  downTo 1) {
+            game.openCards[i] = game.openCards[i - 1]
+        }
+
+        val newCard = game.drawStack.pop()
+        game.openCards[0] = newCard
     }
 
 }

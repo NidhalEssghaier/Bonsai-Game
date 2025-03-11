@@ -21,7 +21,8 @@ class BonsaiGame(
     val players: List<Player>,
     val goalCards: List<GoalCard>,
     val drawStack: Stack<ZenCard>,
-    val openCards: List<ZenCard>
+    var openCards: MutableList<ZenCard>
+
 ){
     var currentPlayer: Int = 0
     var endGameCounter: Int = 0

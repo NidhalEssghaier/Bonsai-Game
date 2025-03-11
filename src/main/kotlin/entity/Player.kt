@@ -21,12 +21,12 @@ abstract class Player(
     val name: String
     )
 {
-    val bonsai: Bonsai = Bonsai(emptyMap<HexagonGrid<HexagonView>,BonsaiTile>(), listOf<BonsaiTile>())
+    var bonsai: Bonsai = Bonsai(emptyMap<HexagonGrid<HexagonView>,BonsaiTile>(), listOf<BonsaiTile>())
     var supplyTileLimit: Int = 5
-    val treeTileLimit: Map<TileType, Int> = mapOf()
-    val declinedGoals: List<GoalCard> = mutableListOf()
-    val seishiTool: Stack<ZenCard> = Stack()
-    val seishiGrowth: Stack<ZenCard> = Stack()
-    val hiddenDeck: List<ZenCard> = mutableListOf()
-    val supply: List<BonsaiTile> = mutableListOf()
+    var treeTileLimit: Map<TileType, Int> = mapOf()
+    var declinedGoals: List<GoalCard> = mutableListOf()
+    var seishiTool: Stack<ZenCard> = Stack()
+    var seishiGrowth: Stack<ZenCard> = Stack()
+    var hiddenDeck: List<ZenCard> = mutableListOf()
+    var supply: MutableList<BonsaiTile> = mutableListOf()
 }

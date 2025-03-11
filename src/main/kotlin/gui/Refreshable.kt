@@ -1,5 +1,7 @@
 package gui
 
+import entity.TileType
+import entity.*
 import service.AbstractRefreshingService
 
 /**
@@ -19,5 +21,7 @@ interface Refreshable {
      * perform refreshes that are necessary after a new game started
      */
     fun refreshAfterStartNewGame() {}
+    fun refreshAfterDrawCard(card: ZenCard){}
+
 
 }
