@@ -3,14 +3,6 @@ import tools.aqua.bgw.components.gamecomponentviews.HexagonView
 import tools.aqua.bgw.util.BidirectionalMap
 
 /**
- * Copy a list
- * @return a copy of the original list
- */
-fun <T> List<T>.copy(): List<T> {
-    return this.map { it }
-}
-
-/**
  * Copy a BidirectionalMap
  * @return a copy of the original BidirectionalMap
  */
