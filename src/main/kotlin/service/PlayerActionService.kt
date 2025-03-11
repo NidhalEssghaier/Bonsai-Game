@@ -51,7 +51,12 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
      * @throws IllegalStateException If there is no active game, or no action to undo.
      */
     fun undo() {
-        // Method implementation
+        val game = rootService.currentGame
+        checkNotNull(game) { "there is no active game" }
+
+        game.redoStack.push(game.currentState.copy())
+        game.currentState = game.undoStack.pop()
+        onAllRefreshables { refreshAfterUndoRedo() }
     }
 
     /**
@@ -69,7 +74,12 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
      * @throws IllegalStateException If there is no active game, or no action to redo.
      */
     fun redo() {
-        // Method implementation
+        val game = rootService.currentGame
+        checkNotNull(game) { "there is no active game" }
+
+        game.undoStack.push(game.currentState.copy())
+        game.currentState = game.redoStack.pop()
+        onAllRefreshables { refreshAfterUndoRedo() }
     }
 
     /**
