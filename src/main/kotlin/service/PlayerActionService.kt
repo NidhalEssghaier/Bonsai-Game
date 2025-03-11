@@ -31,7 +31,9 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
         val game = rootService.currentGame
         checkNotNull(game) { "No game is currently active." }
 
-        // TODO: player must start action
+        check(
+            rootService.networkService.connectionState == ConnectionState.WAITING_FOR_OPPONENT
+        ) { "The active player has not started an action." }
 
         while (
             game.players[game.currentPlayer].supply.size > game.players[game.currentPlayer].supplyTileLimit
