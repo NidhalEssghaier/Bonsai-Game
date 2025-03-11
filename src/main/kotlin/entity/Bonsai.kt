@@ -11,5 +11,6 @@ import tools.aqua.bgw.components.gamecomponentviews.HexagonView
  */
 class Bonsai(
     val grid: MutableMap<HexagonGrid<HexagonView>,BonsaiTile>,
-    val tiles: Map<TileType,Int>
+    val tileCount: Map<TileType,Int>,
+    val tiles: MutableList<BonsaiTile>
 )

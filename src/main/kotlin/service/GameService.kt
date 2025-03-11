@@ -155,9 +155,9 @@ class GameService(private val rootService:RootService):AbstractRefreshingService
         val pointsPerPlayer = mutableMapOf<Player,Int>()
         for(player in playerList) {
             val bonsai = player.bonsai
-            val numberOfLeafTiles = bonsai.tiles[TileType.LEAF]
+            val numberOfLeafTiles = bonsai.tileCount[TileType.LEAF]
             checkNotNull(numberOfLeafTiles)
-            val numberOfFruitTiles = bonsai.tiles[TileType.FRUIT]
+            val numberOfFruitTiles = bonsai.tileCount[TileType.FRUIT]
             checkNotNull(numberOfFruitTiles)
             //TODO Nachbarwerte für Flower Tiles berechnen
             val sumOfFlowerPoints = 0
