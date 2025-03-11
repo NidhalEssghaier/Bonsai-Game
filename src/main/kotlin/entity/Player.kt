@@ -1,5 +1,6 @@
 package entity
 
+import helper.copy
 import tools.aqua.bgw.components.container.HexagonGrid
 import tools.aqua.bgw.components.gamecomponentviews.HexagonView
 import tools.aqua.bgw.util.Stack
@@ -18,16 +19,18 @@ import tools.aqua.bgw.util.Stack
  * @property bonsai The bonsai of the player
  */
 abstract class Player(
-    val name: String
+    val name: String,
+
+    val bonsai: Bonsai = Bonsai(),
+    var supplyTileLimit: Int = 5,
+    val treeTileLimit: MutableMap<TileType, Int> = mutableMapOf(),
+    val declinedGoals: MutableList<GoalCard> = mutableListOf(),
+    val acceptedGoals: MutableList<GoalCard> = mutableListOf(),
+    val seishiTool: Stack<ZenCard> = Stack(),
+    val seishiGrowth: Stack<ZenCard> = Stack(),
+    val hiddenDeck: MutableList<ZenCard> = mutableListOf(),
+    val supply: MutableList<BonsaiTile> = mutableListOf()
     )
 {
-    val bonsai: Bonsai = Bonsai()
-    var supplyTileLimit: Int = 5
-    val treeTileLimit: MutableMap<TileType, Int> = mutableMapOf()
-    val declinedGoals: MutableList<GoalCard> = mutableListOf()
-    val acceptedGoals: MutableList<GoalCard> = mutableListOf()
-    val seishiTool: Stack<ZenCard> = Stack()
-    val seishiGrowth: Stack<ZenCard> = Stack()
-    val hiddenDeck: MutableList<ZenCard> = mutableListOf()
-    val supply: MutableList<BonsaiTile> = mutableListOf()
+    abstract fun copy()
 }
