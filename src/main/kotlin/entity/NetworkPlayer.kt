@@ -1,5 +1,8 @@
 package entity
 
+import helper.copy
+import tools.aqua.bgw.util.Stack
+
 /**
  * Entity to represent the player type "Network"
  *
@@ -14,7 +17,42 @@ package entity
  * @property bonsai The bonsai of the player
  */
 class NetworkPlayer(
-    name: String
-) : Player(
-        name
-    )
+    name: String,
+
+    bonsai: Bonsai = Bonsai(),
+    supplyTileLimit: Int = 5,
+    treeTileLimit: MutableMap<TileType, Int> = mutableMapOf(),
+    declinedGoals: MutableList<GoalCard> = mutableListOf(),
+    acceptedGoals: MutableList<GoalCard> = mutableListOf(),
+    seishiTool: Stack<ZenCard> = Stack(),
+    seishiGrowth: Stack<ZenCard> = Stack(),
+    hiddenDeck: MutableList<ZenCard> = mutableListOf(),
+    supply: MutableList<BonsaiTile> = mutableListOf()
+): Player(
+    name,
+    bonsai,
+    supplyTileLimit,
+    treeTileLimit,
+    declinedGoals,
+    acceptedGoals,
+    seishiTool,
+    seishiGrowth,
+    hiddenDeck,
+    supply
+)
+{
+    override fun copy(): NetworkPlayer {
+        return NetworkPlayer(
+            name,
+            bonsai.copy(),
+            supplyTileLimit,
+            treeTileLimit.toMutableMap(),
+            declinedGoals.toMutableList(),
+            acceptedGoals.toMutableList(),
+            seishiTool.copy(),
+            seishiGrowth.copy(),
+            hiddenDeck.toMutableList(),
+            supply.toMutableList()
+        )
+    }
+}
