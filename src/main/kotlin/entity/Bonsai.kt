@@ -17,7 +17,8 @@ import tools.aqua.bgw.util.BidirectionalMap
 class Bonsai(
     val grid: HexagonGrid<HexagonView> = HexagonGrid(coordinateSystem=HexagonGrid.CoordinateSystem.AXIAL),
     val map: BidirectionalMap<HexagonView, BonsaiTile> = BidirectionalMap(),
-    val tileCount: MutableMap<TileType,Int> = TileType.entries.associateWith { 0 }.toMutableMap()
+    val tileCount: MutableMap<TileType,Int> =
+                TileType.entries.associateWith{ type -> if (type == TileType.WOOD) 1 else 0 }.toMutableMap()
 )
 {
     val tiles = {map.keysBackward.toList()}
