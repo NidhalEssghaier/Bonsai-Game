@@ -23,9 +23,9 @@ abstract class Player(
 {
     val bonsai: Bonsai = Bonsai()
     var supplyTileLimit: Int = 5
-    val treeTileLimit: Map<TileType, Int> = mapOf()
+    val treeTileLimit: MutableMap<TileType, Int> = mutableMapOf()
     val declinedGoals: MutableList<GoalCard> = mutableListOf()
-    val acceptedGoals: List<GoalCard> = mutableListOf()
+    val acceptedGoals: MutableList<GoalCard> = mutableListOf()
     val seishiTool: Stack<ZenCard> = Stack()
     val seishiGrowth: Stack<ZenCard> = Stack()
     val hiddenDeck: MutableList<ZenCard> = mutableListOf()
