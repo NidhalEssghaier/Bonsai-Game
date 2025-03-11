@@ -9,6 +9,7 @@ import tools.aqua.bgw.util.Stack
  * @property supplyTileLimit The maximum number of tiles allowed in the personal inventory
  * @property treeTileLimit The maximum number of tiles allowed to be placed in the bonsai
  * @property declinedGoals The goals the player declined
+ * @property acceptedGoals The goals the player accepted
  * @property seishiTool The tool cards the player has acquired
  * @property seishiGrowth The growth cards the player has acquired
  * @property hiddenDeck The cards the player has already used
@@ -29,5 +30,9 @@ abstract class Player(
     val supply: MutableList<BonsaiTile> = mutableListOf()
     )
 {
+    /**
+     * Abstract method to deep copy the player instance
+     * @return a deep copy of the player instance
+     */
     abstract fun copy(): Player
 }
