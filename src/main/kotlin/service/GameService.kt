@@ -3,7 +3,7 @@ package service
 import entity.*
 import tools.aqua.bgw.util.Stack
 
-class GameService(rootService:RootService):AbstractRefreshingService() {
+class GameService(private val rootService:RootService):AbstractRefreshingService() {
 
     /**
      * Starts a new game and prepares different game elements
@@ -50,7 +50,6 @@ class GameService(rootService:RootService):AbstractRefreshingService() {
             }
         }
 
-        val rootService = RootService()
         rootService.currentGame = BonsaiGame(speed,playerList,goalCards,drawStack,openCards)
         onAllRefreshables { refreshAfterStartNewGame() }
     }
