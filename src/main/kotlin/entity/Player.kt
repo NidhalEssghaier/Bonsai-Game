@@ -28,5 +28,5 @@ abstract class Player(
     val seishiTool: Stack<ZenCard> = Stack()
     val seishiGrowth: Stack<ZenCard> = Stack()
     val hiddenDeck: List<ZenCard> = mutableListOf()
-    val supply: List<BonsaiTile> = mutableListOf()
+    val supply: MutableList<BonsaiTile> = mutableListOf()
 }
