@@ -37,7 +37,27 @@ fun <T: Any> BidirectionalMap<T, BonsaiTile>.copy(): BidirectionalMap<T, BonsaiT
  * @return a copy of the original HexagonGrid
  */
 fun <T : HexagonView> HexagonGrid<T>.copy(): HexagonGrid<T> {
-    val copy = HexagonGrid<T>()
+    val copy = HexagonGrid<T>(
+        this.posX,
+        this.posY,
+        this.width,
+        this.height,
+        this.visual,
+        this.coordinateSystem,
+        this.orientation
+    ).apply {
+        dropAcceptor = this@copy.dropAcceptor
+        isDisabled = this@copy.isDisabled
+        isDraggable = this@copy.isDraggable
+        isFocusable = this@copy.isFocusable
+        isVisible = this@copy.isVisible
+        opacity = this@copy.opacity
+        rotation = this@copy.rotation
+        scale = this@copy.scale
+        scaleX = this@copy.scaleX
+        scaleY = this@copy.scaleY
+        zIndex = this@copy.zIndex
+    }
     val map = this.getCoordinateMap()
     for (coordinate in map.keys) {
         val value = map[coordinate]
