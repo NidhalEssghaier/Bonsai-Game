@@ -3,7 +3,7 @@ package service
 import entity.*
 import tools.aqua.bgw.util.Stack
 
-class GameService(rootService:RootService):AbstractRefreshingService() {
+class GameService(private val rootService:RootService):AbstractRefreshingService() {
 
     /**
      * Starts a new game and prepares different game elements
@@ -50,7 +50,6 @@ class GameService(rootService:RootService):AbstractRefreshingService() {
             }
         }
 
-        val rootService = RootService()
         rootService.currentGame = BonsaiGame(speed,playerList,goalCards,drawStack,openCards)
         onAllRefreshables { refreshAfterStartNewGame() }
     }
@@ -120,6 +119,8 @@ class GameService(rootService:RootService):AbstractRefreshingService() {
         cardStack.push(ParchmentCard(1,ParchmentCardType.LEAF))
         cardStack.push(ParchmentCard(1,ParchmentCardType.WOOD))
 
+        cardStack.shuffle()
+
         return cardStack
     }
 
@@ -147,7 +148,41 @@ class GameService(rootService:RootService):AbstractRefreshingService() {
      */
 
     fun endGame() {
-        // Method implementation
+        val game = rootService.currentGame
+        checkNotNull(game)
+        val playerList = game.players
+
+        val pointsPerPlayer = mutableMapOf<Player,Int>()
+        for(player in playerList) {
+            val bonsai = player.bonsai
+            val numberOfLeafTiles = bonsai.tileCount[TileType.LEAF]
+            checkNotNull(numberOfLeafTiles)
+            val numberOfFruitTiles = bonsai.tileCount[TileType.FRUIT]
+            checkNotNull(numberOfFruitTiles)
+            //TODO Nachbarwerte für Flower Tiles berechnen
+            val sumOfFlowerPoints = 0
+            val tilePoints = numberOfLeafTiles * 3 + numberOfFruitTiles * 7 + sumOfFlowerPoints
+
+            var cardPoints = 0
+            for(card in player.hiddenDeck) {
+                if(card is ParchmentCard) {
+                    cardPoints += card.points
+                }
+            }
+
+            var goalPoints = 0
+            for(goal in player.acceptedGoals) {
+                goalPoints += goal.points
+            }
+
+            val points = tilePoints + cardPoints + goalPoints
+
+            pointsPerPlayer[player] = points
+        }
+        val scoreList = pointsPerPlayer.toList().sortedByDescending { pair -> pair.second }
+        //a tie situation is already handled via sortedByDescending, because equal values stay in the same order
+
+        //onAllRefreshables { refreshAfterEndGame }
     }
 
     /**
