@@ -11,5 +11,5 @@ import tools.aqua.bgw.components.gamecomponentviews.HexagonView
  */
 class Bonsai(
     val grid: Map<HexagonGrid<HexagonView>,BonsaiTile>,
-    val tiles: List<BonsaiTile>
+    val tiles: Map<TileType,Int>
 )
