@@ -36,8 +36,8 @@ class GameState(
             goalCards,
             drawStack.copy(),
             openCards,
-            currentPlayer = this.currentPlayer,
-            endGameCounter = this.endGameCounter
+            this.currentPlayer,
+            this.endGameCounter
         )
     }
 }
