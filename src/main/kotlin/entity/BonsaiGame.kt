@@ -5,8 +5,8 @@ import tools.aqua.bgw.util.Stack
 /**
  * Entity to represent a game of "Bonsai"
  *
- * @property undoStack Saves previous actions.
- * @property redoStack Saves actions reverted by undo.
+ * @property undoStack Saves previous game state.
+ * @property redoStack Saves game states reverted by undo.
  * @param gameSpeed Value for the simulation speed
  * @param drawStack The card stack in the shop
  * @param openCards List of the available cards in the shop
