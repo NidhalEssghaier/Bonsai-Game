@@ -16,15 +16,14 @@ import tools.aqua.bgw.util.Stack
  * @property goalCards List of chosen goal cards
  */
 class BonsaiGame(
-
-    val gameSpeed: Int,
-    val players: List<Player>,
-    val goalCards: List<GoalCard>,
-    val drawStack: Stack<ZenCard>,
-    val openCards: List<ZenCard>
-){
-    var currentPlayer: Int = 0
-    var endGameCounter: Int = 0
-    val undoStack: Stack<BonsaiGame> = Stack()
-    val redoStack: Stack<BonsaiGame> = Stack()
+    private val gameSpeed: Int,
+    private val players: List<Player>,
+    private val goalCards: List<GoalCard>,
+    private val drawStack: Stack<ZenCard>,
+    private val openCards: List<ZenCard>
+)
+{
+    var currentState = GameState(gameSpeed, players, goalCards, drawStack, openCards)
+    val undoStack: Stack<GameState> = Stack()
+    val redoStack: Stack<GameState> = Stack()
 }
