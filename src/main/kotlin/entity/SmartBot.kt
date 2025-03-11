@@ -43,8 +43,8 @@ class SmartBot(
 )
 {
     /**
-     * Make a deep copy of the SmartBot instance
-     * @return The deep copy of the SmartBot instance
+     * Make a deep copy of the [SmartBot] instance
+     * @return The deep copy of the [SmartBot] instance
      */
     override fun copy(): SmartBot {
         return SmartBot(
