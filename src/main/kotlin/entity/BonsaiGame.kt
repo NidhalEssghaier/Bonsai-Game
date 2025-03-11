@@ -28,8 +28,4 @@ class BonsaiGame(
     var endGameCounter: Int = 0
     val undoStack: Stack<BonsaiGame> = Stack()
     val redoStack: Stack<BonsaiGame> = Stack()
-
-
-
-
 }
