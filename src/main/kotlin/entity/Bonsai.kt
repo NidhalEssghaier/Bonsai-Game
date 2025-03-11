@@ -1,6 +1,7 @@
 package entity
 
 import helper.copy
+import helper.deepBonsaiTileCopy
 import tools.aqua.bgw.components.container.HexagonGrid
 import tools.aqua.bgw.components.gamecomponentviews.HexagonView
 import tools.aqua.bgw.util.BidirectionalMap
@@ -20,7 +21,7 @@ class Bonsai(
     val tiles = {map.keysBackward.toList()}
 
     fun copy(): Bonsai {
-        val copy = Bonsai(grid.copy(), map.copy(), tileCount.toMutableMap())
+        val copy = Bonsai(grid.copy(), map.deepBonsaiTileCopy(), tileCount.toMutableMap())
 
         // Fix neighbors references
         val tilesListCopy = copy.tiles()

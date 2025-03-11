@@ -23,7 +23,7 @@ fun <T: Any, R: Any> BidirectionalMap<T, R>.copy(): BidirectionalMap<T, R> {
  * Create a copy of a BidirectionalMap that contains BonsaiTile as value
  * @return a copy of the original BidirectionalMap with deep copied BonsaiTile as value
  */
-fun <T: Any> BidirectionalMap<T, BonsaiTile>.copy(): BidirectionalMap<T, BonsaiTile> {
+fun <T: Any> BidirectionalMap<T, BonsaiTile>.deepBonsaiTileCopy(): BidirectionalMap<T, BonsaiTile> {
     val copy = BidirectionalMap<T, BonsaiTile>()
     val keys = this.keysForward
     for (key in keys) {
