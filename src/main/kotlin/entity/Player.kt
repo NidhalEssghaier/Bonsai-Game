@@ -21,7 +21,7 @@ abstract class Player(
     val name: String
     )
 {
-    val bonsai: Bonsai = Bonsai(mutableMapOf<HexagonGrid<HexagonView>,BonsaiTile>(), emptyMap<TileType,Int>())
+    val bonsai: Bonsai = Bonsai(mutableMapOf<HexagonGrid<HexagonView>,BonsaiTile>(), emptyMap<TileType,Int>(), mutableListOf<BonsaiTile>())
     var supplyTileLimit: Int = 5
     val treeTileLimit: Map<TileType, Int> = mapOf()
     val declinedGoals: MutableList<GoalCard> = mutableListOf()
