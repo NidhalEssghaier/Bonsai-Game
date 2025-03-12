@@ -159,6 +159,39 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
     fun placeTile(tile: TileType, r: Int, q: Int){
 
     }
+
+    /**
+     * Decides whether to claim or renounce a goal card.
+     *
+     * @param goalCard The goal card being considered.
+     * @param claim If true, the player claims the goal. If false, the player renounces it.
+     *
+     * If the player claims the goal, the card is added to the player's accepted goals list,
+     * and all other goal cards of the same color  are forbidden.
+     * If the player renounces the goal, only this specific goal card is forbidden.
+     */
+    fun decideGoalClaim(goalCard: GoalCard,claim: Boolean){
+        val game = rootService.currentGame
+        checkNotNull(game) { "there is no active game" }
+        val currentPlayer = game.players[game.currentPlayer]
+        if (claim) {
+            // Add the claimed goal to acceptedGoals
+            (currentPlayer.acceptedGoals).add(goalCard)
+            onAllRefreshables { refreshAfterClaimGoal(goalCard)  }
+
+            // Find all goal cards of the same color and forbid them
+            currentPlayer.forbiddenGoals.addAll(
+                currentPlayer.declinedGoals.filter { it.color == goalCard.color && it !in currentPlayer.forbiddenGoals }
+            )
+        } else {
+            // Only forbid this specific goal card
+            if (goalCard !in currentPlayer.forbiddenGoals) {
+                currentPlayer.forbiddenGoals.add(goalCard)
+            }
+        }
+
+
+    }
     /**
      * Draws a card from the draw stack and processes it according to its type.
      *
@@ -173,6 +206,7 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
      *
      * @param cardStack The position in the stack to draw from.
      */
+
     fun drawCard(cardStack: Int) {
 
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")

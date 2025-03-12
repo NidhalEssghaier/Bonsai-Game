@@ -39,7 +39,7 @@ class GameService(private val rootService:RootService):AbstractRefreshingService
      */
     fun startNewGame(players: List<Pair<String, Int>>, speed: Int, goalCards: List<GoalCard>) {
         val drawStack = prepareCards(players.size)
-        val openCards = drawStack.popAll(4)
+        val openCards = drawStack.popAll(4).toMutableList()
         val playerList = mutableListOf<Player>()
         for(pair in players) {
             when(pair.second) {
