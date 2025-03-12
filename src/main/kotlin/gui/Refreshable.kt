@@ -30,4 +30,9 @@ interface Refreshable {
      */
     fun refreshAfterClaimGoal(goalCard: GoalCard) {}
 
+    /**
+     * perform refreshes that are necessary after undo / redo
+     */
+    fun refreshAfterUndoRedo() {}
+
 }
