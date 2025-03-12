@@ -19,7 +19,7 @@ class BonsaiGame(
     players: List<Player>,
     goalCards: List<GoalCard>,
     drawStack: Stack<ZenCard>,
-    openCards: List<ZenCard>
+    openCards: MutableList<ZenCard>
 )
 {
     var currentState = GameState(gameSpeed, players, goalCards, drawStack, openCards)

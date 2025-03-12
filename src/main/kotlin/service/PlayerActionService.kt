@@ -122,12 +122,12 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
      */
     fun meditate(card: ZenCard) {
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
-        val currentPlayer = game.players[game.currentPlayer]
+        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
 
-        if (game.openCards.isEmpty()) throw IllegalStateException("No available cards to draw")
+        if (game.currentState.openCards.isEmpty()) throw IllegalStateException("No available cards to draw")
 
         // Find the card in openCards and ensure it's valid
-        val cardIndex = game.openCards.indexOf(card)
+        val cardIndex = game.currentState.openCards.indexOf(card)
         if (cardIndex == -1) throw IllegalStateException("The selected card is not in openCards")
 
         // Draw the card and mark its position as taken
@@ -150,7 +150,7 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
         }
 
         val placeholderCard = object : ZenCard {}
-        game.openCards[cardIndex] = placeholderCard
+        game.currentState.openCards[cardIndex] = placeholderCard
         // Shift remaining cards and enforce game constraints
         shiftBoardAndRefill(cardIndex)
 
@@ -173,7 +173,7 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
     fun decideGoalClaim(goalCard: GoalCard,claim: Boolean){
         val game = rootService.currentGame
         checkNotNull(game) { "there is no active game" }
-        val currentPlayer = game.players[game.currentPlayer]
+        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
         if (claim) {
             // Add the claimed goal to acceptedGoals
             (currentPlayer.acceptedGoals).add(goalCard)
@@ -211,7 +211,7 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
 
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
 
-        if (game.openCards.isEmpty()) throw IllegalStateException("No available cards to draw")
+        if (game.currentState.openCards.isEmpty()) throw IllegalStateException("No available cards to draw")
 
         // Assign bonsai tiles based on the drawn card's board position
         val acquiredTiles = when (cardStack) {
@@ -227,9 +227,9 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
             else -> emptyList()
         }
 
-        val currentPlayer = game.players[game.currentPlayer]
+        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
         currentPlayer.supply += acquiredTiles
-        onAllRefreshables { refreshAfterDrawCard(game.openCards[cardStack])}
+        onAllRefreshables { refreshAfterDrawCard(game.currentState.openCards[cardStack])}
     }
 
     /**
@@ -246,7 +246,7 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
     fun placeHelperCardTiles(card: HelperCard, tile: TileType, r: Int ,q: Int ) {
 
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
-        val currentPlayer = game.players[game.currentPlayer]
+        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
 
         // Check if the chosen tile is different from the one shown on the HelperCard
         // and ensure that the player has not already placed a chosen tile
@@ -272,14 +272,14 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
     fun shiftBoardAndRefill(cardStack: Int) {
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
 
-        if (game.drawStack.isEmpty()) return
+        if (game.currentState.drawStack.isEmpty()) return
 
         for (i in cardStack  downTo 1) {
-            game.openCards[i] = game.openCards[i - 1]
+            game.currentState.openCards[i] = game.currentState.openCards[i - 1]
         }
 
-        val newCard = game.drawStack.pop()
-        game.openCards[0] = newCard
+        val newCard = game.currentState.drawStack.pop()
+        game.currentState.openCards[0] = newCard
     }
 
     fun removeTile(tileView: HexagonView) {
