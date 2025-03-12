@@ -42,6 +42,14 @@ class HexGrid private constructor(
     private val raw2Axial: (Int) -> (Int) = { it - size }
 
     /**
+     * Companion object to store the exceptions
+     */
+    private companion object {
+        private val invalidCoordinate = NoSuchElementException("No BonsaiTile at the given coordinates")
+        private val invalidTile = NoSuchElementException("This BonsaiTile isn't in the grid")
+    }
+
+    /**
      * Secondary public constructor to create a [HexGrid] with coordinates ranging from -[size] to [size]
      * @param size size of the grid
      * @throws IllegalArgumentException if the size is less than 1
@@ -59,12 +67,11 @@ class HexGrid private constructor(
      * @param r r coordinate
      * @return [BonsaiTile] at the given axial coordinates
      * @throws IllegalArgumentException if the coordinate is out of bounds
-     * @throws IllegalStateException if there is no [BonsaiTile] at the given coordinates
+     * @throws NoSuchElementException if there is no [BonsaiTile] at the given coordinates
      */
     operator fun get(q: Int, r: Int): BonsaiTile {
         require(q in axialRange && r in axialRange) {"Coordinate out of bounds"}
-        val tile = grid[axial2Raw(q)][axial2Raw(r)]
-        checkNotNull(tile) {"No BonsaiTile at this coordinate"}
+        val tile = grid[axial2Raw(q)][axial2Raw(r)] ?: throw invalidCoordinate
         return tile
     }
 
@@ -87,11 +94,10 @@ class HexGrid private constructor(
      * Get the axial coordinate of the given [BonsaiTile]
      * @param tile [BonsaiTile]
      * @return [Pair] of axial coordinates
-     * @throws IllegalStateException if the [BonsaiTile] isn't in the grid
+     * @throws NoSuchElementException if the [BonsaiTile] isn't in the grid
      */
     fun getCoordinate(tile: BonsaiTile): Pair<Int, Int> {
-        val coordinate = map[tile]
-        checkNotNull(coordinate) {"This BonsaiTile isn't in the grid"}
+        val coordinate = map[tile] ?: throw invalidTile
         return Pair(raw2Axial(coordinate.first), raw2Axial(coordinate.second))
     }
 
