@@ -2,64 +2,37 @@ package entity
 
 /**
  * Entity to represent the hex grid of the bonsai bowl
- * @property size An odd number that determines the size of the grid
- * @property offset Offset to calculate the coordinates from the grid index (Only for internal usage)
+ * @property size size of the grid
+ * @property actualSize actual size of the internal array (Only for internal usage)
  * @property grid Store the [BonsaiTile] with coordinates (Only for internal usage)
  * @property map Mapping between [BonsaiTile] and its coordinates (Only for internal usage)
  * @property tilesList Returns the list of all [BonsaiTile] in the grid
- * @constructor Create a [HexGrid] of [size] x [size] with coordinates ranging from -[size]/2 to [size]/2
+ * @property axialRange Range of axial coordinates
+ * @property axial2Raw Function to convert axial coordinates to raw internal coordinates (Only for internal usage)
+ * @property raw2Axial Function to convert raw internal coordinates to axial coordinates (Only for internal usage)
+ * @constructor Create a [HexGrid] with coordinates ranging from -[size] to [size]
  */
-class HexGrid {
-    val size: Int
-    private val offset: Int
-    private val grid: Array<Array<BonsaiTile?>>
+class HexGrid private constructor(
+    val size: Int,
+    private val actualSize: Int,
+    private val grid: Array<Array<BonsaiTile?>>,
     private val map: MutableMap<BonsaiTile, Pair<Int, Int>>
-    val tilesList: () -> List<BonsaiTile>
+) {
+    val tilesList = { map.keys.toList() }
+    private val axialRange = -size..size
+
+    private val axial2Raw: (Int) -> (Int) = { it + size }
+    private val raw2Axial: (Int) -> (Int) = { it - size }
 
     /**
-     * Create a [HexGrid] of [size] x [size] with coordinates ranging from -[size]/2 to [size]/2
-     * @param size An odd number that determines the size of the grid
-     * @throws IllegalArgumentException if the size isn't odd
+     * Secondary public constructor to create a [HexGrid] with coordinates ranging from -[size] to [size]
      */
-    constructor(size: Int) {
-        require(size % 2 == 1) {"Size must be odd"}
-        this.size = size
-        offset = this.size / 2
-        grid = Array(size) { arrayOfNulls(size) }
-        map = mutableMapOf()
-        tilesList = {map.keys.toList()}
-    }
-
-    /**
-     * Create a [HexGrid] of [size] x [size] with coordinates ranging from -[size]/2 to [size]/2
-     * This constructor is only for internal deep copy usage
-     * @param size An odd number that determines the size of the grid
-     * @param grid Store the [BonsaiTile] with coordinates
-     * @param map Mapping between [BonsaiTile] and its coordinates
-     * @throws IllegalArgumentException if the size isn't odd
-     */
-    private constructor(size: Int, grid: Array<Array<BonsaiTile?>>, map: MutableMap<BonsaiTile, Pair<Int, Int>>) {
-        require(size % 2 == 1) {"Size must be odd"}
-        this.size = size
-        offset = this.size / 2
-        this.grid = grid
-        this.map = map
-        tilesList = {this.map.keys.toList()}
-    }
-
-    /**
-     * Convert axial coordinates to internal array representation
-     * @param axialCoordinate Axial coordinate
-     * @return Converted coordinate
-     */
-    private fun axial2Raw(axialCoordinate: Int) = axialCoordinate + offset
-
-    /**
-     * Convert internal array representation to axial coordinates
-     * @param rawCoordinate Raw coordinate
-     * @return Converted coordinate
-     */
-    private fun raw2Axial(rawCoordinate: Int) = rawCoordinate - offset
+    constructor(size: Int): this(
+        size,
+        2*size + 1,
+        Array(2*size + 1) { arrayOfNulls<BonsaiTile?>(2*size + 1) },
+        mutableMapOf()
+    )
 
     /**
      * Get the [BonsaiTile] at the given axial coordinates
@@ -70,10 +43,8 @@ class HexGrid {
      * @throws IllegalStateException if there is no [BonsaiTile] at the given coordinates
      */
     operator fun get(q: Int, r: Int): BonsaiTile {
-        val nq = axial2Raw(q)
-        val nr = axial2Raw(r)
-        require(nq < size && nr < size) {"Coordinate out of bounds"}
-        val tile = grid[nq][nr]
+        require(q in axialRange && r in axialRange) {"Coordinate out of bounds"}
+        val tile = grid[axial2Raw(q)][axial2Raw(r)]
         checkNotNull(tile) {"No BonsaiTile at this coordinate"}
         return tile
     }
@@ -86,9 +57,9 @@ class HexGrid {
      * @throws IllegalArgumentException if the coordinate is out of bounds
      */
     operator fun set(q: Int, r: Int, tile: BonsaiTile) {
+        require(q in axialRange && r in axialRange) {"Coordinate out of bounds"}
         val nq = axial2Raw(q)
         val nr = axial2Raw(r)
-        require(nq < size && nr < size) {"Coordinate out of bounds"}
         grid[nq][nr] = tile
         map[tile] = Pair(nq, nr)
     }
@@ -122,7 +93,7 @@ class HexGrid {
      * @return [HexGrid] a deep copy of the original [HexGrid]
      */
     fun copy(): HexGrid {
-        val gridCopy = Array(size) { arrayOfNulls<BonsaiTile?>(size) }
+        val gridCopy = Array(actualSize) { arrayOfNulls<BonsaiTile?>(actualSize) }
         val mapOfNewTiles = mutableMapOf<BonsaiTile, BonsaiTile>()
 
         val mapCopy = map.mapKeys {
@@ -144,6 +115,6 @@ class HexGrid {
             tile.neighbors.addAll(newNeighborsList)
         }
 
-        return HexGrid(size, gridCopy, mapCopy.toMutableMap())
+        return HexGrid(size, actualSize, gridCopy, mapCopy.toMutableMap())
     }
 }
