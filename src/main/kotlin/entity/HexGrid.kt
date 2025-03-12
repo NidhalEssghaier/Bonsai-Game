@@ -26,9 +26,11 @@ class HexGrid private constructor(
 
     /**
      * Secondary public constructor to create a [HexGrid] with coordinates ranging from -[size] to [size]
+     * @param size size of the grid
+     * @throws IllegalArgumentException if the size is less than 1
      */
     constructor(size: Int): this(
-        size,
+        size.also { require( it > 0) },
         2*size + 1,
         Array(2*size + 1) { arrayOfNulls<BonsaiTile?>(2*size + 1) },
         mutableMapOf()
