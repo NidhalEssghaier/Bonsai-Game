@@ -25,7 +25,8 @@ abstract class Player(
     var supplyTileLimit: Int = 5
     var treeTileLimit: Map<TileType, Int> = mapOf()
     var declinedGoals: MutableList<GoalCard> = mutableListOf()
-    val acceptedGoals: List<GoalCard> = mutableListOf()
+    val acceptedGoals: MutableList<GoalCard> = mutableListOf()
+    val forbiddenGoals: MutableList<GoalCard> = mutableListOf()
     var seishiTool: Stack<ZenCard> = Stack()
     var seishiGrowth: Stack<ZenCard> = Stack()
     var hiddenDeck: MutableList<ZenCard> = mutableListOf()
