@@ -19,15 +19,16 @@ import tools.aqua.bgw.util.Stack
 abstract class Player(
     val name: String,
 
-    val bonsai: Bonsai = Bonsai(),
+    var bonsai: Bonsai = Bonsai(),
     var supplyTileLimit: Int = 5,
-    val treeTileLimit: MutableMap<TileType, Int> = mutableMapOf(),
-    val declinedGoals: MutableList<GoalCard> = mutableListOf(),
+    var treeTileLimit: MutableMap<TileType, Int> = mutableMapOf(),
+    var declinedGoals: MutableList<GoalCard> = mutableListOf(),
     val acceptedGoals: MutableList<GoalCard> = mutableListOf(),
-    val seishiTool: Stack<ZenCard> = Stack(),
-    val seishiGrowth: Stack<ZenCard> = Stack(),
-    val hiddenDeck: MutableList<ZenCard> = mutableListOf(),
-    val supply: MutableList<BonsaiTile> = mutableListOf()
+    val forbiddenGoals: MutableList<GoalCard> = mutableListOf(),
+    var seishiTool: Stack<ZenCard> = Stack(),
+    var seishiGrowth: Stack<ZenCard> = Stack(),
+    var hiddenDeck: MutableList<ZenCard> = mutableListOf(),
+    var supply: MutableList<BonsaiTile> = mutableListOf()
     )
 {
     /**
