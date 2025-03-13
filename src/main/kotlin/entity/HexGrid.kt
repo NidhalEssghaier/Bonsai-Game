@@ -87,7 +87,7 @@ class HexGrid private constructor(
     private companion object {
         private val invalidCoordinate = NoSuchElementException("No BonsaiTile at the given coordinates")
         private val invalidTile = NoSuchElementException("This BonsaiTile isn't in the grid")
-        private const val IS_POT_MSG = "Unable to place BonsaiTile in Pot area"
+        private const val IS_POT_MSG = "Unable to place or get BonsaiTile in Pot area"
         private val outOfBounds = IndexOutOfBoundsException("Coordinate out of bounds")
     }
 
