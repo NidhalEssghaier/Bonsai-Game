@@ -1,7 +1,5 @@
 package entity
 
-import tools.aqua.bgw.util.Stack
-
 /**
  * Abstract Entity to represent the player
  *
@@ -16,24 +14,25 @@ import tools.aqua.bgw.util.Stack
  * @property supply The tile inventory of the player
  * @property bonsai The bonsai of the player
  */
-abstract class Player(
-    val name: String,
-
-    var bonsai: Bonsai = Bonsai(),
-    var supplyTileLimit: Int = 5,
-    var treeTileLimit: MutableMap<TileType, Int> = mutableMapOf(),
-    var declinedGoals: MutableList<GoalCard> = mutableListOf(),
-    val acceptedGoals: MutableList<GoalCard> = mutableListOf(),
-    val forbiddenGoals: MutableList<GoalCard> = mutableListOf(),
-    var seishiTool: Stack<ZenCard> = Stack(),
-    var seishiGrowth: Stack<ZenCard> = Stack(),
-    var hiddenDeck: MutableList<ZenCard> = mutableListOf(),
-    var supply: MutableList<BonsaiTile> = mutableListOf()
-    )
+interface Player
 {
+    val name: String
+    var potColor: PotColor
+
+    var bonsai: Bonsai
+    var supplyTileLimit: Int
+    var treeTileLimit: MutableMap<TileType, Int>
+    var declinedGoals: MutableList<GoalCard>
+    val acceptedGoals: MutableList<GoalCard>
+    val forbiddenGoals: MutableList<GoalCard>
+    var seishiTool: ArrayDeque<ZenCard>
+    var seishiGrowth: ArrayDeque<ZenCard>
+    var hiddenDeck: MutableList<ZenCard>
+    var supply: MutableList<BonsaiTile>
+
     /**
      * Abstract method to deep copy the player instance
      * @return a deep copy of the player instance
      */
-    abstract fun copy(): Player
+     fun copy(): Player
 }

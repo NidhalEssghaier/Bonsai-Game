@@ -1,7 +1,5 @@
 package entity
 
-import tools.aqua.bgw.util.Stack
-
 /**
  * Entity to represent a game of "Bonsai"
  *
@@ -18,11 +16,11 @@ class BonsaiGame(
     gameSpeed: Int,
     players: List<Player>,
     goalCards: List<GoalCard>,
-    drawStack: Stack<ZenCard>,
+    drawStack: ArrayDeque<ZenCard>,
     openCards: MutableList<ZenCard>
 )
 {
     var currentState = GameState(gameSpeed, players, goalCards, drawStack, openCards)
-    val undoStack: Stack<GameState> = Stack()
-    val redoStack: Stack<GameState> = Stack()
+    val undoStack: ArrayDeque<GameState> = ArrayDeque()
+    val redoStack: ArrayDeque<GameState> = ArrayDeque()
 }
