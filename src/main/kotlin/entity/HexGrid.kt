@@ -3,19 +3,22 @@ package entity
 /**
  * Entity to represent the hex grid of the bonsai bowl
  * - Example:
- *   ```
+ *   ```kotlin
  *   // Create a HexGrid with size 20 (coordinates ranging from -20 to 20)
  *   val grid = HexGrid(20)
- *   // Create a BonsaiTile
- *   var tile = BonsaiTile(TileType.WOOD)
- *   // Set the BonsaiTile at coordinates (0, 0)
- *   grid[0, 0] = tile
+ *
+ *   // Place the BonsaiTile at coordinates (0, 0)
+ *   grid[0, 0] = BonsaiTile(TileType.WOOD)
+ *
  *   // Get the BonsaiTile at coordinates (0, 0)
  *   val tileAt00 = grid[0, 0]
+ *
  *   // Get the axial coordinates of the BonsaiTile
  *   val coordinate = grid.getCoordinate(tileAt00)
+ *
  *   // Remove the BonsaiTile from the grid
  *   grid.remove(tileAt00)
+ *
  *   // Deep copy the HexGrid
  *   val gridCopy = grid.copy()
  *   ```
