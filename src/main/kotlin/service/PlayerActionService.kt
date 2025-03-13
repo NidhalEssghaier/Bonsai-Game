@@ -306,11 +306,12 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
 
         //is it possible to play wood tile
         check(!currentPlayerBonsaiTiles.any { bonsaiTile -> bonsaiTile.type == TileType.WOOD
-                && neighbors.size < 6
+                && grid.getNeighbors(bonsaiTile).size< 6
         }) { "player can play wood" }
 
         //is it part of the least number of tiles to be removed to make placing a wood possible
-        check(leastGroupOfTilesToBeRemoved(currentPlayerBonsaiTiles).contains(tile))
+        val leastGroupOfTilesToBeRemoved=leastGroupOfTilesToBeRemoved(currentPlayerBonsaiTiles)
+        check(leastGroupOfTilesToBeRemoved.contains(tile))
         {"tile not part of the least number of tiles to be removed to make placing a wood possible"}
 
         //remove tile from bonsai tree
@@ -333,7 +334,7 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
             val neighbors = grid.getNeighbors(tile)
 
             //tile is not neighbor to wood
-            if (neighbors.any { neighbor -> neighbor.type == TileType.WOOD }) return@filter false
+            if (!neighbors.any { neighbor -> neighbor.type == TileType.WOOD }) return@filter false
             //tile is wood
             if (tile.type.equals(TileType.WOOD)) return@filter false
             //tile is surrounded

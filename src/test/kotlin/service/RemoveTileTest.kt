@@ -2,6 +2,7 @@ package service
 
 import entity.BonsaiTile
 import entity.GoalCard
+import entity.PotColor
 import entity.TileType
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
@@ -17,14 +18,13 @@ class removeTileTest {
         val mc = RootService()
         val gameService = GameService(mc)
         val playerActionService = PlayerActionService(mc)
-        gameService.startNewGame(listOf(Pair("Anas",0), Pair("Iyed",1)),5, listOf<GoalCard>())
+        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, listOf<GoalCard>())
         val game = mc.currentGame
         checkNotNull(game)
         val woodTile=BonsaiTile(TileType.WOOD)
-        val woodTileView = HexagonView(1,1,1,Visual.EMPTY)
-        game.currentState.players[0].bonsai.map.add(Pair(woodTileView,woodTile))
+        game.currentState.players[0].bonsai.grid.set(1,-2,woodTile)
         var exception = assertThrows<IllegalStateException> {
-            playerActionService.removeTile(woodTileView)
+            playerActionService.removeTile(woodTile)
         }
         assertEquals("player can play wood", exception.message)
 
@@ -35,39 +35,29 @@ class removeTileTest {
         val leafTile4=BonsaiTile(TileType.LEAF)
         val leafTile5=BonsaiTile(TileType.LEAF)
         val leafTile6=BonsaiTile(TileType.LEAF)
-        val leafTileView1=HexagonView(2,2,1,Visual.EMPTY)
-        val leafTileView2=HexagonView(3,3,1,Visual.EMPTY)
-        val leafTileView3=HexagonView(4,4,1,Visual.EMPTY)
-        val leafTileView4=HexagonView(5,5,1,Visual.EMPTY)
-        val leafTileView5=HexagonView(6,6,1,Visual.EMPTY)
-        val leafTileView6=HexagonView(7,7,1,Visual.EMPTY)
-
-        woodTile.neighbors.addAll(listOf(leafTile1,leafTile2,leafTile3,leafTile4,leafTile5,leafTile6))
-        leafTile1.neighbors.addAll(listOf(leafTile2,leafTile6,woodTile))
-        leafTile2.neighbors.addAll(listOf(leafTile3,leafTile1,woodTile))
-        leafTile3.neighbors.addAll(listOf(leafTile4,leafTile2,woodTile))
-        leafTile4.neighbors.addAll(listOf(leafTile5,leafTile3,woodTile))
-        leafTile5.neighbors.addAll(listOf(leafTile6,leafTile4,woodTile))
-        leafTile6.neighbors.addAll(listOf(leafTile1,leafTile5,woodTile))
-
-
-        //removing a wood tile
-        exception = assertThrows<IllegalStateException> {
-            playerActionService.removeTile(woodTileView)
-        }
-        assertEquals("tile not part of the least number of tiles to be removed to make placing a wood possible",
-            exception.message)
 
         //remove tile not in bonsai
         exception = assertThrows<IllegalStateException> {
-            playerActionService.removeTile(leafTileView1)
+            playerActionService.removeTile(leafTile1)
         }
         assertEquals("cant remove a tile not in players bonsai",
             exception.message)
-        game.currentState.players[0].bonsai.map.addAll(leafTileView1 to leafTile1,leafTileView2 to leafTile2
-            ,leafTileView3 to leafTile3,leafTileView4 to leafTile4,leafTileView5 to leafTile5,leafTileView6 to leafTile6)
 
-        assertDoesNotThrow {playerActionService.removeTile(leafTileView1) }
+        game.currentState.players[0].bonsai.grid.set(2,-2,leafTile1)
+        game.currentState.players[0].bonsai.grid.set(1,-1,leafTile2)
+        game.currentState.players[0].bonsai.grid.set(0,-1,leafTile3)
+        game.currentState.players[0].bonsai.grid.set(0,-2,leafTile4)
+        game.currentState.players[0].bonsai.grid.set(1,-3,leafTile5)
+        game.currentState.players[0].bonsai.grid.set(2,-3,leafTile6)
+
+        //removing a wood tile
+        exception = assertThrows<IllegalStateException> {
+            playerActionService.removeTile(woodTile)
+        }
+        assertEquals("tile not part of the least number of tiles to be removed to make placing a wood possible",
+            exception.message)
+        playerActionService.removeTile(leafTile1)
+        assertDoesNotThrow {playerActionService.removeTile(leafTile1) }
 
 
     }
