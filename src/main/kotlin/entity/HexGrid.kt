@@ -204,18 +204,45 @@ class HexGrid private constructor(
             newTile
         }
 
-        // Fix neighbors references
-        for (tile in mapCopy.keys){
-            val newNeighborsList = tile.neighbors.map {
-                val newNeighbor = mapOfNewTiles[it]
-                checkNotNull(newNeighbor) {"Internal Error! No mapping information for this BonsaiTile"}
-                newNeighbor
-            }
-
-            tile.neighbors.clear()
-            tile.neighbors.addAll(newNeighborsList)
-        }
-
         return HexGrid(size, actualSize, gridCopy, mapCopy.toMutableMap())
+    }
+
+    /**
+     * Get the list of neighbors of the given axial coordinates
+     * @param q q coordinate
+     * @param r r coordinate
+     * @return [List] of neighbors
+     * @throws IllegalArgumentException if the coordinate is out of bounds
+     */
+    fun getNeighbors(q: Int, r: Int): List<BonsaiTile> {
+        require(q in axialRange && r in axialRange) {"Coordinate out of bounds"}
+        val nq = axial2Raw(q)
+        val nr = axial2Raw(r)
+
+        val nqPlusOne = nq + 1
+        val nqMinusOne = nq - 1
+
+        val nrPlusOne = nr + 1
+        val nrMinusOne = nr - 1
+
+        val qUpperBound = if(nqPlusOne >= actualSize) actualSize else nqPlusOne
+        val qLowerBound = if(nqMinusOne < 0) 0 else nqMinusOne
+
+        val rUpperBound = if(nrPlusOne >= actualSize) actualSize else nrPlusOne
+        val rLowerBound = if(nrMinusOne < 0) 0 else nrMinusOne
+
+        val qRange = qLowerBound..qUpperBound
+        val rRange = rLowerBound..rUpperBound
+
+        val neighborsList = mutableListOf<BonsaiTile>()
+        for(nnq in qRange) {
+            for (nnr in rRange) {
+                val neighbor = grid[nnq][nnr]
+                if (neighbor != null) {
+                    neighborsList.add(neighbor)
+                }
+            }
+        }
+        return neighborsList.toList()
     }
 }

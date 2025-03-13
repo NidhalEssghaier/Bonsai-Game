@@ -7,12 +7,9 @@ package entity
  */
 class BonsaiTile(
     val type: TileType,
-
-    //used to track neighbors to help in remove tiles and place fruit and get flower score
-    val neighbors: MutableList<BonsaiTile> = mutableListOf()
 )
 {
     fun copy(): BonsaiTile {
-        return BonsaiTile(type, neighbors.toMutableList())
+        return BonsaiTile(type)
     }
 }
