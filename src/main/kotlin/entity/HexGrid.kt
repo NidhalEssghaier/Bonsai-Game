@@ -19,6 +19,21 @@ package entity
  *   // Remove the BonsaiTile from the grid
  *   grid.remove(tileAt00)
  *
+ *   //Get the used tile list
+ *   val tileList = grid.tilesList()
+ *
+ *   // Check if the grid is empty
+ *   if (grid.isEmpty()) {// Do something}
+ *
+ *   // Check if the grid is NOT empty
+ *   if (grid.isNotEmpty()) {// Do something}
+ *
+ *   // Check if the coordinates are empty
+ *   if (grid.isEmpty(0, 0)) {// Do something}
+ *
+ *   // Check if the coordinates are NOT empty
+ *   if (grid.isNotEmpty(0, 0)) {// Do something}
+ *
  *   // Deep copy the HexGrid
  *   val gridCopy = grid.copy()
  *   ```
@@ -115,6 +130,46 @@ class HexGrid private constructor(
         grid[coordinate.first][coordinate.second] = null
         return true
     }
+
+    /**
+     * Check if the grid is empty
+     * @return `true` if the grid is empty, `false` otherwise
+     */
+    fun isEmpty() = map.isEmpty()
+
+    /**
+     * Check if the grid is NOT empty
+     * @return `true` if the grid is NOT empty, `false` otherwise
+     */
+    fun isNotEmpty() = map.isNotEmpty()
+
+    /**
+     * Check if the given axial coordinates are empty
+     * @param q q coordinate
+     * @param r r coordinate
+     * @return `true` if the coordinates are empty, `false` otherwise
+     */
+    fun isEmpty(q:Int, r:Int) = grid[axial2Raw(q)][axial2Raw(r)] == null
+
+    /**
+     * Check if the given axial coordinates are NOT empty
+     * @param q q coordinate
+     * @param r r coordinate
+     * @return `true` if the coordinates are NOT empty, `false` otherwise
+     */
+    fun isNotEmpty(q:Int, r:Int) = grid[axial2Raw(q)][axial2Raw(r)] != null
+
+    /**
+     * Get the mapping of [BonsaiTile] to its axial coordinates
+     * @return [Map] of [BonsaiTile] to its axial coordinates
+     */
+    fun getTileToCoordinateMap() = map.mapValues { Pair(raw2Axial(it.value.first), raw2Axial(it.value.second)) }
+
+    /**
+     * Get the mapping of axial coordinates to [BonsaiTile]
+     * @return [Map] of axial coordinates to [BonsaiTile]
+     */
+    fun getCoordinateToTileMap() = map.entries.associate {(k, v) -> Pair(raw2Axial(v.first), raw2Axial(v.second)) to k}
 
     /**
      * Deep copy the [HexGrid]
