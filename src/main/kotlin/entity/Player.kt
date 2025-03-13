@@ -14,11 +14,11 @@ package entity
  * @property supply The tile inventory of the player
  * @property bonsai The bonsai of the player
  */
-abstract class Player(
+abstract class Player protected constructor(
     val name: String,
     var potColor: PotColor,
 
-    var bonsai: Bonsai = Bonsai(),
+    var bonsai: Bonsai,
     var supplyTileLimit: Int = 5,
     var treeTileLimit: MutableMap<TileType, Int> = mutableMapOf(),
     var declinedGoals: MutableList<GoalCard> = mutableListOf(),
@@ -30,6 +30,13 @@ abstract class Player(
     var supply: MutableList<BonsaiTile> = mutableListOf()
     )
 {
+    /**
+     * Secondary public constructor to create a player instance
+     * @param name The name of the player
+     * @param potColor The color of the pot
+     */
+    constructor(name: String, potColor: PotColor): this(name, potColor, Bonsai())
+
     /**
      * Abstract method to deep copy the player instance
      * @return a deep copy of the player instance

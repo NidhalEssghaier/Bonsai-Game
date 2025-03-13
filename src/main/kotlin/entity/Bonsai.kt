@@ -7,12 +7,19 @@ package entity
  * @property tileCount Saves the count of each tile type.
  * @property tiles Returns the list of all tiles in the bonsai.
  */
-class Bonsai(
-    val grid: HexGrid = HexGrid(20),
-    val tileCount: MutableMap<TileType,Int> =
-                TileType.entries.associateWith{ type -> if (type == TileType.WOOD) 1 else 0 }.toMutableMap()
+class Bonsai private constructor(
+    val grid: HexGrid,
+    val tileCount: MutableMap<TileType,Int>
 )
 {
+    /**
+     * Public secondary constructor for external usage
+     */
+    constructor(): this(
+        grid = HexGrid(20),
+        tileCount = TileType.entries.associateWith{ type -> if (type == TileType.WOOD) 1 else 0 }.toMutableMap()
+    )
+
     val tiles = grid.tilesList
 
     /**

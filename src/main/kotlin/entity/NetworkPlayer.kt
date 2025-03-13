@@ -14,11 +14,11 @@ package entity
  * @property supply The tile inventory of the player
  * @property bonsai The bonsai of the player
  */
-class NetworkPlayer(
+class NetworkPlayer private constructor(
     name: String,
     potColor: PotColor,
 
-    bonsai: Bonsai = Bonsai(),
+    bonsai: Bonsai,
     supplyTileLimit: Int = 5,
     treeTileLimit: MutableMap<TileType, Int> = mutableMapOf(),
     declinedGoals: MutableList<GoalCard> = mutableListOf(),
@@ -43,6 +43,11 @@ class NetworkPlayer(
     supply
 )
 {
+    /**
+     * Secondary public constructor to create a player instance
+     */
+    constructor(name: String, potColor: PotColor): this(name, potColor, Bonsai())
+
     /**
      * Make a deep copy of the NetworkPlayer instance
      * @return A deep copy of the NetworkPlayer instance
