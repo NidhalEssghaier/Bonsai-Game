@@ -248,10 +248,12 @@ class HexGrid private constructor(
         val nrPlusOne = rawR + 1
         val nrMinusOne = rawR - 1
 
-        val qUpperBound = if(nqPlusOne >= actualSize) actualSize else nqPlusOne
+        val maxIndex = actualSize - 1
+
+        val qUpperBound = if(nqPlusOne > maxIndex) maxIndex else nqPlusOne
         val qLowerBound = if(nqMinusOne < 0) 0 else nqMinusOne
 
-        val rUpperBound = if(nrPlusOne >= actualSize) actualSize else nrPlusOne
+        val rUpperBound = if(nrPlusOne > maxIndex) maxIndex else nrPlusOne
         val rLowerBound = if(nrMinusOne < 0) 0 else nrMinusOne
 
         val qRange = qLowerBound..qUpperBound
