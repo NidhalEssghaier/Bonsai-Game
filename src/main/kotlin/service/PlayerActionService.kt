@@ -1,9 +1,7 @@
 package service
 import entity.*
 import gui.*
-
-import tools.aqua.bgw.components.container.HexagonGrid
-import tools.aqua.bgw.components.gamecomponentviews.HexagonView
+import helper.*
 
 class PlayerActionService(private val rootService: RootService):AbstractRefreshingService() {
 
@@ -292,16 +290,15 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
         game.currentState.openCards[0] = newCard
     }
 
-    fun removeTile(tileView: HexagonView) {
+    fun removeTile(tile: BonsaiTile) {
 
-        //check gamme is running
+        //check if game is running
         val game = rootService.currentGame
         checkNotNull(game) { "there is no active game" }
 
         //is tile in current player bonsai
         val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
         val currentPlayerBonsaiTiles = currentPlayer.bonsai.tiles()
-        val tile = currentPlayer.bonsai.map.forward(tileView)
         check(currentPlayerBonsaiTiles.contains(tile)) { "cant remove a tile not in players bonsai" }
 
         //is it possible to play wood tile
@@ -314,8 +311,7 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
         {"tile not part of the least number of tiles to be removed to make placing a wood possible"}
 
         //remove tile from bonsai tree
-        currentPlayer.bonsai.map.remove(tileView, tile)
-        currentPlayer.bonsai.grid.remove(tileView)
+        currentPlayer.bonsai.grid.remove(tile)
 
         //add tile to player supply
         tile.neighbors.clear()

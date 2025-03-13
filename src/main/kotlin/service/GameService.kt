@@ -1,7 +1,7 @@
 package service
 
 import entity.*
-import tools.aqua.bgw.util.Stack
+import helper.*
 
 class GameService(private val rootService:RootService):AbstractRefreshingService() {
 
@@ -54,8 +54,8 @@ class GameService(private val rootService:RootService):AbstractRefreshingService
         onAllRefreshables { refreshAfterStartNewGame() }
     }
 
-    private fun prepareCards(playerCount: Int) : Stack<ZenCard> {
-        val cardStack = Stack<ZenCard>()
+    private fun prepareCards(playerCount: Int) : ArrayDeque<ZenCard> {
+        val cardStack = ArrayDeque<ZenCard>()
 
         //growth cards
         repeat(2) {
