@@ -1,5 +1,8 @@
 package entity
 
+import kotlinx.serialization.Serializable
+import serializer.ArrayDequeGameStateSerializer
+
 /**
  * Entity to represent a game of "Bonsai"
  *
@@ -12,15 +15,27 @@ package entity
  * @property redoStack Saves game states reverted by undo.
  * @property currentState The current game state.
  */
-class BonsaiGame(
-    gameSpeed: Int,
-    players: List<Player>,
-    goalCards: List<GoalCard>,
-    drawStack: ArrayDeque<ZenCard>,
-    openCards: MutableList<ZenCard>
+@Serializable
+class BonsaiGame private constructor(
+    var currentState: GameState,
+    @Serializable(with = ArrayDequeGameStateSerializer::class)
+    val undoStack: ArrayDeque<GameState>,
+    @Serializable(with = ArrayDequeGameStateSerializer::class)
+    val redoStack: ArrayDeque<GameState>,
 )
 {
-    var currentState = GameState(gameSpeed, players, goalCards, drawStack, openCards)
-    val undoStack: ArrayDeque<GameState> = ArrayDeque()
-    val redoStack: ArrayDeque<GameState> = ArrayDeque()
+    /**
+     * Secondary public constructor for public access
+     */
+    constructor(
+        gameSpeed: Int,
+        players: List<Player>,
+        goalCards: List<GoalCard>,
+        drawStack: ArrayDeque<ZenCard>,
+        openCards: MutableList<ZenCard>
+    ) : this(
+        GameState(gameSpeed, players, goalCards, drawStack, openCards),
+        ArrayDeque(),
+        ArrayDeque()
+    )
 }

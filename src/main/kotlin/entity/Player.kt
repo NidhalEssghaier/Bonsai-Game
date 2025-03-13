@@ -1,5 +1,7 @@
 package entity
 
+import kotlinx.serialization.Serializable
+
 /**
  * Abstract Entity to represent the player
  *
@@ -14,7 +16,8 @@ package entity
  * @property supply The tile inventory of the player
  * @property bonsai The bonsai of the player
  */
-interface Player
+@Serializable
+sealed interface Player
 {
     val name: String
     var potColor: PotColor

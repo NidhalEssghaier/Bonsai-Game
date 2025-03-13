@@ -1,5 +1,8 @@
 package entity
 
+import kotlinx.serialization.Serializable
+import serializer.ArrayDequeZenCardSerializer
+
 /**
  * Entity to represent a bot, based on random behaviour
  *
@@ -14,6 +17,7 @@ package entity
  * @property supply The tile inventory of the player
  * @property bonsai The bonsai of the player
  */
+@Serializable
 class RandomBot private constructor(
     override val name: String,
     override var potColor: PotColor,
@@ -24,7 +28,9 @@ class RandomBot private constructor(
     override var declinedGoals: MutableList<GoalCard> = mutableListOf(),
     override var acceptedGoals: MutableList<GoalCard> = mutableListOf(),
     override val forbiddenGoals: MutableList<GoalCard> = mutableListOf(),
+    @Serializable(with = ArrayDequeZenCardSerializer::class)
     override var seishiTool: ArrayDeque<ZenCard> = ArrayDeque(),
+    @Serializable(with = ArrayDequeZenCardSerializer::class)
     override var seishiGrowth: ArrayDeque<ZenCard> = ArrayDeque(),
     override var hiddenDeck: MutableList<ZenCard> = mutableListOf(),
     override var supply: MutableList<BonsaiTile> = mutableListOf()

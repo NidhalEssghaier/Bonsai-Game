@@ -155,10 +155,11 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
             }
             is ParchmentCard, is HelperCard ->
                 currentPlayer.hiddenDeck += card // Store card within hiddenDeck
+
+            is PlaceholderCard -> {}
         }
 
-        val placeholderCard = object : ZenCard {}
-        game.currentState.openCards[cardIndex] = placeholderCard
+        game.currentState.openCards[cardIndex] = PlaceholderCard
         // Shift remaining cards and enforce game constraints
         shiftBoardAndRefill(cardIndex)
 

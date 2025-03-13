@@ -1,5 +1,7 @@
 package entity
 
+import kotlinx.serialization.Serializable
+
 /**
  * Entity to represent the card type "Helper"
  *
@@ -7,6 +9,7 @@ package entity
  * * @property hasPlacedChosenTile Indicates whether the player has placed a tile of their choice.
  *  * @property hasPlacedShownTile Indicates whether the player has placed the tile shown on the card.
  */
+@Serializable
 class HelperCard(val tiles: List<TileType>) : ZenCard {
     var hasPlacedChosenTile: Boolean = false
     var hasPlacedShownTile: Boolean = false

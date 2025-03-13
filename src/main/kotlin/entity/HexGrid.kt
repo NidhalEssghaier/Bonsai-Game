@@ -1,5 +1,8 @@
 package entity
 
+import kotlinx.serialization.Serializable
+import serializer.IntRangeSerializer
+
 /**
  * Entity to represent the hex grid of the bonsai bowl
  * - Example:
@@ -63,6 +66,7 @@ package entity
  * @property maxIndex Maximum index of the internal array (Only for internal usage)
  * @constructor Create a [HexGrid] with coordinates ranging from -[size] to [size]
  */
+@Serializable
 class HexGrid private constructor(
     val size: Int,
     private val actualSize: Int,
@@ -70,6 +74,7 @@ class HexGrid private constructor(
     private val map: MutableMap<BonsaiTile, Pair<Int, Int>>
 ) {
     val tilesList = { map.keys.toList() }
+    @Serializable(with = IntRangeSerializer::class)
     private val axialRange = -size..size
 
     private val axial2Raw: (Int) -> (Int) = { it + size }

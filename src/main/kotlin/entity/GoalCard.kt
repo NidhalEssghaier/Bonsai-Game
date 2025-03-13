@@ -1,5 +1,7 @@
 package entity
 
+import kotlinx.serialization.Serializable
+
 /**
  * Entity to represent a goal card
  *
@@ -7,6 +9,7 @@ package entity
  * @property color Indicates which goals are part of the same group.
  * @property difficulty The difficulty of the goal.
  */
+@Serializable
 class GoalCard(
     val points: Int,
     val color: GoalColor,

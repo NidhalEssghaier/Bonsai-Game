@@ -1,5 +1,7 @@
 package entity
 
+import kotlinx.serialization.Serializable
+
 /**
  * Entity to represent the bonsai of a player
  *
@@ -7,6 +9,7 @@ package entity
  * @property tileCount Saves the count of each tile type.
  * @property tiles Returns the list of all tiles in the bonsai.
  */
+@Serializable
 class Bonsai private constructor(
     val grid: HexGrid,
     val tileCount: MutableMap<TileType,Int>
