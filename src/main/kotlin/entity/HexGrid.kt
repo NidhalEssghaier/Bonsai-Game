@@ -34,6 +34,12 @@ package entity
  *   // Check if the coordinates are NOT empty
  *   if (grid.isNotEmpty(0, 0)) {// Do something}
  *
+ *   // Get the mapping of BonsaiTile to its axial coordinates
+ *   val tileToCoordinateMap = grid.getTileToCoordinateMap()
+ *
+ *   // Get the mapping of axial coordinates to BonsaiTile
+ *   val coordinateToTileMap = grid.getCoordinateToTileMap()
+ *
  *   // Deep copy the HexGrid
  *   val gridCopy = grid.copy()
  *   ```
