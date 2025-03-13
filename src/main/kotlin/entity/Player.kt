@@ -1,7 +1,5 @@
 package entity
 
-import tools.aqua.bgw.util.Stack
-
 /**
  * Abstract Entity to represent the player
  *
@@ -25,8 +23,8 @@ abstract class Player(
     var declinedGoals: MutableList<GoalCard> = mutableListOf(),
     val acceptedGoals: MutableList<GoalCard> = mutableListOf(),
     val forbiddenGoals: MutableList<GoalCard> = mutableListOf(),
-    var seishiTool: Stack<ZenCard> = Stack(),
-    var seishiGrowth: Stack<ZenCard> = Stack(),
+    var seishiTool: ArrayDeque<ZenCard> = ArrayDeque(),
+    var seishiGrowth: ArrayDeque<ZenCard> = ArrayDeque(),
     var hiddenDeck: MutableList<ZenCard> = mutableListOf(),
     var supply: MutableList<BonsaiTile> = mutableListOf()
     )

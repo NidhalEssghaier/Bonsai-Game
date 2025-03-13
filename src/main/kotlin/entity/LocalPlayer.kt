@@ -1,7 +1,5 @@
 package entity
 
-import helper.copy
-import tools.aqua.bgw.util.Stack
 
 /**
  * Entity to represent the player type "Local"
@@ -26,8 +24,8 @@ class LocalPlayer(
     declinedGoals: MutableList<GoalCard> = mutableListOf(),
     acceptedGoals: MutableList<GoalCard> = mutableListOf(),
     forbiddenGoals: MutableList<GoalCard> = mutableListOf(),
-    seishiTool: Stack<ZenCard> = Stack(),
-    seishiGrowth: Stack<ZenCard> = Stack(),
+    seishiTool: ArrayDeque<ZenCard> = ArrayDeque(),
+    seishiGrowth: ArrayDeque<ZenCard> = ArrayDeque(),
     hiddenDeck: MutableList<ZenCard> = mutableListOf(),
     supply: MutableList<BonsaiTile> = mutableListOf()
 ): Player(
@@ -57,8 +55,8 @@ class LocalPlayer(
             declinedGoals.toMutableList(),
             acceptedGoals.toMutableList(),
             forbiddenGoals.toMutableList(),
-            seishiTool.copy(),
-            seishiGrowth.copy(),
+            ArrayDeque(seishiTool),
+            ArrayDeque(seishiGrowth),
             hiddenDeck.toMutableList(),
             supply.toMutableList()
         )
