@@ -101,7 +101,11 @@ class HexGrid private constructor(
         2*size + 1,
         Array(2*size + 1) { arrayOfNulls<BonsaiTile?>(2*size + 1) },
         mutableMapOf()
-    )
+    ) {
+        val woodTile = BonsaiTile(TileType.WOOD)
+        grid[0][0] = woodTile
+        map[woodTile] = 0 to 0
+    }
 
     /**
      * Check if the given axial coordinates are in the Pot area
@@ -144,7 +148,7 @@ class HexGrid private constructor(
      * @throws IllegalArgumentException if the coordinates are in the Pot area
      */
     operator fun get(q: Int, r: Int): BonsaiTile {
-        require( !isPot(q, r) ) { IS_POT_MSG }
+        require( (q == 0 && r == 0) || !isPot(q, r) ) { IS_POT_MSG }
         val tile = grid[axial2Raw(q)][axial2Raw(r)] ?: throw invalidCoordinate
         return tile
     }
@@ -192,6 +196,7 @@ class HexGrid private constructor(
      */
     fun remove(tile: BonsaiTile): Boolean {
         val coordinate = map[tile] ?: return false
+        if (raw2Axial(coordinate.first) == 0 && raw2Axial(coordinate.second) == 0) return false
         map.remove(tile)
         grid[coordinate.first][coordinate.second] = null
         return true
@@ -221,13 +226,13 @@ class HexGrid private constructor(
      * Check if the grid is empty
      * @return `true` if the grid is empty, `false` otherwise
      */
-    fun isEmpty() = map.isEmpty()
+    fun isEmpty() = map.filter { it.value != 0 to 0 }.isEmpty()
 
     /**
      * Check if the grid is NOT empty
      * @return `true` if the grid is NOT empty, `false` otherwise
      */
-    fun isNotEmpty() = map.isNotEmpty()
+    fun isNotEmpty() = map.filter { it.value != 0 to 0 }.isNotEmpty()
 
     /**
      * Check if the given axial coordinates are empty
