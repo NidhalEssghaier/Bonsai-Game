@@ -8,6 +8,4 @@ package entity
  *  * @property hasPlacedShownTile Indicates whether the player has placed the tile shown on the card.
  */
 class HelperCard(val tiles: List<TileType>) : ZenCard {
-    var hasPlacedChosenTile: Boolean = false
-    var hasPlacedShownTile: Boolean = false
 }

@@ -52,7 +52,7 @@ package entity
  *   // Deep copy the HexGrid
  *   val gridCopy = grid.copy()
  *   ```
- * @property size size of the grid
+ * @property size size of the grid, must be greater than or equal to 3
  * @property actualSize actual size of the internal array (Only for internal usage)
  * @property grid Store the [BonsaiTile] with coordinates (Only for internal usage)
  * @property map Mapping between [BonsaiTile] and its coordinates (Only for internal usage)
@@ -81,24 +81,62 @@ class HexGrid private constructor(
      * Companion object to store the exceptions
      * @property invalidCoordinate Exception for no [BonsaiTile] at the given coordinates
      * @property invalidTile Exception for [BonsaiTile] not in the grid
+     * @property IS_POT_MSG Exception for placing [BonsaiTile] in Pot area
+     * @property outOfBounds Exception for coordinate out of bounds
      */
     private companion object {
         private val invalidCoordinate = NoSuchElementException("No BonsaiTile at the given coordinates")
         private val invalidTile = NoSuchElementException("This BonsaiTile isn't in the grid")
+        private const val IS_POT_MSG = "Unable to place or get BonsaiTile in Pot area"
         private val outOfBounds = IndexOutOfBoundsException("Coordinate out of bounds")
     }
 
     /**
      * Secondary public constructor to create a [HexGrid] with coordinates ranging from -[size] to [size]
      * @param size size of the grid
-     * @throws IllegalArgumentException if the size is less than 1
+     * @throws IllegalArgumentException if the size is less than 3
      */
     constructor(size: Int): this(
-        size.also { require( it > 0) },
+        size.also { require( it >= 3 ) },
         2*size + 1,
         Array(2*size + 1) { arrayOfNulls<BonsaiTile?>(2*size + 1) },
         mutableMapOf()
-    )
+    ) {
+        val woodTile = BonsaiTile(TileType.WOOD)
+        grid[0][0] = woodTile
+        map[woodTile] = 0 to 0
+    }
+
+    /**
+     * Check if the given axial coordinates are in the Pot area
+     * @param q q coordinate
+     * @param r r coordinate
+     * @return `true` if the coordinates are in the Pot area, `false` otherwise
+     */
+    fun isPot(q: Int, r: Int): Boolean {
+        val potRangeQ = -2..3
+        val potRangeR = 0..2
+
+        val allowed = setOf(
+            Pair(3,1),
+            Pair(2,2),
+            Pair(3,2)
+        )
+
+        return when {
+            q to r in allowed -> false
+            q in potRangeQ && r in potRangeR -> true
+            else -> false
+        }
+    }
+
+    /**
+     * Check if the given axial coordinates are NOT in the Pot area
+     * @param q q coordinate
+     * @param r r coordinate
+     * @return `true` if the coordinates are NOT in the Pot area, `false` otherwise
+     */
+    fun isNotPot(q: Int, r: Int) = !isPot(q, r)
 
     /**
      * Get the [BonsaiTile] at the given axial coordinates
@@ -107,8 +145,10 @@ class HexGrid private constructor(
      * @return [BonsaiTile] at the given axial coordinates
      * @throws IndexOutOfBoundsException if the coordinate is out of bounds
      * @throws NoSuchElementException if there is no [BonsaiTile] at the given coordinates
+     * @throws IllegalArgumentException if the coordinates are in the Pot area
      */
     operator fun get(q: Int, r: Int): BonsaiTile {
+        require( (q == 0 && r == 0) || !isPot(q, r) ) { IS_POT_MSG }
         val tile = grid[axial2Raw(q)][axial2Raw(r)] ?: throw invalidCoordinate
         return tile
     }
@@ -119,8 +159,10 @@ class HexGrid private constructor(
      * @param r r coordinate
      * @param tile [BonsaiTile] to set
      * @throws IndexOutOfBoundsException if the coordinate is out of bounds
+     * @throws IllegalArgumentException if the coordinates are in the Pot area
      */
     operator fun set(q: Int, r: Int, tile: BonsaiTile) {
+        require( !isPot(q, r) ) { IS_POT_MSG }
         val nq = axial2Raw(q)
         val nr = axial2Raw(r)
         grid[nq][nr] = tile
@@ -128,10 +170,10 @@ class HexGrid private constructor(
     }
 
     /**
-     * Get the [BonsaiTile] at the given axial coordinates or `null` if the coordinates are empty
+     * Get the [BonsaiTile] at the given axial coordinates or `null` if the coordinates are empty or in the Pot area
      * @param q q coordinate
      * @param r r coordinate
-     * @return [BonsaiTile] at the given axial coordinates or `null` if the coordinates are empty
+     * @return [BonsaiTile] at the given axial coordinates or `null` if the coordinates are empty or in the Pot area
      * @throws IndexOutOfBoundsException if the coordinate is out of bounds
      */
     fun getOrNull(q: Int, r: Int) = grid[axial2Raw(q)][axial2Raw(r)]
@@ -154,6 +196,7 @@ class HexGrid private constructor(
      */
     fun remove(tile: BonsaiTile): Boolean {
         val coordinate = map[tile] ?: return false
+        if (raw2Axial(coordinate.first) == 0 && raw2Axial(coordinate.second) == 0) return false
         map.remove(tile)
         grid[coordinate.first][coordinate.second] = null
         return true
@@ -167,6 +210,7 @@ class HexGrid private constructor(
      * @throws IndexOutOfBoundsException if the coordinate is out of bounds
      */
     fun remove(q: Int, r: Int): Boolean {
+        if ( isPot(q, r) ) return false
         val nq = axial2Raw(q)
         val nr = axial2Raw(r)
 
@@ -182,13 +226,13 @@ class HexGrid private constructor(
      * Check if the grid is empty
      * @return `true` if the grid is empty, `false` otherwise
      */
-    fun isEmpty() = map.isEmpty()
+    fun isEmpty() = map.filter { it.value != 0 to 0 }.isEmpty()
 
     /**
      * Check if the grid is NOT empty
      * @return `true` if the grid is NOT empty, `false` otherwise
      */
-    fun isNotEmpty() = map.isNotEmpty()
+    fun isNotEmpty() = map.filter { it.value != 0 to 0 }.isNotEmpty()
 
     /**
      * Check if the given axial coordinates are empty
@@ -197,7 +241,10 @@ class HexGrid private constructor(
      * @return `true` if the coordinates are empty, `false` otherwise
      * @throws IndexOutOfBoundsException if the coordinate is out of bounds
      */
-    fun isEmpty(q:Int, r:Int) = grid[axial2Raw(q)][axial2Raw(r)] == null
+    fun isEmpty(q:Int, r:Int): Boolean {
+        if ( isPot(q, r) ) return false
+        return grid[axial2Raw(q)][axial2Raw(r)] == null
+    }
 
     /**
      * Check if the given axial coordinates are NOT empty
@@ -206,7 +253,10 @@ class HexGrid private constructor(
      * @return `true` if the coordinates are NOT empty, `false` otherwise
      * @throws IndexOutOfBoundsException if the coordinate is out of bounds
      */
-    fun isNotEmpty(q:Int, r:Int) = grid[axial2Raw(q)][axial2Raw(r)] != null
+    fun isNotEmpty(q:Int, r:Int): Boolean {
+        if ( isPot(q ,r) ) return true
+        return grid[axial2Raw(q)][axial2Raw(r)] != null
+    }
 
     /**
      * Get the mapping of [BonsaiTile] to its axial coordinates
@@ -239,35 +289,94 @@ class HexGrid private constructor(
     }
 
     /**
-     * Get the list of neighbors of the given raw coordinates
-     * @param rawQ raw q coordinate
-     * @param rawR raw r coordinate
-     * @return [List] of neighbors
+     * Get the area around the given raw coordinates
+     * @param rawQ raw internal q coordinate
+     * @param rawR raw internal r coordinate
+     * @return [Set] of coordinates in the area
      */
-    private fun getNeighborsWithRawCoordinate(rawQ: Int, rawR: Int): List<BonsaiTile> {
+    private fun getArea(rawQ: Int, rawR: Int): Set<Pair<Int, Int>> {
         val nqPlusOne = rawQ + 1
         val nqMinusOne = rawQ - 1
 
         val nrPlusOne = rawR + 1
         val nrMinusOne = rawR - 1
 
-        val qUpperBound = if(nqPlusOne > maxIndex) maxIndex else nqPlusOne
-        val qLowerBound = if(nqMinusOne < 0) 0 else nqMinusOne
+        val maxNQ = if(nqPlusOne > maxIndex) rawQ else nqPlusOne
+        val minNQ = if(nqMinusOne < 0) rawQ else nqMinusOne
 
-        val rUpperBound = if(nrPlusOne > maxIndex) maxIndex else nrPlusOne
-        val rLowerBound = if(nrMinusOne < 0) 0 else nrMinusOne
+        val maxNR = if(nrPlusOne > maxIndex) rawR else nrPlusOne
+        val minNR = if(nrMinusOne < 0) rawR else nrMinusOne
+        return setOf(
+            rawQ to rawR,
+            rawQ to minNR,
+            maxNQ to minNR,
+            maxNQ to rawR,
+            rawQ to maxNR,
+            minNQ to maxNR,
+            minNQ to rawR
+        )
+    }
 
-        val qRange = qLowerBound..qUpperBound
-        val rRange = rLowerBound..rUpperBound
+    /**
+     * Get the list of empty spaces around the given raw coordinates
+     * @param rawQ raw internal q coordinate
+     * @param rawR raw internal r coordinate
+     * @return [List] of empty spaces
+     */
+    private fun getEmptySpaceWithRawCoordinate(rawQ: Int, rawR: Int): List<Pair<Int, Int>> {
+        val coordinateSet = getArea(rawQ, rawR)
+
+        val emptySpaceList = mutableListOf<Pair<Int, Int>>()
+        for (coordinate in coordinateSet) {
+            val qAxial = raw2Axial(coordinate.first)
+            val rAxial = raw2Axial(coordinate.second)
+            if( isPot(qAxial, rAxial) ) continue
+            if (grid[coordinate.first][coordinate.second] == null) {
+                emptySpaceList.add(qAxial to rAxial)
+            }
+        }
+
+        return emptySpaceList.toList()
+    }
+
+    /**
+     * Get the list of empty spaces around the given axial coordinates
+     * @param q q coordinate
+     * @param r r coordinate
+     * @return [List] of empty spaces coordinates
+     * @throws IndexOutOfBoundsException if the coordinates are out of bounds
+     */
+    fun getEmptySpace(q: Int, r: Int): List<Pair<Int, Int>> {
+        if ( !(q in axialRange && r in axialRange) ) throw outOfBounds
+        return getEmptySpaceWithRawCoordinate(axial2Raw(q), axial2Raw(r))
+    }
+
+    /**
+     * Get the list of empty spaces around the given [BonsaiTile]
+     * @param tile [BonsaiTile]
+     * @return [List] of empty spaces coordinates
+     * @throws NoSuchElementException if the [BonsaiTile] isn't in the grid
+     */
+    fun getEmptySpace(tile: BonsaiTile): List<Pair<Int, Int>> {
+        val coordinate = map[tile] ?: throw invalidTile
+        return getEmptySpaceWithRawCoordinate(coordinate.first, coordinate.second)
+    }
+
+    /**
+     * Get the list of neighbors of the given raw internal coordinates
+     * @param rawQ raw q coordinate
+     * @param rawR raw r coordinate
+     * @return [List] of neighbors
+     */
+    private fun getNeighborsWithRawCoordinate(rawQ: Int, rawR: Int): List<BonsaiTile> {
+        val coordinateSet = getArea(rawQ, rawR)
 
         val neighborsList = mutableListOf<BonsaiTile>()
-        for(q in qRange) {
-            for (r in rRange) {
-                if (q == rawQ && r == rawR) continue
-                val neighbor = grid[q][r]
-                if (neighbor != null) {
-                    neighborsList.add(neighbor)
-                }
+        for (coordinate in coordinateSet) {
+            if (coordinate.first == rawQ && coordinate.second == rawR) continue
+            val neighbor = grid[coordinate.first][coordinate.second]
+            if (neighbor != null) {
+                neighborsList.add(neighbor)
             }
         }
         return neighborsList.toList()
