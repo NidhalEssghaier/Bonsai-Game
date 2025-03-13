@@ -57,7 +57,7 @@ package entity
  * @property grid Store the [BonsaiTile] with coordinates (Only for internal usage)
  * @property map Mapping between [BonsaiTile] and its coordinates (Only for internal usage)
  * @property tilesList Returns the list of all [BonsaiTile] in the grid
- * @property axialRange Range of axial coordinates
+ * @property axialRange Range of axial coordinates from -[size] to [size] (Only for internal usage)
  * @property axial2Raw Function to convert axial coordinates to raw internal coordinates (Only for internal usage)
  * @property raw2Axial Function to convert raw internal coordinates to axial coordinates (Only for internal usage)
  * @constructor Create a [HexGrid] with coordinates ranging from -[size] to [size]
