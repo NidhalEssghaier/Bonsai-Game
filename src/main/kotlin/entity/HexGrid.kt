@@ -73,7 +73,6 @@ class HexGrid private constructor(
 
     private val axial2Raw: (Int) -> (Int) = { it + size }
     private val raw2Axial: (Int) -> (Int) = { it - size }
-    private val outOfBoundMsg = "Coordinate out of bounds"
 
     /**
      * Companion object to store the exceptions
@@ -83,6 +82,7 @@ class HexGrid private constructor(
     private companion object {
         private val invalidCoordinate = NoSuchElementException("No BonsaiTile at the given coordinates")
         private val invalidTile = NoSuchElementException("This BonsaiTile isn't in the grid")
+        private val outOfBounds = IndexOutOfBoundsException("Coordinate out of bounds")
     }
 
     /**
@@ -102,11 +102,10 @@ class HexGrid private constructor(
      * @param q q coordinate
      * @param r r coordinate
      * @return [BonsaiTile] at the given axial coordinates
-     * @throws IllegalArgumentException if the coordinate is out of bounds
+     * @throws IndexOutOfBoundsException if the coordinate is out of bounds
      * @throws NoSuchElementException if there is no [BonsaiTile] at the given coordinates
      */
     operator fun get(q: Int, r: Int): BonsaiTile {
-        require(q in axialRange && r in axialRange) { outOfBoundMsg }
         val tile = grid[axial2Raw(q)][axial2Raw(r)] ?: throw invalidCoordinate
         return tile
     }
@@ -116,10 +115,9 @@ class HexGrid private constructor(
      * @param q q coordinate
      * @param r r coordinate
      * @param tile [BonsaiTile] to set
-     * @throws IllegalArgumentException if the coordinate is out of bounds
+     * @throws IndexOutOfBoundsException if the coordinate is out of bounds
      */
     operator fun set(q: Int, r: Int, tile: BonsaiTile) {
-        require(q in axialRange && r in axialRange) { outOfBoundMsg }
         val nq = axial2Raw(q)
         val nr = axial2Raw(r)
         grid[nq][nr] = tile
@@ -131,12 +129,9 @@ class HexGrid private constructor(
      * @param q q coordinate
      * @param r r coordinate
      * @return [BonsaiTile] at the given axial coordinates or `null` if the coordinates are empty
-     * @throws IllegalArgumentException if the coordinate is out of bounds
+     * @throws IndexOutOfBoundsException if the coordinate is out of bounds
      */
-    fun getOrNull(q: Int, r: Int): BonsaiTile? {
-        require(q in axialRange && r in axialRange) { outOfBoundMsg }
-        return grid[axial2Raw(q)][axial2Raw(r)]
-    }
+    fun getOrNull(q: Int, r: Int) = grid[axial2Raw(q)][axial2Raw(r)]
 
     /**
      * Get the axial coordinate of the given [BonsaiTile]
@@ -166,10 +161,9 @@ class HexGrid private constructor(
      * @param q q coordinate
      * @param r r coordinate
      * @return `true` if the [BonsaiTile] is removed successfully, `false` otherwise
-     * @throws IllegalArgumentException if the coordinate is out of bounds
+     * @throws IndexOutOfBoundsException if the coordinate is out of bounds
      */
     fun remove(q: Int, r: Int): Boolean {
-        require(q in axialRange && r in axialRange) { outOfBoundMsg }
         val nq = axial2Raw(q)
         val nr = axial2Raw(r)
 
@@ -198,6 +192,7 @@ class HexGrid private constructor(
      * @param q q coordinate
      * @param r r coordinate
      * @return `true` if the coordinates are empty, `false` otherwise
+     * @throws IndexOutOfBoundsException if the coordinate is out of bounds
      */
     fun isEmpty(q:Int, r:Int) = grid[axial2Raw(q)][axial2Raw(r)] == null
 
@@ -206,6 +201,7 @@ class HexGrid private constructor(
      * @param q q coordinate
      * @param r r coordinate
      * @return `true` if the coordinates are NOT empty, `false` otherwise
+     * @throws IndexOutOfBoundsException if the coordinate is out of bounds
      */
     fun isNotEmpty(q:Int, r:Int) = grid[axial2Raw(q)][axial2Raw(r)] != null
 
@@ -279,10 +275,10 @@ class HexGrid private constructor(
      * @param q q coordinate
      * @param r r coordinate
      * @return [List] of neighbors
-     * @throws IllegalArgumentException if the coordinate is out of bounds
+     * @throws IndexOutOfBoundsException if the coordinate is out of bounds
      */
     fun getNeighbors(q: Int, r: Int): List<BonsaiTile> {
-        require(q in axialRange && r in axialRange) { outOfBoundMsg }
+        if ( !(q in axialRange && r in axialRange) ) throw outOfBounds
 
         return getNeighborsWithRawCoordinate(axial2Raw(q), axial2Raw(r))
     }
