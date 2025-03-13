@@ -1,6 +1,4 @@
-package kotlin
-
-//Globally extend ArrayDeque to make it a drop-in replacement for BGW Stack making serialization easier.
+package helper
 
 /**
  * Pushes all the supplied elements onto the Stack. The element at index 0 of the List is pushed first.
