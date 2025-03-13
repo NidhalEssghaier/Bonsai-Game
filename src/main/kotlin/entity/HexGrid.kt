@@ -120,8 +120,8 @@ class HexGrid private constructor(
         )
 
         return when {
-            q to r in allowed -> true
-            q in potRangeQ && r in potRangeR -> false
+            q to r in allowed -> false
+            q in potRangeQ && r in potRangeR -> true
             else -> false
         }
     }
