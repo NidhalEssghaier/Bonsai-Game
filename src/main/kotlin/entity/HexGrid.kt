@@ -254,8 +254,8 @@ class HexGrid private constructor(
         val rUpperBound = if(nrPlusOne >= actualSize) actualSize else nrPlusOne
         val rLowerBound = if(nrMinusOne < 0) 0 else nrMinusOne
 
-        val qRange = (qLowerBound..qUpperBound)
-        val rRange = (rLowerBound..rUpperBound)
+        val qRange = qLowerBound..qUpperBound
+        val rRange = rLowerBound..rUpperBound
 
         val neighborsList = mutableListOf<BonsaiTile>()
         for(q in qRange) {
