@@ -10,6 +10,7 @@ import tools.aqua.bgw.components.gamecomponentviews.HexagonView
 import tools.aqua.bgw.visual.Visual
 import kotlin.test.Test
 import kotlin.test.assertEquals
+fruiimport kotlin.test.assertTrue
 
 class removeTileTest {
 
@@ -56,9 +57,22 @@ class removeTileTest {
         }
         assertEquals("tile not part of the least number of tiles to be removed to make placing a wood possible",
             exception.message)
-        playerActionService.removeTile(leafTile1)
-        assertDoesNotThrow {playerActionService.removeTile(leafTile1) }
 
+        //removing a valid leaf
+        assertDoesNotThrow {  playerActionService.removeTile(leafTile1)}
+
+        //see if leaf removed from player grid
+        assertThrows<NoSuchElementException> {  game.currentState.players[0].bonsai.grid.get(2,-2)}
+
+        val fruitTile1  =BonsaiTile(TileType.FRUIT)
+        game.currentState.players[0].bonsai.grid.set(2,-2,fruitTile1)
+
+        //removing a necessary leaf tile for a fruit
+        exception = assertThrows<IllegalStateException> {
+            playerActionService.removeTile(leafTile2)
+        }
+        assertEquals("tile not part of the least number of tiles to be removed to make placing a wood possible",
+            exception.message)
 
     }
 }
