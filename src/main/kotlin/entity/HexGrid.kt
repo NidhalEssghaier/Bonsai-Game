@@ -16,9 +16,6 @@ package entity
  *   // Get the axial coordinates of the BonsaiTile
  *   val coordinate = grid.getCoordinate(tileAt00)
  *
- *   // Remove the BonsaiTile from the grid
- *   grid.remove(tileAt00)
- *
  *   //Get the used tile list
  *   val tileList = grid.tilesList()
  *
@@ -39,6 +36,15 @@ package entity
  *
  *   // Get the mapping of axial coordinates to BonsaiTile
  *   val coordinateToTileMap = grid.getCoordinateToTileMap()
+ *
+ *   // Get the list of neighbors of the given axial coordinates
+ *   val neighbors = grid.getNeighbors(0, 0)
+ *
+ *   // Get the list of neighbors of the given BonsaiTile
+ *   val neighbors = grid.getNeighbors(tileAt00)
+ *
+ *   // Remove the BonsaiTile from the grid
+ *   grid.remove(tileAt00)
  *
  *   // Deep copy the HexGrid
  *   val gridCopy = grid.copy()
