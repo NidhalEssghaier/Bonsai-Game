@@ -1,7 +1,5 @@
 package entity
 
-import tools.aqua.bgw.components.container.HexagonGrid
-import tools.aqua.bgw.components.gamecomponentviews.HexagonView
 import tools.aqua.bgw.util.Stack
 
 /**
@@ -11,6 +9,7 @@ import tools.aqua.bgw.util.Stack
  * @property supplyTileLimit The maximum number of tiles allowed in the personal inventory
  * @property treeTileLimit The maximum number of tiles allowed to be placed in the bonsai
  * @property declinedGoals The goals the player declined
+ * @property acceptedGoals The goals the player accepted
  * @property seishiTool The tool cards the player has acquired
  * @property seishiGrowth The growth cards the player has acquired
  * @property hiddenDeck The cards the player has already used
@@ -18,16 +17,23 @@ import tools.aqua.bgw.util.Stack
  * @property bonsai The bonsai of the player
  */
 abstract class Player(
-    val name: String
+    val name: String,
+
+    var bonsai: Bonsai = Bonsai(),
+    var supplyTileLimit: Int = 5,
+    var treeTileLimit: MutableMap<TileType, Int> = mutableMapOf(),
+    var declinedGoals: MutableList<GoalCard> = mutableListOf(),
+    val acceptedGoals: MutableList<GoalCard> = mutableListOf(),
+    val forbiddenGoals: MutableList<GoalCard> = mutableListOf(),
+    var seishiTool: Stack<ZenCard> = Stack(),
+    var seishiGrowth: Stack<ZenCard> = Stack(),
+    var hiddenDeck: MutableList<ZenCard> = mutableListOf(),
+    var supply: MutableList<BonsaiTile> = mutableListOf()
     )
 {
-    val bonsai: Bonsai = Bonsai(mutableMapOf<HexagonGrid<HexagonView>,BonsaiTile>(), emptyMap<TileType,Int>(), mutableListOf<BonsaiTile>())
-    var supplyTileLimit: Int = 5
-    val treeTileLimit: Map<TileType, Int> = mapOf()
-    val declinedGoals: MutableList<GoalCard> = mutableListOf()
-    val acceptedGoals: List<GoalCard> = mutableListOf()
-    val seishiTool: Stack<ZenCard> = Stack()
-    val seishiGrowth: Stack<ZenCard> = Stack()
-    val hiddenDeck: MutableList<ZenCard> = mutableListOf()
-    val supply: MutableList<BonsaiTile> = mutableListOf()
+    /**
+     * Abstract method to deep copy the player instance
+     * @return a deep copy of the player instance
+     */
+    abstract fun copy(): Player
 }

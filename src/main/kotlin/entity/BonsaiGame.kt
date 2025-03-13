@@ -5,26 +5,24 @@ import tools.aqua.bgw.util.Stack
 /**
  * Entity to represent a game of "Bonsai"
  *
- * @property currentPlayer The active player, who can do actions.
- * @property endGameCounter Is used at the end of the game to allow every player only one last turn.
- * @property undoStack Saves previous actions.
- * @property redoStack Saves actions reverted by undo.
- * @property gameSpeed Value for the simulation speed
- * @property drawStack The card stack in the shop
- * @property openCards List of the available cards in the shop
- * @property players List of players in the configured sorting order
- * @property goalCards List of chosen goal cards
+ * @param gameSpeed Value for the simulation speed
+ * @param drawStack The card stack in the shop
+ * @param openCards List of the available cards in the shop
+ * @param players List of players in the configured sorting order
+ * @param goalCards List of chosen goal cards
+ * @property undoStack Saves previous game state.
+ * @property redoStack Saves game states reverted by undo.
+ * @property currentState The current game state.
  */
 class BonsaiGame(
-
-    val gameSpeed: Int,
-    val players: List<Player>,
-    val goalCards: List<GoalCard>,
-    val drawStack: Stack<ZenCard>,
-    val openCards: List<ZenCard>
-){
-    var currentPlayer: Int = 0
-    var endGameCounter: Int = 0
-    val undoStack: Stack<BonsaiGame> = Stack()
-    val redoStack: Stack<BonsaiGame> = Stack()
+    gameSpeed: Int,
+    players: List<Player>,
+    goalCards: List<GoalCard>,
+    drawStack: Stack<ZenCard>,
+    openCards: MutableList<ZenCard>
+)
+{
+    var currentState = GameState(gameSpeed, players, goalCards, drawStack, openCards)
+    val undoStack: Stack<GameState> = Stack()
+    val redoStack: Stack<GameState> = Stack()
 }

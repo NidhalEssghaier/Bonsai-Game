@@ -1,11 +1,12 @@
 package service
+import entity.*
+import gui.*
 
-import entity.BonsaiTile
-import entity.TileType
 import tools.aqua.bgw.components.container.HexagonGrid
 import tools.aqua.bgw.components.gamecomponentviews.HexagonView
 
 class PlayerActionService(private val rootService: RootService):AbstractRefreshingService() {
+
     /**
      * Ends the active players turn and advances the game to the next player.
      *
@@ -114,7 +115,12 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
      * @throws IllegalStateException If there is no active game, or no action to undo.
      */
     fun undo() {
-        // Method implementation
+        val game = rootService.currentGame
+        checkNotNull(game) { "there is no active game" }
+
+        game.redoStack.push(game.currentState.copy())
+        game.currentState = game.undoStack.pop()
+        onAllRefreshables { refreshAfterUndoRedo() }
     }
 
     /**
@@ -132,7 +138,12 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
      * @throws IllegalStateException If there is no active game, or no action to redo.
      */
     fun redo() {
-        // Method implementation
+        val game = rootService.currentGame
+        checkNotNull(game) { "there is no active game" }
+
+        game.undoStack.push(game.currentState.copy())
+        game.currentState = game.redoStack.pop()
+        onAllRefreshables { refreshAfterUndoRedo() }
     }
 
     /**
@@ -182,19 +193,178 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
      * @throws IllegalStateException If the Game's stacks are empty.
      *
      */
-    fun medidate() {
-        // Method implementation
+    fun meditate(card: ZenCard) {
+        val game = rootService.currentGame ?: throw IllegalStateException("No active game")
+        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
+
+        if (game.currentState.openCards.isEmpty()) throw IllegalStateException("No available cards to draw")
+
+        // Find the card in openCards and ensure it's valid
+        val cardIndex = game.currentState.openCards.indexOf(card)
+        if (cardIndex == -1) throw IllegalStateException("The selected card is not in openCards")
+
+        // Draw the card and mark its position as taken
+        drawCard(cardIndex)
+
+        // Process card effects based on type
+        when (card) {
+            is GrowthCard -> currentPlayer.seishiGrowth.push(card)
+            is ToolCard -> {
+                currentPlayer.seishiTool.push(card)
+                currentPlayer.supplyTileLimit += 2 // Increase tile limit for future turns
+            }
+            is MasterCard -> {
+                currentPlayer.supply += card.tiles.map { BonsaiTile(it) } // Add tiles to supply
+                // Store the card in the hidden deck; tile limit checks will be enforced at the end of the turn
+                currentPlayer.hiddenDeck += card
+            }
+            is ParchmentCard, is HelperCard ->
+                currentPlayer.hiddenDeck += card // Store card within hiddenDeck
+        }
+
+        val placeholderCard = object : ZenCard {}
+        game.currentState.openCards[cardIndex] = placeholderCard
+        // Shift remaining cards and enforce game constraints
+        shiftBoardAndRefill(cardIndex)
+
     }
 
-    fun removeTile(tile: BonsaiTile) {
+    fun placeTile(tile: TileType, r: Int, q: Int){
+
+    }
+
+    /**
+     * Decides whether to claim or renounce a goal card.
+     *
+     * @param goalCard The goal card being considered.
+     * @param claim If true, the player claims the goal. If false, the player renounces it.
+     *
+     * If the player claims the goal, the card is added to the player's accepted goals list,
+     * and all other goal cards of the same color  are forbidden.
+     * If the player renounces the goal, only this specific goal card is forbidden.
+     */
+    fun decideGoalClaim(goalCard: GoalCard,claim: Boolean){
+        val game = rootService.currentGame
+        checkNotNull(game) { "there is no active game" }
+        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
+        if (claim) {
+            // Add the claimed goal to acceptedGoals
+            (currentPlayer.acceptedGoals).add(goalCard)
+            onAllRefreshables { refreshAfterClaimGoal(goalCard)  }
+
+            // Find all goal cards of the same color and forbid them
+            currentPlayer.forbiddenGoals.addAll(
+                currentPlayer.declinedGoals.filter { it.color == goalCard.color && it !in currentPlayer.forbiddenGoals }
+            )
+        } else {
+            // Only forbid this specific goal card
+            if (goalCard !in currentPlayer.forbiddenGoals) {
+                currentPlayer.forbiddenGoals.add(goalCard)
+            }
+        }
+
+
+    }
+    /**
+     * Draws a card from the draw stack and processes it according to its type.
+     *
+     * **Preconditions:**
+     * - A game must be active.
+     * - The `openCards` list must not be empty.
+     *
+     * **Postconditions:**
+     * - The selected card is drawn and its effects are applied.
+     * - If the card position grants bonsai tiles, they are added to the player's supply.
+     * - The UI is updated to reflect the drawn card.
+     *
+     * @param cardStack The position in the stack to draw from.
+     */
+
+    fun drawCard(cardStack: Int) {
+
+        val game = rootService.currentGame ?: throw IllegalStateException("No active game")
+
+        if (game.currentState.openCards.isEmpty()) throw IllegalStateException("No available cards to draw")
+
+        // Assign bonsai tiles based on the drawn card's board position
+        val acquiredTiles = when (cardStack) {
+            0 -> emptyList()
+            1 -> {
+                // Allow the player to choose between WOOD or LEAF
+                val choice = onAllRefreshables { refreshTogetUserTileChoice() } as TileType
+                require(choice == TileType.WOOD  || choice == TileType.LEAF  ){throw IllegalStateException()}
+                listOf(BonsaiTile(choice))
+            }
+            2 -> listOf(BonsaiTile(TileType.WOOD), BonsaiTile(TileType.FLOWER))
+            3 -> listOf(BonsaiTile(TileType.LEAF), BonsaiTile(TileType.FRUIT))
+            else -> emptyList()
+        }
+
+        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
+        currentPlayer.supply += acquiredTiles
+        onAllRefreshables { refreshAfterDrawCard(game.currentState.openCards[cardStack])}
+    }
+
+    /**
+     * Handles the placement of tiles when a HelperCard is drawn.
+     *
+     * This function will be directly triggered in the GUI when the player selects a HelperCard.
+     * It ensures that at least one tile is placed according to the HelperCard's rules.
+     *
+     * @param card The HelperCard being processed.
+     * @param tile The tile selected by the player.
+     * @param r The row coordinate where the tile should be placed.
+     * @param q The column coordinate where the tile should be placed.
+     */
+    fun placeHelperCardTiles(card: HelperCard, tile: TileType, r: Int ,q: Int ) {
+
+        val game = rootService.currentGame ?: throw IllegalStateException("No active game")
+        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
+
+        // Check if the chosen tile is different from the one shown on the HelperCard
+        // and ensure that the player has not already placed a chosen tile
+
+        if (tile != card.tiles[1] && !card.hasPlacedChosenTile )
+        {   placeTile(tile, r,q)  // Place the chosen tile on the board
+            card.hasPlacedChosenTile = true // Mark the chosen tile as placed
+
+        }
+        // Check if the selected tile matches the shown tile on the HelperCard
+        // and ensure that the player has this tile in their supply and has not placed it yet
+
+        else if (tile == card.tiles[1] && currentPlayer.supply.contains(BonsaiTile(tile)) && !card.hasPlacedShownTile)
+        { placeTile(tile, r,q)
+            card.hasPlacedShownTile = true
+        }
+
+    }
+
+    /**
+     * Shifts all face-up cards to the right and fills the empty position with a new card.
+     */
+    fun shiftBoardAndRefill(cardStack: Int) {
+        val game = rootService.currentGame ?: throw IllegalStateException("No active game")
+
+        if (game.currentState.drawStack.isEmpty()) return
+
+        for (i in cardStack  downTo 1) {
+            game.currentState.openCards[i] = game.currentState.openCards[i - 1]
+        }
+
+        val newCard = game.currentState.drawStack.pop()
+        game.currentState.openCards[0] = newCard
+    }
+
+    fun removeTile(tileView: HexagonView) {
 
         //check gamme is running
         val game = rootService.currentGame
         checkNotNull(game) { "there is no active game" }
 
         //is tile in current player bonsai
-        val currentPlayer = game.players[game.currentPlayer]
-        val currentPlayerBonsaiTiles = currentPlayer.bonsai.tiles
+        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
+        val currentPlayerBonsaiTiles = currentPlayer.bonsai.tiles()
+        val tile = currentPlayer.bonsai.map.forward(tileView)
         check(currentPlayerBonsaiTiles.contains(tile)) { "cant remove a tile not in players bonsai" }
 
         //is it possible to play wood tile
@@ -207,13 +377,11 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
         {"tile not part of the least number of tiles to be removed to make placing a wood possible"}
 
         //remove tile from bonsai tree
-        currentPlayer.bonsai.tiles.remove(tile)
-        val keyToRemove:HexagonGrid<HexagonView>? = currentPlayer.bonsai.grid.entries.find { it.value.equals(tile) }?.key
-        if (keyToRemove != null) {
-            currentPlayer.bonsai.grid.remove(keyToRemove)
-        }
+        currentPlayer.bonsai.map.remove(tileView, tile)
+        currentPlayer.bonsai.grid.remove(tileView)
 
         //add tile to player supply
+        tile.neighbors.clear()
         currentPlayer.supply.add(tile)
     }
 
