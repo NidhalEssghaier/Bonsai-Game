@@ -17,6 +17,7 @@ package entity
  */
 class SmartBot(
     name: String,
+    potColor: PotColor,
 
     bonsai: Bonsai = Bonsai(),
     supplyTileLimit: Int = 5,
@@ -30,6 +31,7 @@ class SmartBot(
     supply: MutableList<BonsaiTile> = mutableListOf()
 ): Player(
     name,
+    potColor,
     bonsai,
     supplyTileLimit,
     treeTileLimit,
@@ -49,6 +51,7 @@ class SmartBot(
     override fun copy(): SmartBot {
         return SmartBot(
             name,
+            potColor,
             bonsai.copy(),
             supplyTileLimit,
             treeTileLimit.toMutableMap(),

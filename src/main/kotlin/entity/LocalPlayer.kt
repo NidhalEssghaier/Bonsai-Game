@@ -17,6 +17,7 @@ package entity
  */
 class LocalPlayer(
     name: String,
+    potColor: PotColor,
 
     bonsai: Bonsai = Bonsai(),
     supplyTileLimit: Int = 5,
@@ -30,6 +31,7 @@ class LocalPlayer(
     supply: MutableList<BonsaiTile> = mutableListOf()
 ): Player(
     name,
+    potColor,
     bonsai,
     supplyTileLimit,
     treeTileLimit,
@@ -49,6 +51,7 @@ class LocalPlayer(
     override fun copy(): LocalPlayer {
         return LocalPlayer(
             name,
+            potColor,
             bonsai.copy(),
             supplyTileLimit,
             treeTileLimit.toMutableMap(),

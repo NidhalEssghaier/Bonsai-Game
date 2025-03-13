@@ -16,6 +16,7 @@ package entity
  */
 class NetworkPlayer(
     name: String,
+    potColor: PotColor,
 
     bonsai: Bonsai = Bonsai(),
     supplyTileLimit: Int = 5,
@@ -29,6 +30,7 @@ class NetworkPlayer(
     supply: MutableList<BonsaiTile> = mutableListOf()
 ): Player(
     name,
+    potColor,
     bonsai,
     supplyTileLimit,
     treeTileLimit,
@@ -48,6 +50,7 @@ class NetworkPlayer(
     override fun copy(): NetworkPlayer {
         return NetworkPlayer(
             name,
+            potColor,
             bonsai.copy(),
             supplyTileLimit,
             treeTileLimit.toMutableMap(),

@@ -16,6 +16,7 @@ package entity
  */
 abstract class Player(
     val name: String,
+    var potColor: PotColor,
 
     var bonsai: Bonsai = Bonsai(),
     var supplyTileLimit: Int = 5,

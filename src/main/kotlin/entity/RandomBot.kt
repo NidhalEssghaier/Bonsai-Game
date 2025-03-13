@@ -16,6 +16,7 @@ package entity
  */
 class RandomBot(
     name: String,
+    potColor: PotColor,
 
     bonsai: Bonsai = Bonsai(),
     supplyTileLimit: Int = 5,
@@ -29,6 +30,7 @@ class RandomBot(
     supply: MutableList<BonsaiTile> = mutableListOf()
 ): Player (
     name,
+    potColor,
     bonsai,
     supplyTileLimit,
     treeTileLimit,
@@ -48,6 +50,7 @@ class RandomBot(
     override fun copy(): RandomBot {
         return RandomBot(
             name,
+            potColor,
             bonsai.copy(),
             supplyTileLimit,
             treeTileLimit.toMutableMap(),
