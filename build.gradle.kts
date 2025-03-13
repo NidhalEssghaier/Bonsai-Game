@@ -10,6 +10,7 @@ plugins {
     id("org.jetbrains.dokka") version "1.9.20"
     id("io.gitlab.arturbosch.detekt") version "1.23.7"
     id("org.jetbrains.kotlinx.kover") version "0.6.1"
+    kotlin("plugin.serialization") version "2.1.0"
 }
 
 group = "edu.udo.cs.sopra"
@@ -33,6 +34,7 @@ dependencies {
     implementation(group = "tools.aqua", name = "bgw-gui", version = "0.9-17-b7de59c-SNAPSHOT")
     implementation(group = "tools.aqua", name = "bgw-net-common", version = "0.9-17-b7de59c-SNAPSHOT")
     implementation(group = "tools.aqua", name = "bgw-net-client", version = "0.9-17-b7de59c-SNAPSHOT")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
 }
 
 tasks.distZip {
