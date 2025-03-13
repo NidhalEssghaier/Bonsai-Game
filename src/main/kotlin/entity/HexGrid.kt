@@ -46,6 +46,9 @@ package entity
  *   // Remove the BonsaiTile from the grid
  *   grid.remove(tileAt00)
  *
+ *   // Remove the BonsaiTile at the given coordinates
+ *   grid.remove(0, 0)
+ *
  *   // Deep copy the HexGrid
  *   val gridCopy = grid.copy()
  *   ```
@@ -152,6 +155,26 @@ class HexGrid private constructor(
         val coordinate = map[tile] ?: return false
         map.remove(tile)
         grid[coordinate.first][coordinate.second] = null
+        return true
+    }
+
+    /**
+     * Remove the [BonsaiTile] at the given axial coordinates
+     * @param q q coordinate
+     * @param r r coordinate
+     * @return `true` if the [BonsaiTile] is removed successfully, `false` otherwise
+     * @throws IllegalArgumentException if the coordinate is out of bounds
+     */
+    fun remove(q: Int, r: Int): Boolean {
+        require(q in axialRange && r in axialRange) {"Coordinate out of bounds"}
+        val nq = axial2Raw(q)
+        val nr = axial2Raw(r)
+
+        val tile = grid[nq][nr] ?: return false
+
+        map.remove(tile)
+        grid[nq][nr] = null
+
         return true
     }
 
