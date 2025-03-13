@@ -76,6 +76,8 @@ class HexGrid private constructor(
 
     /**
      * Companion object to store the exceptions
+     * @property invalidCoordinate Exception for no [BonsaiTile] at the given coordinates
+     * @property invalidTile Exception for [BonsaiTile] not in the grid
      */
     private companion object {
         private val invalidCoordinate = NoSuchElementException("No BonsaiTile at the given coordinates")
