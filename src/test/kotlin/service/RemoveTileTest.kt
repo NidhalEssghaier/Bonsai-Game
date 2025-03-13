@@ -10,7 +10,7 @@ import tools.aqua.bgw.components.gamecomponentviews.HexagonView
 import tools.aqua.bgw.visual.Visual
 import kotlin.test.Test
 import kotlin.test.assertEquals
-fruiimport kotlin.test.assertTrue
+import kotlin.test.assertTrue
 
 class removeTileTest {
 
@@ -23,9 +23,9 @@ class removeTileTest {
         val game = mc.currentGame
         checkNotNull(game)
         val woodTile=BonsaiTile(TileType.WOOD)
-        game.currentState.players[0].bonsai.grid.set(1,-2,woodTile)
+        val firstWood = game.currentState.players[0].bonsai.grid.get(0,0)
         var exception = assertThrows<IllegalStateException> {
-            playerActionService.removeTile(woodTile)
+            playerActionService.removeTile(firstWood)
         }
         assertEquals("player can play wood", exception.message)
 
@@ -44,16 +44,16 @@ class removeTileTest {
         assertEquals("cant remove a tile not in players bonsai",
             exception.message)
 
-        game.currentState.players[0].bonsai.grid.set(2,-2,leafTile1)
+        game.currentState.players[0].bonsai.grid.set(0,-1,leafTile1)
         game.currentState.players[0].bonsai.grid.set(1,-1,leafTile2)
-        game.currentState.players[0].bonsai.grid.set(0,-1,leafTile3)
+        /*game.currentState.players[0].bonsai.grid.set(0,-1,leafTile3)
         game.currentState.players[0].bonsai.grid.set(0,-2,leafTile4)
         game.currentState.players[0].bonsai.grid.set(1,-3,leafTile5)
-        game.currentState.players[0].bonsai.grid.set(2,-3,leafTile6)
+        game.currentState.players[0].bonsai.grid.set(2,-3,leafTile6)*/
 
         //removing a wood tile
         exception = assertThrows<IllegalStateException> {
-            playerActionService.removeTile(woodTile)
+            playerActionService.removeTile(firstWood)
         }
         assertEquals("tile not part of the least number of tiles to be removed to make placing a wood possible",
             exception.message)
