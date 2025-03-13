@@ -255,8 +255,8 @@ class HexGrid private constructor(
         val rUpperBound = if(nrPlusOne >= actualSize) actualSize else nrPlusOne
         val rLowerBound = if(nrMinusOne < 0) 0 else nrMinusOne
 
-        val qRange = qLowerBound..qUpperBound
-        val rRange = rLowerBound..rUpperBound
+        val qRange = (qLowerBound..qUpperBound).filter { it == rawQ }
+        val rRange = (rLowerBound..rUpperBound).filter { it == rawR }
 
         val neighborsList = mutableListOf<BonsaiTile>()
         for(q in qRange) {
@@ -279,10 +279,8 @@ class HexGrid private constructor(
      */
     fun getNeighbors(q: Int, r: Int): List<BonsaiTile> {
         require(q in axialRange && r in axialRange) {"Coordinate out of bounds"}
-        val nq = axial2Raw(q)
-        val nr = axial2Raw(r)
 
-        return getNeighborsWithRawCoordinate(nq, nr)
+        return getNeighborsWithRawCoordinate(axial2Raw(q), axial2Raw(r))
     }
 
     /**
@@ -293,9 +291,7 @@ class HexGrid private constructor(
      */
     fun getNeighbors(tile: BonsaiTile): List<BonsaiTile> {
         val coordinate = map[tile] ?: throw invalidTile
-        val nq = coordinate.first
-        val nr = coordinate.second
 
-        return getNeighborsWithRawCoordinate(nq, nr)
+        return getNeighborsWithRawCoordinate(coordinate.first, coordinate.second)
     }
 }
