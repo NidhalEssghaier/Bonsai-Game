@@ -120,8 +120,8 @@ class HexGrid private constructor(
         )
 
         return when {
-            q to r in allowed -> true
-            q in potRangeQ && r in potRangeR -> false
+            q to r in allowed -> false
+            q in potRangeQ && r in potRangeR -> true
             else -> false
         }
     }
@@ -317,9 +317,11 @@ class HexGrid private constructor(
         val emptySpaceList = mutableListOf<Pair<Int, Int>>()
         for(q in qRange) {
             for (r in rRange) {
-                if( isPot(q, r) ) continue
+                val qAxial = raw2Axial(q)
+                val rAxial = raw2Axial(r)
+                if( isPot(qAxial, rAxial) ) continue
                 if (grid[q][r] == null) {
-                    emptySpaceList.add(raw2Axial(q) to raw2Axial(r))
+                    emptySpaceList.add(qAxial to rAxial)
                 }
             }
         }
