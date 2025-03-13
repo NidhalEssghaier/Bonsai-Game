@@ -120,7 +120,10 @@ class HexGrid private constructor(
      * @param r r coordinate
      * @return [BonsaiTile] at the given axial coordinates or `null` if the coordinates are empty
      */
-    fun getOrNull(q: Int, r: Int) = grid[axial2Raw(q)][axial2Raw(r)]
+    fun getOrNull(q: Int, r: Int): BonsaiTile? {
+        require(q in axialRange && r in axialRange) {"Coordinate out of bounds"}
+        return grid[axial2Raw(q)][axial2Raw(r)]
+    }
 
     /**
      * Get the axial coordinate of the given [BonsaiTile]
