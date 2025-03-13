@@ -119,6 +119,7 @@ class HexGrid private constructor(
      * @param q q coordinate
      * @param r r coordinate
      * @return [BonsaiTile] at the given axial coordinates or `null` if the coordinates are empty
+     * @throws IllegalArgumentException if the coordinate is out of bounds
      */
     fun getOrNull(q: Int, r: Int): BonsaiTile? {
         require(q in axialRange && r in axialRange) {"Coordinate out of bounds"}
