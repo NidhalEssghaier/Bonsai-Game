@@ -35,4 +35,10 @@ interface Refreshable {
      */
     fun refreshAfterUndoRedo() {}
 
+    /**
+     * perform refreshes that are necessary after undo / redo
+     */
+    fun refreshAfterRemoveTile(){}
+
+
 }

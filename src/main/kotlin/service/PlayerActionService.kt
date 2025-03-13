@@ -301,9 +301,8 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
         //is tile in current player bonsai
         val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
         val currentPlayerBonsaiTiles = currentPlayer.bonsai.tiles()
-        val tile = currentPlayer.bonsai.map.forward(tileView)
-        check(currentPlayerBonsaiTiles.contains(tile)) { "cant remove a tile not in players bonsai" }
-
+        check(currentPlayer.bonsai.map.containsForward(tileView)) { "cant remove a tile not in players bonsai" }
+        val tile =currentPlayer.bonsai.map.forward(tileView)
         //is it possible to play wood tile
         check(!currentPlayerBonsaiTiles.any { bonsaiTile -> bonsaiTile.type == TileType.WOOD
                 && bonsaiTile.neighbors.size < 6
@@ -317,9 +316,14 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
         currentPlayer.bonsai.map.remove(tileView, tile)
         currentPlayer.bonsai.grid.remove(tileView)
 
-        //add tile to player supply
+        //remove tile from neighbors
+        tile.neighbors.forEach{neighbor -> neighbor.neighbors.remove(tile)}
         tile.neighbors.clear()
-        currentPlayer.supply.add(tile)
+
+        //refreshAfter removeTile
+        onAllRefreshables {
+            refreshAfterRemoveTile()
+        }
     }
 
     private fun leastGroupOfTilesToBeRemoved(tiles: List<BonsaiTile>): List<BonsaiTile> {
