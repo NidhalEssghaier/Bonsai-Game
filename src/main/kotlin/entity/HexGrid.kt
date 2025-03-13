@@ -60,6 +60,7 @@ package entity
  * @property axialRange Range of axial coordinates from -[size] to [size] (Only for internal usage)
  * @property axial2Raw Function to convert axial coordinates to raw internal coordinates (Only for internal usage)
  * @property raw2Axial Function to convert raw internal coordinates to axial coordinates (Only for internal usage)
+ * @property maxIndex Maximum index of the internal array (Only for internal usage)
  * @constructor Create a [HexGrid] with coordinates ranging from -[size] to [size]
  */
 class HexGrid private constructor(
@@ -73,6 +74,8 @@ class HexGrid private constructor(
 
     private val axial2Raw: (Int) -> (Int) = { it + size }
     private val raw2Axial: (Int) -> (Int) = { it - size }
+
+    private val maxIndex = actualSize - 1
 
     /**
      * Companion object to store the exceptions
@@ -247,8 +250,6 @@ class HexGrid private constructor(
 
         val nrPlusOne = rawR + 1
         val nrMinusOne = rawR - 1
-
-        val maxIndex = actualSize - 1
 
         val qUpperBound = if(nqPlusOne > maxIndex) maxIndex else nqPlusOne
         val qLowerBound = if(nqMinusOne < 0) 0 else nqMinusOne
