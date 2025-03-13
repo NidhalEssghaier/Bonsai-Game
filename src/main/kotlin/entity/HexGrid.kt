@@ -208,22 +208,17 @@ class HexGrid private constructor(
     }
 
     /**
-     * Get the list of neighbors of the given axial coordinates
-     * @param q q coordinate
-     * @param r r coordinate
+     * Get the list of neighbors of the given raw coordinates
+     * @param rawQ raw q coordinate
+     * @param rawR raw r coordinate
      * @return [List] of neighbors
-     * @throws IllegalArgumentException if the coordinate is out of bounds
      */
-    fun getNeighbors(q: Int, r: Int): List<BonsaiTile> {
-        require(q in axialRange && r in axialRange) {"Coordinate out of bounds"}
-        val nq = axial2Raw(q)
-        val nr = axial2Raw(r)
+    private fun getNeighborsWithRawCoordinate(rawQ: Int, rawR: Int): List<BonsaiTile> {
+        val nqPlusOne = rawQ + 1
+        val nqMinusOne = rawQ - 1
 
-        val nqPlusOne = nq + 1
-        val nqMinusOne = nq - 1
-
-        val nrPlusOne = nr + 1
-        val nrMinusOne = nr - 1
+        val nrPlusOne = rawR + 1
+        val nrMinusOne = rawR - 1
 
         val qUpperBound = if(nqPlusOne >= actualSize) actualSize else nqPlusOne
         val qLowerBound = if(nqMinusOne < 0) 0 else nqMinusOne
@@ -235,14 +230,43 @@ class HexGrid private constructor(
         val rRange = rLowerBound..rUpperBound
 
         val neighborsList = mutableListOf<BonsaiTile>()
-        for(nnq in qRange) {
-            for (nnr in rRange) {
-                val neighbor = grid[nnq][nnr]
+        for(q in qRange) {
+            for (r in rRange) {
+                val neighbor = grid[q][r]
                 if (neighbor != null) {
                     neighborsList.add(neighbor)
                 }
             }
         }
         return neighborsList.toList()
+    }
+
+    /**
+     * Get the list of neighbors of the given axial coordinates
+     * @param q q coordinate
+     * @param r r coordinate
+     * @return [List] of neighbors
+     * @throws IllegalArgumentException if the coordinate is out of bounds
+     */
+    fun getNeighbors(q: Int, r: Int): List<BonsaiTile> {
+        require(q in axialRange && r in axialRange) {"Coordinate out of bounds"}
+        val nq = axial2Raw(q)
+        val nr = axial2Raw(r)
+
+        return getNeighborsWithRawCoordinate(nq, nr)
+    }
+
+    /**
+     * Get the list of neighbors of the given [BonsaiTile]
+     * @param tile [BonsaiTile]
+     * @return [List] of neighbors
+     * @throws NoSuchElementException if the [BonsaiTile] isn't in the grid
+     */
+    fun getNeighbors(tile: BonsaiTile): List<BonsaiTile> {
+        val coordinate = map[tile] ?: throw invalidTile
+        val nq = coordinate.first
+        val nr = coordinate.second
+
+        return getNeighborsWithRawCoordinate(nq, nr)
     }
 }
