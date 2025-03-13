@@ -202,44 +202,79 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
 
 
     }
+
     /**
-     * Draws a card from the draw stack and processes it according to its type.
+     * Draws a card from the specified position in the openCards stack and processes it.
+     * For certain positions (e.g., cardStack 1), it requires player input for tile choice,
+     * deferring the addition of tiles to the supply until applyTileChoice is called.
      *
-     * **Preconditions:**
-     * - A game must be active.
-     * - The `openCards` list must not be empty.
+     * Preconditions:
+     * - A game must be active (rootService.currentGame != null).
+     * - The openCards list must not be empty.
      *
-     * **Postconditions:**
-     * - The selected card is drawn and its effects are applied.
-     * - If the card position grants bonsai tiles, they are added to the player's supply.
-     * - The UI is updated to reflect the drawn card.
+     * Postconditions:
+     * - For cardStack 0, 2, 3, tiles are immediately added to the player's supply, and the UI is refreshed.
+     * - For cardStack 1, the function triggers a GUI prompt via refreshToPromptTileChoice and exits early,
+     *   leaving tile assignment to applyTileChoice.
+     * - For invalid cardStack values, no tiles are added.
      *
-     * @param cardStack The position in the stack to draw from.
+     * @param cardStack The position in openCards to draw from (0-based index).
      */
-
     fun drawCard(cardStack: Int) {
-
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
 
         if (game.currentState.openCards.isEmpty()) throw IllegalStateException("No available cards to draw")
 
-        // Assign bonsai tiles based on the drawn card's board position
+        // Determine which tiles to assign based on the card's position in openCards
         val acquiredTiles = when (cardStack) {
-            0 -> emptyList()
+            0 -> emptyList() // Position 0: No tiles awarded
             1 -> {
-                // Allow the player to choose between WOOD or LEAF
-                val choice = onAllRefreshables { refreshTogetUserTileChoice() } as TileType
-                require(choice == TileType.WOOD  || choice == TileType.LEAF  ){throw IllegalStateException()}
-                listOf(BonsaiTile(choice))
+                // Position 1: Player must choose between WOOD or LEAF
+                // Notify the GUI (via Refreshable objects) to prompt the player for a tile choice
+                onAllRefreshables { refreshToPromptTileChoice() }
+                // Exit early; tile assignment is deferred until applyTileChoice is called by the GUI
+                return
             }
             2 -> listOf(BonsaiTile(TileType.WOOD), BonsaiTile(TileType.FLOWER))
             3 -> listOf(BonsaiTile(TileType.LEAF), BonsaiTile(TileType.FRUIT))
-            else -> emptyList()
+            else -> emptyList() // Any other position: No tiles (default case)
         }
 
+        // If we reach here (i.e., not cardStack 1), add the tiles to the current player's supply
         val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
         currentPlayer.supply += acquiredTiles
-        onAllRefreshables { refreshAfterDrawCard(game.currentState.openCards[cardStack])}
+
+        // Notify the GUI to update (e.g., refresh supply display, board, etc.) with the drawn card
+        onAllRefreshables { refreshAfterDrawCard(game.currentState.openCards[cardStack]) }
+    }
+
+    /**
+     * Applies the player's tile choice for cardStack 1 after the GUI prompts them.
+     * This is called by the GUI after the player selects WOOD or LEAF.
+     *
+     * Preconditions:
+     * - A game must be active.
+     * - The choice must be either WOOD or LEAF.
+     *
+     * Postconditions:
+     * - The chosen tile is added to the player's supply.
+     * - The UI is refreshed to reflect the change.
+     *
+     * @param cardStack The position in openCards (should be 1 for this case).
+     * @param choice The tile type chosen by the player (WOOD or LEAF).
+     */
+    fun applyTileChoice(cardStack: Int, choice: TileType) {
+        val game = rootService.currentGame ?: return
+
+        // Validate that the choice is WOOD or LEAF; throw an exception if invalid
+        require(choice == TileType.WOOD || choice == TileType.LEAF) { "Invalid choice" }
+
+        // Add the chosen tile to the current player's supply
+        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
+        currentPlayer.supply += listOf(BonsaiTile(choice))
+
+        // Notify the GUI to update with the drawn card (same as in drawCard)
+        onAllRefreshables { refreshAfterDrawCard(game.currentState.openCards[cardStack]) }
     }
 
     /**
@@ -253,27 +288,28 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
      * @param r The row coordinate where the tile should be placed.
      * @param q The column coordinate where the tile should be placed.
      */
-    fun placeHelperCardTiles(card: HelperCard, tile: TileType, r: Int ,q: Int ) {
-
+    fun placeHelperCardTiles(card: HelperCard, tile: TileType, r: Int, q: Int) {
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
         val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
 
-        // Check if the chosen tile is different from the one shown on the HelperCard
-        // and ensure that the player has not already placed a chosen tile
-
-        if (tile != card.tiles[1] && !card.hasPlacedChosenTile )
-        {   placeTile(tile, r,q)  // Place the chosen tile on the board
-            card.hasPlacedChosenTile = true // Mark the chosen tile as placed
-
-        }
-        // Check if the selected tile matches the shown tile on the HelperCard
-        // and ensure that the player has this tile in their supply and has not placed it yet
-
-        else if (tile == card.tiles[1] && currentPlayer.supply.contains(BonsaiTile(tile)) && !card.hasPlacedShownTile)
-        { placeTile(tile, r,q)
+        // Check if the selected tile matches the shown tile on the HelperCard (card.tiles[1])
+        // and ensure it hasn’t been placed yet. Prioritize this check since the chosen tile
+        // could coincidentally match the shown tile, but we want to track them separately.
+        if (tile == card.tiles[1] && !card.hasPlacedShownTile) {
+            // Place the shown tile at the specified coordinates
+            placeTile(tile, r, q)
+            // Mark the shown tile as placed to prevent re-placement
             card.hasPlacedShownTile = true
         }
-
+        // If the shown tile condition doesn’t apply, check if the player can place a tile of their choice
+        // and ensure they haven’t already placed a chosen tile
+        else if (!card.hasPlacedChosenTile) {
+            // Place the player’s chosen tile (which can be any type) at the specified coordinates
+            placeTile(tile, r, q)
+            // Mark the chosen tile as placed to prevent placing another
+            card.hasPlacedChosenTile = true
+        }
+        // Note: If neither condition is met (e.g., both tiles already placed), the function does nothing.
     }
 
     /**
