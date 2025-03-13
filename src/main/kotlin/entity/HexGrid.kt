@@ -255,12 +255,13 @@ class HexGrid private constructor(
         val rUpperBound = if(nrPlusOne >= actualSize) actualSize else nrPlusOne
         val rLowerBound = if(nrMinusOne < 0) 0 else nrMinusOne
 
-        val qRange = (qLowerBound..qUpperBound).filter { it == rawQ }
-        val rRange = (rLowerBound..rUpperBound).filter { it == rawR }
+        val qRange = (qLowerBound..qUpperBound)
+        val rRange = (rLowerBound..rUpperBound)
 
         val neighborsList = mutableListOf<BonsaiTile>()
         for(q in qRange) {
             for (r in rRange) {
+                if (q == rawQ && r == rawR) continue
                 val neighbor = grid[q][r]
                 if (neighbor != null) {
                     neighborsList.add(neighbor)
