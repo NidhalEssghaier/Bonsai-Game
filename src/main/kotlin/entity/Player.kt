@@ -31,13 +31,6 @@ abstract class Player protected constructor(
     )
 {
     /**
-     * Secondary public constructor to create a player instance
-     * @param name The name of the player
-     * @param potColor The color of the pot
-     */
-    constructor(name: String, potColor: PotColor): this(name, potColor, Bonsai())
-
-    /**
      * Abstract method to deep copy the player instance
      * @return a deep copy of the player instance
      */
