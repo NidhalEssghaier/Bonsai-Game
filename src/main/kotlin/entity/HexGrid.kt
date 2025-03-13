@@ -115,6 +115,16 @@ class HexGrid private constructor(
     }
 
     /**
+     * Get the [BonsaiTile] at the given axial coordinates or `null` if the coordinates are empty
+     * @param q q coordinate
+     * @param r r coordinate
+     * @return [BonsaiTile] at the given axial coordinates or `null` if the coordinates are empty
+     */
+    fun getOrNull(q: Int, r: Int): BonsaiTile? {
+        return grid[axial2Raw(q)][axial2Raw(r)]
+    }
+
+    /**
      * Get the axial coordinate of the given [BonsaiTile]
      * @param tile [BonsaiTile]
      * @return [Pair] of axial coordinates
