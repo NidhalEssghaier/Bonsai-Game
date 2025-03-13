@@ -323,7 +323,7 @@ class HexGrid private constructor(
      * @param rawR raw internal r coordinate
      * @return [List] of empty spaces
      */
-    private fun getAreaEmptySpace(rawQ: Int, rawR: Int): List<Pair<Int, Int>> {
+    private fun getEmptySpaceWithRawCoordinate(rawQ: Int, rawR: Int): List<Pair<Int, Int>> {
         val coordinateSet = getArea(rawQ, rawR)
 
         val emptySpaceList = mutableListOf<Pair<Int, Int>>()
@@ -348,7 +348,7 @@ class HexGrid private constructor(
      */
     fun getEmptySpace(q: Int, r: Int): List<Pair<Int, Int>> {
         if ( !(q in axialRange && r in axialRange) ) throw outOfBounds
-        return getAreaEmptySpace(axial2Raw(q), axial2Raw(r))
+        return getEmptySpaceWithRawCoordinate(axial2Raw(q), axial2Raw(r))
     }
 
     /**
@@ -359,7 +359,7 @@ class HexGrid private constructor(
      */
     fun getEmptySpace(tile: BonsaiTile): List<Pair<Int, Int>> {
         val coordinate = map[tile] ?: throw invalidTile
-        return getAreaEmptySpace(coordinate.first, coordinate.second)
+        return getEmptySpaceWithRawCoordinate(coordinate.first, coordinate.second)
     }
 
     /**
