@@ -11,6 +11,4 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 class HelperCard(val tiles: List<TileType>) : ZenCard {
-    var hasPlacedChosenTile: Boolean = false
-    var hasPlacedShownTile: Boolean = false
 }

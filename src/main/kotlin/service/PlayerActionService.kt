@@ -82,27 +82,85 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
     }
 
     /**
-     * Executes the "cultivate" action, allowing the player to place tiles in Bonsai.
-     * In the rare case that placing a wood tile is not possible at the beginning of the player's turn,
-     * the player may remove existing tiles to enable placement.
+     * Places a tile while considering the player's helper cards and growth card effects.
      *
-     * Preconditions:
-     * - A game must have been started and must be currently running.
-     * - The player must be on their turn.
+     * This method verifies whether the specified tile is in the player's personal supply.
+     * If the player has an unused helper card, it checks whether the tile type matches
+     * any of the helper card's allowed tiles or if a generic tile can be used.
      *
-     * Postconditions:
-     * - If placing a tile is possible , and the player chooses to, it will be placed.
-     * - If the player chooses to remove tiles, they will be removed.
-     * - The player's turn will end.
+     * If a matching tile is found, the tile is placed, and the matched tile in the helper card is marked as used
+     * by adding it to `usedHelperTiles`. The helper card itself is also marked as used by adding it to
+     * `usedHelperCards`.
      *
-     * @returns This method returns no value (`Unit`).
+     * If the tile does not match the conditions of the helper card, an exception is thrown.
      *
-     * @throws IllegalStateException If there is no active game.
+     * If the player does not use a HelperCard, the tile is placed normally according to the rules of [placeTile].
+     * The tile must either match one of the player's Seishi starting tiles or be allowed by an active GrowthCard.
      *
-     * @sample cultivate()
+     * @param tile The BonsaiTile to be placed.
+     * @param r The row coordinate for tile placement.
+     * @param q The column coordinate for tile placement.
+     *
+     * @throws IllegalStateException if there is no active game or if the tile is not in the player's supply.
+     * @throws IllegalStateException if a helper card is available but the tile does not follow its placement rules of the card
+     * @throws IllegalStateException if no helper card is used and the tile is not allowed based on Seishi
+     * or GrowthCard rules.
      */
-    fun cultivate() {
-        // Method implementation
+    fun cultivate(tile: BonsaiTile, r: Int, q: Int) {
+
+        val game = rootService.currentGame ?: throw IllegalStateException("No active game")
+        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
+        val personalSupply = currentPlayer.supply
+        check(tile in personalSupply) { "this Tile is not in your personal supply" }
+
+        // Find an unused helper card in the hidden deck
+        val helperCard = currentPlayer.hiddenDeck.find {
+            it is HelperCard && it !in currentPlayer.usedHelperCards
+        } as? HelperCard
+
+        // placing a Tile when having  a helper Card
+        if (helperCard != null) {
+
+
+            val respectedTile = helperCard.tiles.find { it == tile.type  && it !in currentPlayer.usedHelperTiles }
+            val genericTile = helperCard.tiles.find {
+                it == TileType.GENERIC && it !in currentPlayer.usedHelperTiles
+            }
+
+            if (respectedTile != null || genericTile != null) {
+                placeTile(tile, r, q)
+                currentPlayer.usedHelperCards.add(helperCard)
+
+                // add the specific tile that was matched to usedHelperTiles
+                if (respectedTile != null) {
+                        currentPlayer.usedHelperTiles.add(respectedTile)
+                } else if (genericTile != null) {
+                        currentPlayer.usedHelperTiles.add(genericTile)
+
+                        // wichtig: player´s usedHelperTiles must be cleared when the player ends his Turn
+                }
+            }
+            else {
+
+                    throw IllegalStateException(" Unrespected placing rules according to Helper Card")
+            }
+        }
+        // placing a Tile without a helper Card
+        else {
+            val seishiAllowedTiles = currentPlayer.treeTileLimit.keys // The 3 permanent Seishi tile types
+            // Tile types granted by Growth Cards
+            val growthAllowedTiles = currentPlayer.seishiGrowth.map { (it as? GrowthCard)?.type }
+
+            val allowedTiles = seishiAllowedTiles + growthAllowedTiles
+            val isPlacementAllowed = tile.type in allowedTiles
+
+            if (isPlacementAllowed) {
+                placeTile(tile, r, q)
+            } else {
+                throw IllegalStateException("Tile placement not allowed based on Seishi StartingTile ans Growth Cards.")
+            }
+        }
+
     }
 
     /**
@@ -153,19 +211,21 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
                 // Store the card in the hidden deck; tile limit checks will be enforced at the end of the turn
                 currentPlayer.hiddenDeck += card
             }
-            is ParchmentCard, is HelperCard ->
-                currentPlayer.hiddenDeck += card // Store card within hiddenDeck
-
-            is PlaceholderCard -> {}
+            is ParchmentCard -> currentPlayer.hiddenDeck += card // Store card within hiddenDeck
+            is HelperCard -> {
+                currentPlayer.hiddenDeck += card
+                onAllRefreshables { refreshAfterDrawHelperCard(card) }
+            }
         }
 
-        game.currentState.openCards[cardIndex] = PlaceholderCard
+        val placeholderCard = object : ZenCard {}
+        game.currentState.openCards[cardIndex] = placeholderCard
         // Shift remaining cards and enforce game constraints
         shiftBoardAndRefill(cardIndex)
 
     }
 
-    fun placeTile(tile: TileType, r: Int, q: Int){
+    private fun placeTile(tile: BonsaiTile, r: Int, q: Int){
 
     }
 
@@ -241,39 +301,6 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
         onAllRefreshables { refreshAfterDrawCard(game.currentState.openCards[cardStack])}
     }
 
-    /**
-     * Handles the placement of tiles when a HelperCard is drawn.
-     *
-     * This function will be directly triggered in the GUI when the player selects a HelperCard.
-     * It ensures that at least one tile is placed according to the HelperCard's rules.
-     *
-     * @param card The HelperCard being processed.
-     * @param tile The tile selected by the player.
-     * @param r The row coordinate where the tile should be placed.
-     * @param q The column coordinate where the tile should be placed.
-     */
-    fun placeHelperCardTiles(card: HelperCard, tile: TileType, r: Int ,q: Int ) {
-
-        val game = rootService.currentGame ?: throw IllegalStateException("No active game")
-        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
-
-        // Check if the chosen tile is different from the one shown on the HelperCard
-        // and ensure that the player has not already placed a chosen tile
-
-        if (tile != card.tiles[1] && !card.hasPlacedChosenTile )
-        {   placeTile(tile, r,q)  // Place the chosen tile on the board
-            card.hasPlacedChosenTile = true // Mark the chosen tile as placed
-
-        }
-        // Check if the selected tile matches the shown tile on the HelperCard
-        // and ensure that the player has this tile in their supply and has not placed it yet
-
-        else if (tile == card.tiles[1] && currentPlayer.supply.contains(BonsaiTile(tile)) && !card.hasPlacedShownTile)
-        { placeTile(tile, r,q)
-            card.hasPlacedShownTile = true
-        }
-
-    }
 
     /**
      * Shifts all face-up cards to the right and fills the empty position with a new card.

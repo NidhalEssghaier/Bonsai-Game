@@ -32,6 +32,9 @@ sealed interface Player
     var seishiGrowth: ArrayDeque<ZenCard>
     var hiddenDeck: MutableList<ZenCard>
     var supply: MutableList<BonsaiTile>
+    var usedHelperCards: MutableList<HelperCard>
+    var usedHelperTiles: MutableList<TileType>
+
 
     /**
      * Abstract method to deep copy the player instance

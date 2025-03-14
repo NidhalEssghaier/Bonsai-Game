@@ -33,7 +33,9 @@ class RandomBot internal constructor(
     @Serializable(with = ArrayDequeZenCardSerializer::class)
     override var seishiGrowth: ArrayDeque<ZenCard> = ArrayDeque(),
     override var hiddenDeck: MutableList<ZenCard> = mutableListOf(),
-    override var supply: MutableList<BonsaiTile> = mutableListOf()
+    override var supply: MutableList<BonsaiTile> = mutableListOf(),
+    override var usedHelperTiles: MutableList<TileType> = mutableListOf(),
+    override var usedHelperCards: MutableList<HelperCard> = mutableListOf() ,
 ): Player
 {
     /**
@@ -58,7 +60,9 @@ class RandomBot internal constructor(
             ArrayDeque(seishiTool),
             ArrayDeque(seishiGrowth),
             hiddenDeck.toMutableList(),
-            supply.toMutableList()
+            supply.toMutableList(),
+            usedHelperTiles.toMutableList(),
+            usedHelperCards.toMutableList(),
         )
     }
 }
