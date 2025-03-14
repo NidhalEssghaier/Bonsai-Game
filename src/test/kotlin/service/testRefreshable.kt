@@ -11,6 +11,9 @@ class TestRefreshable : Refreshable {
     var refreshAfterStartTileRemoved: Boolean = false
         private set
 
+    var refreshAfterStartNewGameCalled: Boolean = false
+        private set
+
 
 
     /**
@@ -18,10 +21,15 @@ class TestRefreshable : Refreshable {
      */
     fun reset() {
         refreshAfterStartTileRemoved = false
+        refreshAfterStartNewGameCalled = false
     }
 
     override fun refreshAfterRemoveTile() {
         refreshAfterStartTileRemoved = true
+    }
+
+    override fun refreshAfterStartNewGame() {
+        refreshAfterStartNewGameCalled = true
     }
 
 
