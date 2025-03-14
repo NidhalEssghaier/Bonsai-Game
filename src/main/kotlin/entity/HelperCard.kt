@@ -15,4 +15,4 @@ import kotlin.uuid.Uuid
 data class HelperCard @OptIn(ExperimentalUuidApi::class) constructor(
     val tiles: List<TileType>,
     private val uuid: Uuid = Uuid.random()
-)
+): ZenCard
