@@ -22,7 +22,6 @@ interface Refreshable {
      */
     fun refreshAfterStartNewGame() {}
     fun refreshAfterDrawCard(card: ZenCard){}
-    fun refreshTogetUserTileChoice(): TileType
 
     /**
      * perform refreshes after a player claims a goal card
