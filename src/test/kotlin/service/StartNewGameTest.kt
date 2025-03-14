@@ -7,7 +7,7 @@ import entity.PotColor
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
-class startNewGameTest {
+class StartNewGameTest {
     @Test
     fun testStartNewGame() {
         val rootService = RootService()

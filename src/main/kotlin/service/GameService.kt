@@ -112,13 +112,13 @@ class GameService(private val rootService:RootService):AbstractRefreshingService
         cardStack.push(HelperCard(listOf(TileType.GENERIC,TileType.FRUIT)))
 
         //parchment cards
-        cardStack.push(ParchmentCard(2,ParchmentCardType.MASTER))
-        cardStack.push(ParchmentCard(2,ParchmentCardType.GROWTH))
-        cardStack.push(ParchmentCard(2,ParchmentCardType.HELPER))
-        cardStack.push(ParchmentCard(2,ParchmentCardType.FLOWER))
-        cardStack.push(ParchmentCard(2,ParchmentCardType.FRUIT))
-        cardStack.push(ParchmentCard(1,ParchmentCardType.LEAF))
-        cardStack.push(ParchmentCard(1,ParchmentCardType.WOOD))
+        cardStack.push(ParchmentCard(2,ParchmentCardType.MASTER,34))
+        cardStack.push(ParchmentCard(2,ParchmentCardType.GROWTH,35))
+        cardStack.push(ParchmentCard(2,ParchmentCardType.HELPER,36))
+        cardStack.push(ParchmentCard(2,ParchmentCardType.FLOWER,37))
+        cardStack.push(ParchmentCard(2,ParchmentCardType.FRUIT,38))
+        cardStack.push(ParchmentCard(1,ParchmentCardType.LEAF,39))
+        cardStack.push(ParchmentCard(1,ParchmentCardType.WOOD,40))
 
         cardStack.shuffle()
 
@@ -148,7 +148,7 @@ class GameService(private val rootService:RootService):AbstractRefreshingService
      * @sample endGame()
      */
 
-    fun endGame() {
+    fun endGame() : List<Pair<Player,Int>> {
         val game = rootService.currentGame
         checkNotNull(game)
         val playerList = game.currentState.players
@@ -156,36 +156,56 @@ class GameService(private val rootService:RootService):AbstractRefreshingService
         val pointsPerPlayer = mutableMapOf<Player,Int>()
         for(player in playerList) {
             val bonsai = player.bonsai
-            val numberOfLeafTiles = bonsai.tileCount[TileType.LEAF]
+            /*val numberOfLeafTiles = bonsai.tileCount[TileType.LEAF]
             checkNotNull(numberOfLeafTiles)
             val numberOfFruitTiles = bonsai.tileCount[TileType.FRUIT]
-            checkNotNull(numberOfFruitTiles)
+            checkNotNull(numberOfFruitTiles)*/
 
+            var numberOfWoodTiles = 0
+            var numberOfLeafTiles = 0
+            var numberOfFlowerTiles = 0
+            var numberOfFruitTiles = 0
             var sumOfFlowerPoints = 0
-            val grid = player.bonsai.grid
-            val listOfTiles: List<BonsaiTile> = grid.tilesList.invoke()
-            for(tile in listOfTiles) {
-                if(tile.type == TileType.FLOWER) {
-                    sumOfFlowerPoints += 6 - grid.getNeighbors(tile).size
+
+            for(tile in bonsai.grid.getInternalMap().keys) {
+                when(tile.type) {
+                    TileType.WOOD -> numberOfWoodTiles += 1
+                    TileType.LEAF -> numberOfLeafTiles += 1
+                    TileType.FLOWER -> {
+                        numberOfFlowerTiles += 1
+                        sumOfFlowerPoints += 6 - bonsai.grid.getNeighbors(tile).size
+                    }
+                    TileType.FRUIT -> numberOfFruitTiles += 1
+                    else -> {}
                 }
             }
 
+            val cardPoints = mutableMapOf<ParchmentCardType,Int>()
+            for(type in ParchmentCardType.entries) {
+                cardPoints[type] = 0
+            }
 
-            val tilePoints = numberOfLeafTiles * 3 + numberOfFruitTiles * 7 + sumOfFlowerPoints
-
-            var cardPoints = 0
             for(card in player.hiddenDeck) {
                 if(card is ParchmentCard) {
-                    cardPoints += card.points
+                    checkNotNull(cardPoints[card.type])
+                    val newValue = cardPoints[card.type]?.plus(card.points)
+                    checkNotNull(newValue)
+                    cardPoints[card.type] = newValue
                 }
             }
+
+            val finalWoodPoints = numberOfWoodTiles * cardPoints.getValue(ParchmentCardType.WOOD)
+            val finalLeafPoints = numberOfLeafTiles * (3 + cardPoints.getValue(ParchmentCardType.LEAF))
+            val finalFruitPoints = numberOfFruitTiles * (7 + cardPoints.getValue(ParchmentCardType.FRUIT))
+            val finalFlowerPoints = sumOfFlowerPoints + numberOfFlowerTiles * cardPoints.getValue(ParchmentCardType.FLOWER)
+            val tilePoints = finalWoodPoints + finalLeafPoints + finalFruitPoints + finalFlowerPoints
 
             var goalPoints = 0
             for(goal in player.acceptedGoals) {
                 goalPoints += goal.points
             }
 
-            val points = tilePoints + cardPoints + goalPoints
+            val points = tilePoints + goalPoints
 
             pointsPerPlayer[player] = points
         }
@@ -193,6 +213,8 @@ class GameService(private val rootService:RootService):AbstractRefreshingService
         //a tie situation is already handled via sortedByDescending, because equal values stay in the same order
 
         onAllRefreshables { refreshAfterEndGame(scoreList) }
+
+        return scoreList
     }
 
     /**
