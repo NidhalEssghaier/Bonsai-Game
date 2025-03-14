@@ -37,16 +37,16 @@ class GameService(private val rootService:RootService):AbstractRefreshingService
      *
      * @sample startNewGame(mutableListOf(Pair("Max Mustermann",0)),3,false)
      */
-    fun startNewGame(players: List<Pair<String, Int>>, speed: Int, goalCards: List<GoalCard>) {
+    fun startNewGame(players: List<Triple<String, Int, PotColor>>, speed: Int, goalCards: List<GoalCard>) {
         val drawStack = prepareCards(players.size)
         val openCards = drawStack.popAll(4).toMutableList()
         val playerList = mutableListOf<Player>()
-        for(pair in players) {
-            when(pair.second) {
-                0 -> playerList.add(LocalPlayer(pair.first))
-                1 -> playerList.add(NetworkPlayer(pair.first))
-                2 -> playerList.add(RandomBot(pair.first))
-                3 -> playerList.add(SmartBot(pair.first))
+        for(triple in players) {
+            when(triple.second) {
+                0 -> playerList.add(LocalPlayer(triple.first, triple.third))
+                1 -> playerList.add(NetworkPlayer(triple.first, triple.third))
+                2 -> playerList.add(RandomBot(triple.first, triple.third))
+                3 -> playerList.add(SmartBot(triple.first, triple.third))
             }
         }
 
@@ -54,8 +54,8 @@ class GameService(private val rootService:RootService):AbstractRefreshingService
         onAllRefreshables { refreshAfterStartNewGame() }
     }
 
-    private fun prepareCards(playerCount: Int) : Stack<ZenCard> {
-        val cardStack = Stack<ZenCard>()
+    private fun prepareCards(playerCount: Int) : ArrayDeque<ZenCard> {
+        val cardStack = ArrayDeque<ZenCard>()
 
         //growth cards
         repeat(2) {
