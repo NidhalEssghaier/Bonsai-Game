@@ -1,8 +1,5 @@
 package entity
 
-import helper.copy
-import tools.aqua.bgw.util.Stack
-
 /**
  * Entity to represent the game state
  *
@@ -18,7 +15,7 @@ class GameState(
     val gameSpeed: Int,
     val players: List<Player>,
     val goalCards: List<GoalCard>,
-    val drawStack: Stack<ZenCard>,
+    val drawStack: ArrayDeque<ZenCard>,
     val openCards: MutableList<ZenCard>,
 
     var currentPlayer: Int = 0,
@@ -34,7 +31,7 @@ class GameState(
             gameSpeed,
             players.map { it.copy() },
             goalCards,
-            drawStack.copy(),
+            ArrayDeque(drawStack),
             openCards,
             this.currentPlayer,
             this.endGameCounter

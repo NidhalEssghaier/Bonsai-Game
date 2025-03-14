@@ -1,7 +1,7 @@
 package service
 
 import entity.*
-import tools.aqua.bgw.util.Stack
+import helper.*
 
 class GameService(private val rootService:RootService):AbstractRefreshingService() {
 

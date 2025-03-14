@@ -1,9 +1,7 @@
 package service
 import entity.*
 import gui.*
-
-import tools.aqua.bgw.components.container.HexagonGrid
-import tools.aqua.bgw.components.gamecomponentviews.HexagonView
+import helper.*
 
 class PlayerActionService(private val rootService: RootService):AbstractRefreshingService() {
 
@@ -84,27 +82,85 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
     }
 
     /**
-     * Executes the "cultivate" action, allowing the player to place tiles in Bonsai.
-     * In the rare case that placing a wood tile is not possible at the beginning of the player's turn,
-     * the player may remove existing tiles to enable placement.
+     * Places a tile while considering the player's helper cards and growth card effects.
      *
-     * Preconditions:
-     * - A game must have been started and must be currently running.
-     * - The player must be on their turn.
+     * This method verifies whether the specified tile is in the player's personal supply.
+     * If the player has an unused helper card, it checks whether the tile type matches
+     * any of the helper card's allowed tiles or if a generic tile can be used.
      *
-     * Postconditions:
-     * - If placing a tile is possible , and the player chooses to, it will be placed.
-     * - If the player chooses to remove tiles, they will be removed.
-     * - The player's turn will end.
+     * If a matching tile is found, the tile is placed, and the matched tile in the helper card is marked as used
+     * by adding it to `usedHelperTiles`. The helper card itself is also marked as used by adding it to
+     * `usedHelperCards`.
      *
-     * @returns This method returns no value (`Unit`).
+     * If the tile does not match the conditions of the helper card, an exception is thrown.
      *
-     * @throws IllegalStateException If there is no active game.
+     * If the player does not use a HelperCard, the tile is placed normally according to the rules of [placeTile].
+     * The tile must either match one of the player's Seishi starting tiles or be allowed by an active GrowthCard.
      *
-     * @sample cultivate()
+     * @param tile The BonsaiTile to be placed.
+     * @param r The row coordinate for tile placement.
+     * @param q The column coordinate for tile placement.
+     *
+     * @throws IllegalStateException if there is no active game or if the tile is not in the player's supply.
+     * @throws IllegalStateException if a helper card is available but the tile does not follow its placement rules of the card
+     * @throws IllegalStateException if no helper card is used and the tile is not allowed based on Seishi
+     * or GrowthCard rules.
      */
-    fun cultivate() {
-        // Method implementation
+    fun cultivate(tile: BonsaiTile, r: Int, q: Int) {
+
+        val game = rootService.currentGame ?: throw IllegalStateException("No active game")
+        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
+        val personalSupply = currentPlayer.supply
+        check(tile in personalSupply) { "this Tile is not in your personal supply" }
+
+        // Find an unused helper card in the hidden deck
+        val helperCard = currentPlayer.hiddenDeck.find {
+            it is HelperCard && it !in currentPlayer.usedHelperCards
+        } as? HelperCard
+
+        // placing a Tile when having  a helper Card
+        if (helperCard != null) {
+
+
+            val respectedTile = helperCard.tiles.find { it == tile.type  && it !in currentPlayer.usedHelperTiles }
+            val genericTile = helperCard.tiles.find {
+                it == TileType.GENERIC && it !in currentPlayer.usedHelperTiles
+            }
+
+            if (respectedTile != null || genericTile != null) {
+                placeTile(tile, r, q)
+                currentPlayer.usedHelperCards.add(helperCard)
+
+                // add the specific tile that was matched to usedHelperTiles
+                if (respectedTile != null) {
+                    currentPlayer.usedHelperTiles.add(respectedTile)
+                } else if (genericTile != null) {
+                    currentPlayer.usedHelperTiles.add(genericTile)
+
+                    // wichtig: player´s usedHelperTiles must be cleared when the player ends his Turn
+                }
+            }
+            else {
+
+                throw IllegalStateException(" Unrespected placing rules according to Helper Card")
+            }
+        }
+        // placing a Tile without a helper Card
+        else {
+            val seishiAllowedTiles = currentPlayer.treeTileLimit.keys // The 3 permanent Seishi tile types
+            // Tile types granted by Growth Cards
+            val growthAllowedTiles = currentPlayer.seishiGrowth.map { (it as? GrowthCard)?.type }
+
+            val allowedTiles = seishiAllowedTiles + growthAllowedTiles
+            val isPlacementAllowed = tile.type in allowedTiles
+
+            if (isPlacementAllowed) {
+                placeTile(tile, r, q)
+            } else {
+                throw IllegalStateException("Tile placement not allowed based on Seishi StartingTile ans Growth Cards.")
+            }
+        }
+
     }
 
     /**
@@ -155,8 +211,11 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
                 // Store the card in the hidden deck; tile limit checks will be enforced at the end of the turn
                 currentPlayer.hiddenDeck += card
             }
-            is ParchmentCard, is HelperCard ->
-                currentPlayer.hiddenDeck += card // Store card within hiddenDeck
+            is ParchmentCard -> currentPlayer.hiddenDeck += card // Store card within hiddenDeck
+            is HelperCard -> {
+                currentPlayer.hiddenDeck += card
+                onAllRefreshables { refreshAfterDrawHelperCard(card) }
+            }
         }
 
         val placeholderCard = object : ZenCard {}
@@ -166,7 +225,7 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
 
     }
 
-    fun placeTile(tile: TileType, r: Int, q: Int){
+    private fun placeTile(tile: BonsaiTile, r: Int, q: Int){
 
     }
 
@@ -202,7 +261,6 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
 
 
     }
-
     /**
      * Draws a card from the specified position in the openCards stack and processes it.
      * For certain positions (e.g., cardStack 1), it requires player input for tile choice,
@@ -263,6 +321,7 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
      * @param cardStack The position in openCards (should be 1 for this case).
      * @param choice The tile type chosen by the player (WOOD or LEAF).
      */
+
     fun applyTileChoice(cardStack: Int, choice: TileType) {
         val game = rootService.currentGame ?: return
 
@@ -276,7 +335,6 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
         // Notify the GUI to update with the drawn card (same as in drawCard)
         onAllRefreshables { refreshAfterDrawCard(game.currentState.openCards[cardStack]) }
     }
-
 
     /**
      * Shifts all face-up cards to the right and fills the empty position with a new card.
@@ -294,21 +352,23 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
         game.currentState.openCards[0] = newCard
     }
 
-    fun removeTile(tileView: HexagonView) {
+    fun removeTile(tile: BonsaiTile) {
 
-        //check gamme is running
+        //check if game is running
         val game = rootService.currentGame
         checkNotNull(game) { "there is no active game" }
 
         //is tile in current player bonsai
         val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
         val currentPlayerBonsaiTiles = currentPlayer.bonsai.tiles()
-        val tile = currentPlayer.bonsai.map.forward(tileView)
         check(currentPlayerBonsaiTiles.contains(tile)) { "cant remove a tile not in players bonsai" }
+
+        val grid = currentPlayer.bonsai.grid
+        val neighbors = grid.getNeighbors(tile)
 
         //is it possible to play wood tile
         check(!currentPlayerBonsaiTiles.any { bonsaiTile -> bonsaiTile.type == TileType.WOOD
-                && bonsaiTile.neighbors.size < 6
+                && neighbors.size < 6
         }) { "player can play wood" }
 
         //is it part of the least number of tiles to be removed to make placing a wood possible
@@ -316,29 +376,37 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
         {"tile not part of the least number of tiles to be removed to make placing a wood possible"}
 
         //remove tile from bonsai tree
-        currentPlayer.bonsai.map.remove(tileView, tile)
-        currentPlayer.bonsai.grid.remove(tileView)
+        currentPlayer.bonsai.grid.remove(tile)
 
         //add tile to player supply
-        tile.neighbors.clear()
         currentPlayer.supply.add(tile)
     }
 
     private fun leastGroupOfTilesToBeRemoved(tiles: List<BonsaiTile>): List<BonsaiTile> {
+        //check if game is running
+        val game = rootService.currentGame
+        checkNotNull(game) { "there is no active game" }
+
         return tiles.filter { tile ->
+            //get grid
+            val grid = game.currentState.players[game.currentState.currentPlayer].bonsai.grid
+
+            //get neighbors of tile
+            val neighbors = grid.getNeighbors(tile)
+
             //tile is not neighbor to wood
-            if (tile.neighbors.any { neighbor -> neighbor.type == TileType.WOOD }) return@filter false
+            if (neighbors.any { neighbor -> neighbor.type == TileType.WOOD }) return@filter false
             //tile is wood
             if (tile.type.equals(TileType.WOOD)) return@filter false
             //tile is surrounded
-            if (tile.neighbors.size == 6) return@filter false
+            if (neighbors.size == 6) return@filter false
             //tile is fruit or flower
             if (tile.type.equals(TileType.FLOWER) || tile.type.equals(TileType.FRUIT)) return@filter true
 
             //tile is leaf
             if (tile.type == TileType.LEAF) {
-                val neighborFruits = tile.neighbors.filter { neighbor -> neighbor.type == TileType.FRUIT }
-                val neighborFlowers = tile.neighbors.filter { neighbor -> neighbor.type == TileType.FLOWER }
+                val neighborFruits = neighbors.filter { neighbor -> neighbor.type == TileType.FRUIT }
+                val neighborFlowers = neighbors.filter { neighbor -> neighbor.type == TileType.FLOWER }
 
                 //has no fruit or flower neighbors
                 if (neighborFlowers.isEmpty() && neighborFruits.isEmpty()) return@filter true
@@ -346,14 +414,14 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
                 //neighbor flower have less then 2 leaves
                 else if (
                     neighborFlowers.any { flower ->
-                        (flower.neighbors.filter { neighbor -> neighbor.type == TileType.LEAF }.size) < 2
+                        (grid.getNeighbors(flower).filter { neighbor -> neighbor.type == TileType.LEAF }.size) < 2
                     }
                 ) { return@filter false }
 
 
                 //neighbor fruit has no 2 adjacent leafs after deletion
                 for (fruit in neighborFruits) {
-                    val fruitLeafNeighbors = fruit.neighbors
+                    val fruitLeafNeighbors = grid.getNeighbors(fruit)
                         .filter { neighbor -> neighbor.type == TileType.LEAF && !neighbor.equals(tile) }
                     if(!hasAdjacentPair(fruitLeafNeighbors)){
                         return@filter false
@@ -366,14 +434,22 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
     }
 
     private fun hasAdjacentPair(leafTiles: List<BonsaiTile>): Boolean {
+        //check if game is running
+        val game = rootService.currentGame
+        checkNotNull(game) { "there is no active game" }
+
+        val grid = game.currentState.players[game.currentState.currentPlayer].bonsai.grid
+
         for (leaf in leafTiles) {
-            if (leaf.neighbors.any { it in leafTiles }) {
+            if (grid.getNeighbors(leaf).any { it in leafTiles }) {
                 return true
             }
         }
         return false
     }
 }
+
+
 
 
 
