@@ -1,8 +1,5 @@
 package entity
 
-import helper.copy
-import tools.aqua.bgw.util.Stack
-
 /**
  * Entity to represent the player type "Network"
  *
@@ -17,33 +14,29 @@ import tools.aqua.bgw.util.Stack
  * @property supply The tile inventory of the player
  * @property bonsai The bonsai of the player
  */
-class NetworkPlayer(
-    name: String,
+class NetworkPlayer private constructor(
+    override val name: String,
+    override var potColor: PotColor,
 
-    bonsai: Bonsai = Bonsai(),
-    supplyTileLimit: Int = 5,
-    treeTileLimit: MutableMap<TileType, Int> = mutableMapOf(),
-    declinedGoals: MutableList<GoalCard> = mutableListOf(),
-    acceptedGoals: MutableList<GoalCard> = mutableListOf(),
-    forbiddenGoals: MutableList<GoalCard> = mutableListOf(),
-    seishiTool: Stack<ZenCard> = Stack(),
-    seishiGrowth: Stack<ZenCard> = Stack(),
-    hiddenDeck: MutableList<ZenCard> = mutableListOf(),
-    supply: MutableList<BonsaiTile> = mutableListOf()
-): Player(
-    name,
-    bonsai,
-    supplyTileLimit,
-    treeTileLimit,
-    declinedGoals,
-    acceptedGoals,
-    forbiddenGoals,
-    seishiTool,
-    seishiGrowth,
-    hiddenDeck,
-    supply
-)
+    override var bonsai: Bonsai,
+    override var supplyTileLimit: Int = 5,
+    override var treeTileLimit: MutableMap<TileType, Int> = mutableMapOf(),
+    override var declinedGoals: MutableList<GoalCard> = mutableListOf(),
+    override var acceptedGoals: MutableList<GoalCard> = mutableListOf(),
+    override val forbiddenGoals: MutableList<GoalCard> = mutableListOf(),
+    override var seishiTool: ArrayDeque<ZenCard> = ArrayDeque(),
+    override var seishiGrowth: ArrayDeque<ZenCard> = ArrayDeque(),
+    override var hiddenDeck: MutableList<ZenCard> = mutableListOf(),
+    override var supply: MutableList<BonsaiTile> = mutableListOf(),
+    override var usedHelperTiles: MutableList<TileType> = mutableListOf(),
+    override var usedHelperCards: MutableList<HelperCard> = mutableListOf() ,
+) : Player
 {
+    /**
+     * Secondary public constructor to create a player instance
+     */
+    constructor(name: String, potColor: PotColor): this(name, potColor, Bonsai())
+
     /**
      * Make a deep copy of the NetworkPlayer instance
      * @return A deep copy of the NetworkPlayer instance
@@ -51,16 +44,20 @@ class NetworkPlayer(
     override fun copy(): NetworkPlayer {
         return NetworkPlayer(
             name,
+            potColor,
             bonsai.copy(),
             supplyTileLimit,
             treeTileLimit.toMutableMap(),
             declinedGoals.toMutableList(),
             acceptedGoals.toMutableList(),
             forbiddenGoals.toMutableList(),
-            seishiTool.copy(),
-            seishiGrowth.copy(),
+            ArrayDeque(seishiTool),
+            ArrayDeque(seishiGrowth),
             hiddenDeck.toMutableList(),
-            supply.toMutableList()
+            supply.toMutableList(),
+            usedHelperTiles.toMutableList(),
+            usedHelperCards.toMutableList(),
+
         )
     }
 }
