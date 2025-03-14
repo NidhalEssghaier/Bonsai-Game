@@ -2,6 +2,8 @@ package entity
 
 import kotlinx.serialization.Serializable
 import serializer.IntRangeSerializer
+import kotlin.math.ceil
+import kotlin.math.floor
 
 /**
  * Entity to represent the hex grid of the bonsai bowl
@@ -134,6 +136,50 @@ class HexGrid internal constructor(
             else -> false
         }
     }
+
+    /**
+     * Get the position of the given axial coordinates relative to the Pot
+     * @param q q coordinate
+     * @param r r coordinate
+     * @return [PotSide] of the given coordinates
+     * @throws IndexOutOfBoundsException if the coordinate is out of bounds
+     */
+    fun getPotSide(q: Int, r: Int): PotSide {
+        if ( !(q in axialRange && r in axialRange) ) throw outOfBounds
+        if ( isPot(q, r) ) return PotSide.OTHER
+        if (q >= 2) return PotSide.BELOW
+        if (q <= -2 - ceil(r.toDouble() / 2).toInt() ) return PotSide.LEFT
+        if (q >= 3 - floor(r.toDouble() / 2).toInt() ) return PotSide.RIGHT
+        return PotSide.OTHER
+    }
+
+    /**
+     * Get the position of the given [BonsaiTile] relative to the Pot
+     * @param tile [BonsaiTile]
+     * @return [PotSide] of the given [BonsaiTile]
+     * @throws NoSuchElementException if the [BonsaiTile] isn't in the grid
+     */
+    fun getPotSide(tile: BonsaiTile): PotSide {
+        val coordinate = map[tile] ?: throw invalidTile
+        return getPotSide(raw2Axial(coordinate.first), raw2Axial(coordinate.second))
+    }
+
+    /**
+     * Check if the given axial coordinates are protruding from the Pot area
+     * @param q q coordinate
+     * @param r r coordinate
+     * @return `true` if the coordinates are protruding from the Pot area, `false` otherwise
+     * @throws IndexOutOfBoundsException if the coordinate is out of bounds
+     */
+    fun isProtruding(q: Int, r: Int) = getPotSide(q, r) != PotSide.OTHER
+
+    /**
+     * Check if the given [BonsaiTile] is protruding from the Pot area
+     * @param tile [BonsaiTile]
+     * @return `true` if the [BonsaiTile] is protruding from the Pot area, `false` otherwise
+     * @throws NoSuchElementException if the [BonsaiTile] isn't in the grid
+     */
+    fun isProtruding(tile: BonsaiTile) = getPotSide(tile) != PotSide.OTHER
 
     /**
      * Check if the given axial coordinates are NOT in the Pot area
