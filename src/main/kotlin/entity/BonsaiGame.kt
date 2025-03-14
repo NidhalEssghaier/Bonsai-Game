@@ -16,7 +16,7 @@ import serializer.ArrayDequeGameStateSerializer
  * @property currentState The current game state.
  */
 @Serializable
-class BonsaiGame private constructor(
+class BonsaiGame internal constructor(
     var currentState: GameState,
     @Serializable(with = ArrayDequeGameStateSerializer::class)
     val undoStack: ArrayDeque<GameState>,

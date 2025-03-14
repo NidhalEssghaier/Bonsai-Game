@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
  * @property tiles Returns the list of all tiles in the bonsai.
  */
 @Serializable
-class Bonsai private constructor(
+class Bonsai internal constructor(
     val grid: HexGrid,
     val tileCount: MutableMap<TileType,Int>
 )
