@@ -11,12 +11,21 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.*
 
+/**
+ * Serializer for HexGrid
+ * @property descriptor The descriptor of the serializer
+ */
 class HexGridSerializer: KSerializer<HexGrid> {
     override val descriptor = buildClassSerialDescriptor("HexGrid") {
         element<Int>("Size")
         element<Map<BonsaiTile, Pair<Int, Int>>>("Map")
     }
 
+    /**
+     * Serializes the given value
+     * @param encoder The encoder to use
+     * @param value The value to serialize
+     */
     override fun serialize(encoder: Encoder, value: HexGrid) {
         encoder.encodeStructure(descriptor) {
             encodeIntElement(descriptor, 0, value.size)
@@ -29,6 +38,11 @@ class HexGridSerializer: KSerializer<HexGrid> {
         }
     }
 
+    /**
+     * Deserializes the given value
+     * @param decoder The decoder to use
+     * @return The deserialized HexGrid
+     */
     @OptIn(ExperimentalSerializationApi::class)
     override fun deserialize(decoder: Decoder): HexGrid {
         return decoder.decodeStructure(descriptor) {
