@@ -5,6 +5,8 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class RemoveTileTest {
 
@@ -13,14 +15,18 @@ class RemoveTileTest {
         val mc = RootService()
         val gameService = GameService(mc)
         val playerActionService = PlayerActionService(mc)
+
+        //test with no game
+        assertThrows<IllegalStateException> {playerActionService.removeTile(BonsaiTile(TileType.WOOD))  }
         gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, listOf())
+
 
         //check game not null
         val game = mc.currentGame
         checkNotNull(game)
+        val firstWoodTile= game.currentState.players[0].bonsai.grid[0, 0]
 
         //check removing with empty bonsai
-        val firstWoodTile= game.currentState.players[0].bonsai.grid[0, 0]
         val exception = assertThrows<IllegalStateException> {
             playerActionService.removeTile(firstWoodTile)
         }
@@ -50,8 +56,12 @@ class RemoveTileTest {
     fun `test remove unnecessary tile`(){
 
         val mc = RootService()
+        val testRefreshable =TestRefreshable()
         val gameService = GameService(mc)
         val playerActionService = PlayerActionService(mc)
+        playerActionService.addRefreshable(testRefreshable)
+
+
         gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, listOf())
 
         //check game not null
@@ -115,11 +125,14 @@ class RemoveTileTest {
         assertEquals("tile not part of the least number of tiles to be removed to make placing a wood possible",
             exception.message)
 
+        assertFalse { testRefreshable.refreshAfterStartTileRemoved }
         //removing a valid leaf
         assertDoesNotThrow {  playerActionService.removeTile(leafTile2)}
 
         //see if leaf removed from player grid
         assertThrows<NoSuchElementException> {  game.currentState.players[0].bonsai.grid.get(2,-2)}
+        assertTrue { testRefreshable.refreshAfterStartTileRemoved }
+
     }
 
 
