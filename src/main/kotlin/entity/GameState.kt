@@ -1,5 +1,9 @@
 package entity
 
+import kotlinx.serialization.Polymorphic
+import kotlinx.serialization.Serializable
+import serializer.ArrayDequeZenCardSerializer
+
 /**
  * Entity to represent the game state
  *
@@ -11,12 +15,14 @@ package entity
  * @property currentPlayer The active player, who can do actions.
  * @property endGameCounter Is used at the end of the game to allow every player only one last turn.
  */
+@Serializable
 class GameState(
     val gameSpeed: Int,
-    val players: List<Player>,
+    val players: List<@Polymorphic Player>,
     val goalCards: List<GoalCard>,
+    @Serializable(with = ArrayDequeZenCardSerializer::class)
     val drawStack: ArrayDeque<ZenCard>,
-    val openCards: MutableList<ZenCard>,
+    val openCards: MutableList<@Polymorphic ZenCard>,
 
     var currentPlayer: Int = 0,
     var endGameCounter: Int = 0

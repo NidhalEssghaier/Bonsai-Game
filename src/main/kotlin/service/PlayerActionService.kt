@@ -216,10 +216,10 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
                 currentPlayer.hiddenDeck += card
                 onAllRefreshables { refreshAfterDrawHelperCard(card) }
             }
+            is PlaceholderCard -> {}
         }
 
-        val placeholderCard = object : ZenCard {}
-        game.currentState.openCards[cardIndex] = placeholderCard
+        game.currentState.openCards[cardIndex] = PlaceholderCard
         // Shift remaining cards and enforce game constraints
         shiftBoardAndRefill(cardIndex)
 
