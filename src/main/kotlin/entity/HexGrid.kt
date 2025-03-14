@@ -95,6 +95,7 @@ class HexGrid private constructor(
         private val invalidTile = NoSuchElementException("This BonsaiTile isn't in the grid")
         private const val IS_POT_MSG = "Unable to place or get BonsaiTile in Pot area"
         private val outOfBounds = IndexOutOfBoundsException("Coordinate out of bounds")
+        private val unplayableTile = BonsaiTile(TileType.UNPLAYABLE)
     }
 
     /**
@@ -455,14 +456,12 @@ class HexGrid private constructor(
 
             //mark unplayable pot tile as a placeholder neighbor
             else if(isPot(raw2Axial(coordinate.first),raw2Axial(coordinate.second))){
-                neighborsList.add(BonsaiTile(TileType.GENERIC))
+                neighborsList.add(unplayableTile)
             }
 
-            //mark unplayaple out of range limit tiles as a placeholder neighbor
+            //mark unplayable out of range limit tiles as a placeholder neighbor
             else if ( !(raw2Axial(rawQ) in axialRange && raw2Axial(rawR) in axialRange) ){
-                neighborsList.add(BonsaiTile(TileType.GENERIC))
-
-
+                neighborsList.add(unplayableTile)
             }
 
         }
