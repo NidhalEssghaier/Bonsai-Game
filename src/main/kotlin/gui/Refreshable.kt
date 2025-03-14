@@ -36,7 +36,7 @@ interface Refreshable {
     fun refreshAfterUndoRedo() {}
 
     /**
-     * perform refreshes that are necessary when a player choose a tile between 
+     * perform refreshes that are necessary when a player choose a tile between
      */
     fun refreshToPromptTileChoice() {}
     /**
@@ -48,6 +48,12 @@ interface Refreshable {
      */
 
     fun refreshAfterDrawHelperCard(helperCard: HelperCard) {}
+
+    /**
+     * perform refreshes that are necessary after undo / redo
+     */
+    fun refreshAfterRemoveTile(){}
+
 
     fun refreshAfterEndGame(scoreList: List<Pair<Player,Int>>) {}
 
