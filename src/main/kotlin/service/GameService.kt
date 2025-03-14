@@ -160,8 +160,17 @@ class GameService(private val rootService:RootService):AbstractRefreshingService
             checkNotNull(numberOfLeafTiles)
             val numberOfFruitTiles = bonsai.tileCount[TileType.FRUIT]
             checkNotNull(numberOfFruitTiles)
-            //TODO Nachbarwerte für Flower Tiles berechnen
-            val sumOfFlowerPoints = 0
+
+            var sumOfFlowerPoints = 0
+            val grid = player.bonsai.grid
+            val listOfTiles: List<BonsaiTile> = grid.tilesList.invoke()
+            for(tile in listOfTiles) {
+                if(tile.type == TileType.FLOWER) {
+                    sumOfFlowerPoints += 6 - grid.getNeighbors(tile).size
+                }
+            }
+
+
             val tilePoints = numberOfLeafTiles * 3 + numberOfFruitTiles * 7 + sumOfFlowerPoints
 
             var cardPoints = 0
@@ -183,7 +192,7 @@ class GameService(private val rootService:RootService):AbstractRefreshingService
         val scoreList = pointsPerPlayer.toList().sortedByDescending { pair -> pair.second }
         //a tie situation is already handled via sortedByDescending, because equal values stay in the same order
 
-        //onAllRefreshables { refreshAfterEndGame }
+        onAllRefreshables { refreshAfterEndGame(scoreList) }
     }
 
     /**

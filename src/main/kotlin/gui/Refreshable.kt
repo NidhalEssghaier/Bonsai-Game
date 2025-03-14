@@ -49,4 +49,6 @@ interface Refreshable {
 
     fun refreshAfterDrawHelperCard(helperCard: HelperCard) {}
 
+    fun refreshAfterEndGame(scoreList: List<Pair<Player,Int>>) {}
+
 }
