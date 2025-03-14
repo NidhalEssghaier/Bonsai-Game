@@ -452,9 +452,19 @@ class HexGrid private constructor(
             if (neighbor != null) {
                 neighborsList.add(neighbor)
             }
+
+            //mark unplayable pot tile as a placeholder neighbor
             else if(isPot(raw2Axial(coordinate.first),raw2Axial(coordinate.second))){
                 neighborsList.add(BonsaiTile(TileType.GENERIC))
             }
+
+            //mark unplayaple out of range limit tiles as a placeholder neighbor
+            else if ( !(raw2Axial(rawQ) in axialRange && raw2Axial(rawR) in axialRange) ){
+                neighborsList.add(BonsaiTile(TileType.GENERIC))
+
+
+            }
+
         }
         return neighborsList.toList()
     }

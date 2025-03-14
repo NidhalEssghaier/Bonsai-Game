@@ -65,6 +65,7 @@ class RemoveTileTest {
         val leafTile2=BonsaiTile(TileType.LEAF)
 
         //removing a wood tile when wood cant be played
+        //here the other neighbor are the unplayabe pot tile
         game.currentState.players[0].bonsai.grid[1, -1] = leafTile2
         game.currentState.players[0].bonsai.grid[0, -1] = leafTile1
         var exception = assertThrows<IllegalStateException> {
@@ -113,8 +114,6 @@ class RemoveTileTest {
         }
         assertEquals("tile not part of the least number of tiles to be removed to make placing a wood possible",
             exception.message)
-
-
 
         //removing a valid leaf
         assertDoesNotThrow {  playerActionService.removeTile(leafTile2)}
