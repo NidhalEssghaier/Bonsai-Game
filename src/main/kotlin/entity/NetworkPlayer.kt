@@ -1,5 +1,6 @@
 package entity
 
+import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
 import serializer.ArrayDequeZenCardSerializer
 
@@ -32,7 +33,7 @@ class NetworkPlayer private constructor(
     override var seishiTool: ArrayDeque<ZenCard> = ArrayDeque(),
     @Serializable(with = ArrayDequeZenCardSerializer::class)
     override var seishiGrowth: ArrayDeque<ZenCard> = ArrayDeque(),
-    override var hiddenDeck: MutableList<ZenCard> = mutableListOf(),
+    override var hiddenDeck: MutableList<@Polymorphic ZenCard> = mutableListOf(),
     override var supply: MutableList<BonsaiTile> = mutableListOf(),
     override var usedHelperTiles: MutableList<TileType> = mutableListOf(),
     override var usedHelperCards: MutableList<HelperCard> = mutableListOf() ,

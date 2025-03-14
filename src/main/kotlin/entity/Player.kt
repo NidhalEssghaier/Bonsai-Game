@@ -1,5 +1,6 @@
 package entity
 
+import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
 
 /**
@@ -30,7 +31,7 @@ sealed interface Player
     val forbiddenGoals: MutableList<GoalCard>
     var seishiTool: ArrayDeque<ZenCard>
     var seishiGrowth: ArrayDeque<ZenCard>
-    var hiddenDeck: MutableList<ZenCard>
+    var hiddenDeck: MutableList<@Polymorphic ZenCard>
     var supply: MutableList<BonsaiTile>
     var usedHelperCards: MutableList<HelperCard>
     var usedHelperTiles: MutableList<TileType>
