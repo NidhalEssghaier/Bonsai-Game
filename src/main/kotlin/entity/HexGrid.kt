@@ -103,8 +103,11 @@ class HexGrid private constructor(
         mutableMapOf()
     ) {
         val woodTile = BonsaiTile(TileType.WOOD)
-        grid[0][0] = woodTile
-        map[woodTile] = 0 to 0
+        val nq = axial2Raw(0)
+        val nr = axial2Raw(0)
+        grid[nq][nr] = woodTile
+        map[woodTile] = Pair(nq, nr)
+
     }
 
     /**
@@ -377,6 +380,9 @@ class HexGrid private constructor(
             val neighbor = grid[coordinate.first][coordinate.second]
             if (neighbor != null) {
                 neighborsList.add(neighbor)
+            }
+            else if(isPot(raw2Axial(coordinate.first),raw2Axial(coordinate.second))){
+                neighborsList.add(BonsaiTile(TileType.GENERIC))
             }
         }
         return neighborsList.toList()

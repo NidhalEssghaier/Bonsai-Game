@@ -34,17 +34,17 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
     }
 
     /**
-     * Undoes the last action by popping and restoring the last state from the [undoStack]
-     * and pushing it onto the [redoStack].
+     * Undoes the last action by popping and restoring the last state from the [BonsaiGame.undoStack]
+     * and pushing it onto the [BonsaiGame.redoStack].
      *
      * This method does not accept parameters.
      *
      * **Preconditions:**
      * - A game has been started and is currently running.
-     * - The [undoStack] is not empty.
+     * - The [BonsaiGame.undoStack] is not empty.
      *
      * **Postconditions:**
-     * - The previous game state has been moved from the [undoStack] to the [redoStack].
+     * - The previous game state has been moved from the undoStack to the redoStack.
      * - The previous game state has been restored.
      *
      * @throws IllegalStateException If there is no active game, or no action to undo.
@@ -59,15 +59,15 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
     }
 
     /**
-     * Redoes the last undone action by popping and restoring the last state from the [redoStack]
-     * and pushing it onto the [undoStack].
+     * Redoes the last undone action by popping and restoring the last state from the [BonsaiGame.redoStack]
+     * and pushing it onto the [BonsaiGame.undoStack].
      *
      * **Preconditions:**
      * - A game has been started and is currently running.
-     * - The [redoStack] is not empty.
+     * - The redoStack is not empty.
      *
      * **Postconditions:**
-     * - The following game state has been moved from the [redoStack] to the [undoStack].
+     * - The following game state has been moved from the redoStack to the undoStack.
      * - The following game state has been restored.
      *
      * @throws IllegalStateException If there is no active game, or no action to redo.
@@ -108,7 +108,7 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
     /**
      * Executes the "meditate" action, allowing the player to remove tiles and draw a card from the [BonsaiGame] [openCards].
      * Based on the card position, a [Player] receives bonsai tiles from the common supply and keep
-     * them in his [supply].
+     * them in his [Player.supply].
      * Based on the card type, a player can play a tile, recieve tiles or get a bonus
      *
      * Preconditions:
@@ -118,8 +118,8 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
      *
      * Postconditions:
      * - [HelperCard],[MasterCard] and [ParchmentCard] will be added to [Player] [hiddenDeck].
-     * - [ToolCard] will be added to [Player] [seichiTool].
-     * - [GrowthCard] will be added to [Player] [seichiGrowth].
+     * - [ToolCard] will be added to [Player.seishiTool].
+     * - [GrowthCard] will be added to [Player.seishiGrowth].
      * - The player's turn will end.
      *
      * @returns This method returns no value (`Unit`).
@@ -290,6 +290,7 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
         game.currentState.openCards[0] = newCard
     }
 
+
     fun removeTile(tile: BonsaiTile) {
 
         //check if game is running
@@ -301,12 +302,12 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
         val currentPlayerBonsaiTiles = currentPlayer.bonsai.tiles()
         check(currentPlayerBonsaiTiles.contains(tile)) { "cant remove a tile not in players bonsai" }
 
+        //get first wood tile
         val grid = currentPlayer.bonsai.grid
-        val neighbors = grid.getNeighbors(tile)
 
         //is it possible to play wood tile
-        check(!currentPlayerBonsaiTiles.any { bonsaiTile -> bonsaiTile.type == TileType.WOOD
-                && grid.getNeighbors(bonsaiTile).size< 6
+        check(!currentPlayerBonsaiTiles.any { bonsaiTile ->
+            (bonsaiTile.type == TileType.WOOD && grid.getNeighbors(bonsaiTile).size< 6 )
         }) { "player can play wood" }
 
         //is it part of the least number of tiles to be removed to make placing a wood possible
@@ -322,6 +323,7 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
     }
 
     private fun leastGroupOfTilesToBeRemoved(tiles: List<BonsaiTile>): List<BonsaiTile> {
+
         //check if game is running
         val game = rootService.currentGame
         checkNotNull(game) { "there is no active game" }
@@ -350,7 +352,7 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
                 //has no fruit or flower neighbors
                 if (neighborFlowers.isEmpty() && neighborFruits.isEmpty()) return@filter true
 
-                //neighbor flower have less then 2 leaves
+                //neighbor flower have less than 2 leaves
                 else if (
                     neighborFlowers.any { flower ->
                         (grid.getNeighbors(flower).filter { neighbor -> neighbor.type == TileType.LEAF }.size) < 2
