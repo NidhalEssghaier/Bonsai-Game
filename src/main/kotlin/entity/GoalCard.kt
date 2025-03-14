@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
  * @property difficulty The difficulty of the goal.
  */
 @Serializable
-class GoalCard(
+data class GoalCard(
     val points: Int,
     val color: GoalColor,
     val difficulty: GoalDifficulty,
