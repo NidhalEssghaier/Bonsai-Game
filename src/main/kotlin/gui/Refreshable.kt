@@ -1,6 +1,5 @@
 package gui
 
-import entity.TileType
 import entity.*
 import service.AbstractRefreshingService
 
@@ -22,6 +21,7 @@ interface Refreshable {
      */
     fun refreshAfterStartNewGame() {}
     fun refreshAfterDrawCard(card: ZenCard){}
+
 
     /**
      * perform refreshes after a player claims a goal card
@@ -56,7 +56,6 @@ interface Refreshable {
      * should be placed , these parameters need to be passed to the cultivate Method and the cultivate method needs to
      * be called
      */
-
     fun refreshAfterDrawHelperCard(helperCard: HelperCard) {}
 
     /**
@@ -64,5 +63,18 @@ interface Refreshable {
      */
     fun refreshAfterRemoveTile(){}
 
+
+    /**
+     * refreshes the Game Scene when the places a tile
+     */
+    fun refreshAfterPlaceTile(placedTile: BonsaiTile) {}
+
+    /**
+     * * refreshes the game scene once the player achieves the requirement of at least one GoalCard
+     * player should see wich Goals have been achieved
+     * in gui : the player should then decide to claim or renounce of every achieved Goal
+     * then the Method  [decideGoalClaim(goalCard: GoalCard,claim: Boolean)] needs to be called for every decision
+     */
+    fun refreshAfterReachGoals(reachedGoals:List<GoalCard>){}
 
 }
