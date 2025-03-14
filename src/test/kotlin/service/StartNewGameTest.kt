@@ -6,14 +6,17 @@ import entity.GoalDifficulty
 import entity.PotColor
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class StartNewGameTest {
     @Test
     fun testStartNewGame() {
         val rootService = RootService()
-        val gameService = GameService(rootService)
-        /*val testRefreshable = TestRefreshable()
-        assertFalse { testRefreshable.refreshAfterStartNewGameCalled }*/
+        val testRefreshable = TestRefreshable()
+        rootService.addRefreshable(testRefreshable)
+        val gameService = rootService.gameService
+        assertFalse { testRefreshable.refreshAfterStartNewGameCalled }
 
         //create players (two local players)
         val player0 = Triple("Alice",0,PotColor.RED)
@@ -35,7 +38,7 @@ class StartNewGameTest {
         )
 
         gameService.startNewGame(players,3,goalCards)
-        //assertTrue { testRefreshable.refreshAfterStartNewGameCalled }
+        assertTrue { testRefreshable.refreshAfterStartNewGameCalled }
 
         var game = rootService.currentGame
         checkNotNull(game)
