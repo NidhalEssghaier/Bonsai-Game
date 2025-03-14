@@ -133,16 +133,16 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
 
                 // add the specific tile that was matched to usedHelperTiles
                 if (respectedTile != null) {
-                        currentPlayer.usedHelperTiles.add(respectedTile)
+                    currentPlayer.usedHelperTiles.add(respectedTile)
                 } else if (genericTile != null) {
-                        currentPlayer.usedHelperTiles.add(genericTile)
+                    currentPlayer.usedHelperTiles.add(genericTile)
 
-                        // wichtig: player´s usedHelperTiles must be cleared when the player ends his Turn
+                    // wichtig: player´s usedHelperTiles must be cleared when the player ends his Turn
                 }
             }
             else {
 
-                    throw IllegalStateException(" Unrespected placing rules according to Helper Card")
+                throw IllegalStateException(" Unrespected placing rules according to Helper Card")
             }
         }
         // placing a Tile without a helper Card
@@ -262,45 +262,79 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
 
     }
     /**
-     * Draws a card from the draw stack and processes it according to its type.
+     * Draws a card from the specified position in the openCards stack and processes it.
+     * For certain positions (e.g., cardStack 1), it requires player input for tile choice,
+     * deferring the addition of tiles to the supply until applyTileChoice is called.
      *
-     * **Preconditions:**
-     * - A game must be active.
-     * - The `openCards` list must not be empty.
+     * Preconditions:
+     * - A game must be active (rootService.currentGame != null).
+     * - The openCards list must not be empty.
      *
-     * **Postconditions:**
-     * - The selected card is drawn and its effects are applied.
-     * - If the card position grants bonsai tiles, they are added to the player's supply.
-     * - The UI is updated to reflect the drawn card.
+     * Postconditions:
+     * - For cardStack 0, 2, 3, tiles are immediately added to the player's supply, and the UI is refreshed.
+     * - For cardStack 1, the function triggers a GUI prompt via refreshToPromptTileChoice and exits early,
+     *   leaving tile assignment to applyTileChoice.
+     * - For invalid cardStack values, no tiles are added.
      *
-     * @param cardStack The position in the stack to draw from.
+     * @param cardStack The position in openCards to draw from (0-based index).
      */
-
     fun drawCard(cardStack: Int) {
-
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
 
         if (game.currentState.openCards.isEmpty()) throw IllegalStateException("No available cards to draw")
 
-        // Assign bonsai tiles based on the drawn card's board position
+        // Determine which tiles to assign based on the card's position in openCards
         val acquiredTiles = when (cardStack) {
-            0 -> emptyList()
+            0 -> emptyList() // Position 0: No tiles awarded
             1 -> {
-                // Allow the player to choose between WOOD or LEAF
-                val choice = onAllRefreshables { refreshTogetUserTileChoice() } as TileType
-                require(choice == TileType.WOOD  || choice == TileType.LEAF  ){throw IllegalStateException()}
-                listOf(BonsaiTile(choice))
+                // Position 1: Player must choose between WOOD or LEAF
+                // Notify the GUI (via Refreshable objects) to prompt the player for a tile choice
+                onAllRefreshables { refreshToPromptTileChoice() }
+                // Exit early; tile assignment is deferred until applyTileChoice is called by the GUI
+                return
             }
             2 -> listOf(BonsaiTile(TileType.WOOD), BonsaiTile(TileType.FLOWER))
             3 -> listOf(BonsaiTile(TileType.LEAF), BonsaiTile(TileType.FRUIT))
-            else -> emptyList()
+            else -> emptyList() // Any other position: No tiles (default case)
         }
 
+        // If we reach here (i.e., not cardStack 1), add the tiles to the current player's supply
         val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
         currentPlayer.supply += acquiredTiles
-        onAllRefreshables { refreshAfterDrawCard(game.currentState.openCards[cardStack])}
+
+        // Notify the GUI to update (e.g., refresh supply display, board, etc.) with the drawn card
+        onAllRefreshables { refreshAfterDrawCard(game.currentState.openCards[cardStack]) }
     }
 
+    /**
+     * Applies the player's tile choice for cardStack 1 after the GUI prompts them.
+     * This is called by the GUI after the player selects WOOD or LEAF.
+     *
+     * Preconditions:
+     * - A game must be active.
+     * - The choice must be either WOOD or LEAF.
+     *
+     * Postconditions:
+     * - The chosen tile is added to the player's supply.
+     * - The UI is refreshed to reflect the change.
+     *
+     * @param cardStack The position in openCards (should be 1 for this case).
+     * @param choice The tile type chosen by the player (WOOD or LEAF).
+     */
+
+    fun applyTileChoice(cardStack: Int, choice: TileType) {
+        val game = rootService.currentGame ?: return
+
+        // Validate that the choice is WOOD or LEAF; throw an exception if invalid
+        require(choice == TileType.WOOD || choice == TileType.LEAF) { "Invalid choice" }
+
+        // Add the chosen tile to the current player's supply
+        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
+        currentPlayer.supply += listOf(BonsaiTile(choice))
+
+        // Notify the GUI to update with the drawn card (same as in drawCard)
+        onAllRefreshables { refreshAfterDrawCard(game.currentState.openCards[cardStack]) }
+    }
 
     /**
      * Shifts all face-up cards to the right and fills the empty position with a new card.
@@ -414,6 +448,8 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
         return false
     }
 }
+
+
 
 
 
