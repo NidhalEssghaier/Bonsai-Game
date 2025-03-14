@@ -18,7 +18,7 @@ import serializer.ArrayDequeZenCardSerializer
  * @property bonsai The bonsai of the player
  */
 @Serializable
-class SmartBot internal constructor(
+class SmartBot private constructor(
     override val name: String,
     override var potColor: PotColor,
 

@@ -69,7 +69,7 @@ import kotlin.math.floor
  * @constructor Create a [HexGrid] with coordinates ranging from -[size] to [size]
  */
 @Serializable
-class HexGrid internal constructor(
+class HexGrid private constructor(
     val size: Int,
     private val actualSize: Int,
     private val grid: Array<Array<BonsaiTile?>>,
