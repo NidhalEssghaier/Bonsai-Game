@@ -281,16 +281,13 @@ class HexGrid private constructor(
      */
     fun copy(): HexGrid {
         val gridCopy = Array(actualSize) { arrayOfNulls<BonsaiTile?>(actualSize) }
-        val mapOfNewTiles = mutableMapOf<BonsaiTile, BonsaiTile>()
 
-        val mapCopy = map.mapKeys {
-            val newTile = it.key.copy()
-            gridCopy[it.value.first][it.value.second] = newTile
-            mapOfNewTiles[it.key] = newTile
-            newTile
+        map.keys.forEach {
+            val coordinate = map[it] ?: return@forEach
+            gridCopy[coordinate.first][coordinate.second] = it
         }
 
-        return HexGrid(size, actualSize, gridCopy, mapCopy.toMutableMap())
+        return HexGrid(size, actualSize, gridCopy, map.toMutableMap())
     }
 
     /**
