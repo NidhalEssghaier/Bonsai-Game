@@ -110,8 +110,10 @@ class HexGrid private constructor(
         mutableMapOf()
     ) {
         val woodTile = BonsaiTile(TileType.WOOD)
-        grid[0][0] = woodTile
-        map[woodTile] = 0 to 0
+        val rawQ = axial2Raw(0)
+        val rawR = axial2Raw(0)
+        grid[rawQ][rawR] = woodTile
+        map[woodTile] = rawQ to rawR
     }
 
     /**
