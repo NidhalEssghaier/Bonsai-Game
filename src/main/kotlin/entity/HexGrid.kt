@@ -1,7 +1,6 @@
 package entity
 
 import kotlinx.serialization.Serializable
-import serializer.IntRangeSerializer
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -68,7 +67,6 @@ import kotlin.math.floor
  * @property maxIndex Maximum index of the internal array (Only for internal usage)
  * @constructor Create a [HexGrid] with coordinates ranging from -[size] to [size]
  */
-@Serializable
 class HexGrid private constructor(
     val size: Int,
     private val actualSize: Int,
@@ -76,7 +74,6 @@ class HexGrid private constructor(
     private val map: MutableMap<BonsaiTile, Pair<Int, Int>>
 ) {
     val tilesList = { map.keys.toList() }
-    @Serializable(with = IntRangeSerializer::class)
     private val axialRange = -size..size
 
     private val axial2Raw: (Int) -> (Int) = { it + size }
@@ -115,6 +112,31 @@ class HexGrid private constructor(
         grid[rawQ][rawR] = woodTile
         map[woodTile] = rawQ to rawR
     }
+
+    /**
+     * Constructor for creating a [HexGrid] with the given size and map
+     * @param size size of the grid
+     * @param map Mapping between [BonsaiTile] and its coordinates
+     * @throws IllegalArgumentException if the size is less than 3
+     * @throws IndexOutOfBoundsException if the coordinate in map is out of bounds
+     */
+    constructor(size: Int, map: MutableMap<BonsaiTile, Pair<Int, Int>>): this(
+        size.also { require( it >= 3 ) },
+        2*size + 1,
+        Array(2*size + 1) { arrayOfNulls<BonsaiTile?>(2*size + 1) },
+        map
+    ) {
+        map.keys.forEach {
+            val coordinate = map[it] ?: return@forEach
+            grid[coordinate.first][coordinate.second] = it
+        }
+    }
+
+    /**
+     * Get the copy of the internal map
+     * @return [Map] of [BonsaiTile] to its coordinates
+     */
+    fun getInternalMap() = map.toMap()
 
     /**
      * Check if the given axial coordinates are in the Pot area
