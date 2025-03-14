@@ -277,40 +277,6 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
         onAllRefreshables { refreshAfterDrawCard(game.currentState.openCards[cardStack]) }
     }
 
-    /**
-     * Handles the placement of tiles when a HelperCard is drawn.
-     *
-     * This function will be directly triggered in the GUI when the player selects a HelperCard.
-     * It ensures that at least one tile is placed according to the HelperCard's rules.
-     *
-     * @param card The HelperCard being processed.
-     * @param tile The tile selected by the player.
-     * @param r The row coordinate where the tile should be placed.
-     * @param q The column coordinate where the tile should be placed.
-     */
-    fun placeHelperCardTiles(card: HelperCard, tile: TileType, r: Int, q: Int) {
-        val game = rootService.currentGame ?: throw IllegalStateException("No active game")
-        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
-
-        // Check if the selected tile matches the shown tile on the HelperCard (card.tiles[1])
-        // and ensure it hasn’t been placed yet. Prioritize this check since the chosen tile
-        // could coincidentally match the shown tile, but we want to track them separately.
-        if (tile == card.tiles[1] && !card.hasPlacedShownTile) {
-            // Place the shown tile at the specified coordinates
-            placeTile(tile, r, q)
-            // Mark the shown tile as placed to prevent re-placement
-            card.hasPlacedShownTile = true
-        }
-        // If the shown tile condition doesn’t apply, check if the player can place a tile of their choice
-        // and ensure they haven’t already placed a chosen tile
-        else if (!card.hasPlacedChosenTile) {
-            // Place the player’s chosen tile (which can be any type) at the specified coordinates
-            placeTile(tile, r, q)
-            // Mark the chosen tile as placed to prevent placing another
-            card.hasPlacedChosenTile = true
-        }
-        // Note: If neither condition is met (e.g., both tiles already placed), the function does nothing.
-    }
 
     /**
      * Shifts all face-up cards to the right and fills the empty position with a new card.
