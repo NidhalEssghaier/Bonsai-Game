@@ -318,8 +318,9 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
         //remove tile from bonsai tree
         currentPlayer.bonsai.grid.remove(tile)
 
-        //add tile to player supply
-        currentPlayer.supply.add(tile)
+        onAllRefreshables {
+            refreshAfterRemoveTile()
+        }
     }
 
     private fun leastGroupOfTilesToBeRemoved(tiles: List<BonsaiTile>): List<BonsaiTile> {
