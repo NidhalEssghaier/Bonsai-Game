@@ -1,7 +1,8 @@
 package entity
 
-import helper.copy
-import tools.aqua.bgw.util.Stack
+import kotlinx.serialization.Polymorphic
+import kotlinx.serialization.Serializable
+import serializer.ArrayDequeZenCardSerializer
 
 /**
  * Entity to represent the game state
@@ -14,12 +15,14 @@ import tools.aqua.bgw.util.Stack
  * @property currentPlayer The active player, who can do actions.
  * @property endGameCounter Is used at the end of the game to allow every player only one last turn.
  */
+@Serializable
 class GameState(
     val gameSpeed: Int,
-    val players: List<Player>,
+    val players: List<@Polymorphic Player>,
     val goalCards: List<GoalCard>,
-    val drawStack: Stack<ZenCard>,
-    val openCards: MutableList<ZenCard>,
+    @Serializable(with = ArrayDequeZenCardSerializer::class)
+    val drawStack: ArrayDeque<ZenCard>,
+    val openCards: MutableList<@Polymorphic ZenCard>,
 
     var currentPlayer: Int = 0,
     var endGameCounter: Int = 0
@@ -34,7 +37,7 @@ class GameState(
             gameSpeed,
             players.map { it.copy() },
             goalCards,
-            drawStack.copy(),
+            ArrayDeque(drawStack),
             openCards,
             this.currentPlayer,
             this.endGameCounter

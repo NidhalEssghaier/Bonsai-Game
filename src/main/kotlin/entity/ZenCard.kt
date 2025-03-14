@@ -1,6 +1,9 @@
 package entity
 
+import kotlinx.serialization.Serializable
+
 /**
  * Interface to represent a zen card
  */
-interface ZenCard
+@Serializable
+sealed interface ZenCard

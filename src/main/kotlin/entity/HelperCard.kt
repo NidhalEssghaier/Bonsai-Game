@@ -1,5 +1,9 @@
 package entity
 
+import kotlinx.serialization.Serializable
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
+
 /**
  * Entity to represent the card type "Helper"
  *
@@ -7,7 +11,8 @@ package entity
  * * @property hasPlacedChosenTile Indicates whether the player has placed a tile of their choice.
  *  * @property hasPlacedShownTile Indicates whether the player has placed the tile shown on the card.
  */
-class HelperCard(val tiles: List<TileType>) : ZenCard
-{ var hasPlacedChosenTile: Boolean = false
-    var hasPlacedShownTile: Boolean = false
-}
+@Serializable
+data class HelperCard @OptIn(ExperimentalUuidApi::class) constructor(
+    val tiles: List<TileType>,
+    private val uuid: Uuid = Uuid.random()
+): ZenCard

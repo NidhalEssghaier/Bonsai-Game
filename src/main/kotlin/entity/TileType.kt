@@ -8,5 +8,6 @@ enum class TileType {
     LEAF,
     FLOWER,
     FRUIT,
-    GENERIC
+    GENERIC,
+    UNPLAYABLE
 }

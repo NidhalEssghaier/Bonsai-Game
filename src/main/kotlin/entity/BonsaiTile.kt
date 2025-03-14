@@ -1,18 +1,18 @@
 package entity
 
+import kotlinx.serialization.Serializable
+
 /**
  * Entity to represent a bonsai tile
  *
  * @property type The type of the tile (e.g. wood)
  */
+@Serializable
 class BonsaiTile(
     val type: TileType,
-
-    //used to track neighbors to help in remove tiles and place fruit and get flower score
-    val neighbors: MutableList<BonsaiTile> = mutableListOf()
 )
 {
     fun copy(): BonsaiTile {
-        return BonsaiTile(type, neighbors.toMutableList())
+        return BonsaiTile(type)
     }
 }
