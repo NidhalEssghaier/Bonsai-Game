@@ -22,7 +22,7 @@ interface Refreshable {
      */
     fun refreshAfterStartNewGame() {}
     fun refreshAfterDrawCard(card: ZenCard){}
-    fun refreshTogetUserTileChoice(): TileType
+
 
     /**
      * perform refreshes after a player claims a goal card
@@ -34,6 +34,20 @@ interface Refreshable {
      * perform refreshes that are necessary after undo / redo
      */
     fun refreshAfterUndoRedo() {}
+
+    /**
+     * perform refreshes that are necessary when a player choose a tile between
+     */
+    fun refreshToPromptTileChoice() {}
+    /**
+     * perform refreshes that are necessary after a [HelperCard] has been drawn
+     *  this refresh is called in [Meditate] when a [HelperCard] has been drawn
+     * in gui : the player should  choose wich tile he wants to play and the position in wich the tile
+     * should be placed , these parameters need to be passed to the cultivate Method and the cultivate method needs to
+     * be called
+     */
+
+    fun refreshAfterDrawHelperCard(helperCard: HelperCard) {}
 
     /**
      * perform refreshes that are necessary after undo / redo

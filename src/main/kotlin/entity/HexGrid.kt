@@ -1,5 +1,10 @@
 package entity
 
+import kotlinx.serialization.Serializable
+import serializer.HexGridSerializer
+import kotlin.math.ceil
+import kotlin.math.floor
+
 /**
  * Entity to represent the hex grid of the bonsai bowl
  * - Example:
@@ -63,6 +68,7 @@ package entity
  * @property maxIndex Maximum index of the internal array (Only for internal usage)
  * @constructor Create a [HexGrid] with coordinates ranging from -[size] to [size]
  */
+@Serializable(with = HexGridSerializer::class)
 class HexGrid private constructor(
     val size: Int,
     private val actualSize: Int,
@@ -84,7 +90,7 @@ class HexGrid private constructor(
      * @property IS_POT_MSG Exception for placing [BonsaiTile] in Pot area
      * @property outOfBounds Exception for coordinate out of bounds
      */
-    private companion object {
+    companion object {
         private val invalidCoordinate = NoSuchElementException("No BonsaiTile at the given coordinates")
         private val invalidTile = NoSuchElementException("This BonsaiTile isn't in the grid")
         private const val IS_POT_MSG = "Unable to place or get BonsaiTile in Pot area"
@@ -103,12 +109,36 @@ class HexGrid private constructor(
         mutableMapOf()
     ) {
         val woodTile = BonsaiTile(TileType.WOOD)
-        val nq = axial2Raw(0)
-        val nr = axial2Raw(0)
-        grid[nq][nr] = woodTile
-        map[woodTile] = Pair(nq, nr)
-
+        val rawQ = axial2Raw(0)
+        val rawR = axial2Raw(0)
+        grid[rawQ][rawR] = woodTile
+        map[woodTile] = rawQ to rawR
     }
+
+    /**
+     * Constructor for creating a [HexGrid] with the given size and map
+     * @param size size of the grid
+     * @param map Mapping between [BonsaiTile] and its coordinates
+     * @throws IllegalArgumentException if the size is less than 3
+     * @throws IndexOutOfBoundsException if the coordinate in map is out of bounds
+     */
+    constructor(size: Int, map: MutableMap<BonsaiTile, Pair<Int, Int>>): this(
+        size.also { require( it >= 3 ) },
+        2*size + 1,
+        Array(2*size + 1) { arrayOfNulls<BonsaiTile?>(2*size + 1) },
+        map
+    ) {
+        map.keys.forEach {
+            val coordinate = map[it] ?: return@forEach
+            grid[coordinate.first][coordinate.second] = it
+        }
+    }
+
+    /**
+     * Get the copy of the internal map
+     * @return [Map] of [BonsaiTile] to its coordinates
+     */
+    fun getInternalMap() = map.toMap()
 
     /**
      * Check if the given axial coordinates are in the Pot area
@@ -132,6 +162,50 @@ class HexGrid private constructor(
             else -> false
         }
     }
+
+    /**
+     * Get the position of the given axial coordinates relative to the Pot
+     * @param q q coordinate
+     * @param r r coordinate
+     * @return [PotSide] of the given coordinates
+     * @throws IndexOutOfBoundsException if the coordinate is out of bounds
+     */
+    fun getPotSide(q: Int, r: Int): PotSide {
+        if ( !(q in axialRange && r in axialRange) ) throw outOfBounds
+        if ( isPot(q, r) ) return PotSide.OTHER
+        if (q >= 2) return PotSide.BELOW
+        if (q <= -2 - ceil(r.toDouble() / 2).toInt() ) return PotSide.LEFT
+        if (q >= 3 - floor(r.toDouble() / 2).toInt() ) return PotSide.RIGHT
+        return PotSide.OTHER
+    }
+
+    /**
+     * Get the position of the given [BonsaiTile] relative to the Pot
+     * @param tile [BonsaiTile]
+     * @return [PotSide] of the given [BonsaiTile]
+     * @throws NoSuchElementException if the [BonsaiTile] isn't in the grid
+     */
+    fun getPotSide(tile: BonsaiTile): PotSide {
+        val coordinate = map[tile] ?: throw invalidTile
+        return getPotSide(raw2Axial(coordinate.first), raw2Axial(coordinate.second))
+    }
+
+    /**
+     * Check if the given axial coordinates are protruding from the Pot area
+     * @param q q coordinate
+     * @param r r coordinate
+     * @return `true` if the coordinates are protruding from the Pot area, `false` otherwise
+     * @throws IndexOutOfBoundsException if the coordinate is out of bounds
+     */
+    fun isProtruding(q: Int, r: Int) = getPotSide(q, r) != PotSide.OTHER
+
+    /**
+     * Check if the given [BonsaiTile] is protruding from the Pot area
+     * @param tile [BonsaiTile]
+     * @return `true` if the [BonsaiTile] is protruding from the Pot area, `false` otherwise
+     * @throws NoSuchElementException if the [BonsaiTile] isn't in the grid
+     */
+    fun isProtruding(tile: BonsaiTile) = getPotSide(tile) != PotSide.OTHER
 
     /**
      * Check if the given axial coordinates are NOT in the Pot area
@@ -279,16 +353,13 @@ class HexGrid private constructor(
      */
     fun copy(): HexGrid {
         val gridCopy = Array(actualSize) { arrayOfNulls<BonsaiTile?>(actualSize) }
-        val mapOfNewTiles = mutableMapOf<BonsaiTile, BonsaiTile>()
 
-        val mapCopy = map.mapKeys {
-            val newTile = it.key.copy()
-            gridCopy[it.value.first][it.value.second] = newTile
-            mapOfNewTiles[it.key] = newTile
-            newTile
+        map.keys.forEach {
+            val coordinate = map[it] ?: return@forEach
+            gridCopy[coordinate.first][coordinate.second] = it
         }
 
-        return HexGrid(size, actualSize, gridCopy, mapCopy.toMutableMap())
+        return HexGrid(size, actualSize, gridCopy, map.toMutableMap())
     }
 
     /**

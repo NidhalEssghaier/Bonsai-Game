@@ -1,5 +1,9 @@
 package entity
 
+import kotlinx.serialization.Polymorphic
+import kotlinx.serialization.Serializable
+import serializer.ArrayDequeZenCardSerializer
+
 /**
  * Entity to represent a bot, based on random behaviour
  *
@@ -14,6 +18,7 @@ package entity
  * @property supply The tile inventory of the player
  * @property bonsai The bonsai of the player
  */
+@Serializable
 class RandomBot private constructor(
     override val name: String,
     override var potColor: PotColor,
@@ -24,10 +29,14 @@ class RandomBot private constructor(
     override var declinedGoals: MutableList<GoalCard> = mutableListOf(),
     override var acceptedGoals: MutableList<GoalCard> = mutableListOf(),
     override val forbiddenGoals: MutableList<GoalCard> = mutableListOf(),
+    @Serializable(with = ArrayDequeZenCardSerializer::class)
     override var seishiTool: ArrayDeque<ZenCard> = ArrayDeque(),
+    @Serializable(with = ArrayDequeZenCardSerializer::class)
     override var seishiGrowth: ArrayDeque<ZenCard> = ArrayDeque(),
-    override var hiddenDeck: MutableList<ZenCard> = mutableListOf(),
-    override var supply: MutableList<BonsaiTile> = mutableListOf()
+    override var hiddenDeck: MutableList<@Polymorphic ZenCard> = mutableListOf(),
+    override var supply: MutableList<BonsaiTile> = mutableListOf(),
+    override var usedHelperTiles: MutableList<TileType> = mutableListOf(),
+    override var usedHelperCards: MutableList<HelperCard> = mutableListOf() ,
 ): Player
 {
     /**
@@ -52,7 +61,9 @@ class RandomBot private constructor(
             ArrayDeque(seishiTool),
             ArrayDeque(seishiGrowth),
             hiddenDeck.toMutableList(),
-            supply.toMutableList()
+            supply.toMutableList(),
+            usedHelperTiles.toMutableList(),
+            usedHelperCards.toMutableList(),
         )
     }
 }

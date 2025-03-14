@@ -54,6 +54,7 @@ class GameService(private val rootService:RootService):AbstractRefreshingService
         onAllRefreshables { refreshAfterStartNewGame() }
     }
 
+    @OptIn(kotlin.uuid.ExperimentalUuidApi::class)
     private fun prepareCards(playerCount: Int) : ArrayDeque<ZenCard> {
         val cardStack = ArrayDeque<ZenCard>()
 
