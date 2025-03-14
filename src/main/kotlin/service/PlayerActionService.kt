@@ -12,7 +12,6 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
      *
      * Preconditions:
      * - A game was started and is running.
-     * - The active player must have started an action (either `meditate` or `cultivate`).
      *
      * Postconditions:
      * - If the player has more tiles than his storage limit allows,
@@ -30,7 +29,69 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
      * @sample endTurn()
      */
     fun endTurn() {
-        // Method implementation
+        val game = rootService.currentGame
+        checkNotNull(game) { "No game is currently active." }
+
+        while (
+            game.currentState.players[game.currentState.currentPlayer].supply.size >
+            game.currentState.players[game.currentState.currentPlayer].supplyTileLimit
+        ) {
+            onAllRefreshables {
+                refreshAfterDiscardTile()
+            }
+        }
+
+        game.undoStack.push(game.currentState)
+        game.redoStack.clear()
+
+        if (game.currentState.drawStack.isEmpty()) {
+            game.currentState.endGameCounter++
+            if (game.currentState.endGameCounter > game.currentState.players.size) {
+                rootService.gameService.endGame()
+            } else {
+                game.currentState.currentPlayer =
+                    (game.currentState.currentPlayer + 1) % game.currentState.players.size
+                onAllRefreshables {
+                    refreshAfterEndTurn()
+                }
+            }
+        } else {
+            game.currentState.currentPlayer =
+                (game.currentState.currentPlayer + 1) % game.currentState.players.size
+            onAllRefreshables {
+                refreshAfterEndTurn()
+            }
+        }
+    }
+
+    /**
+     * Removes the given tile from the active players supply.
+     *
+     * @param tile The tile to remove from the active players supply.
+     *
+     * Preconditions:
+     * - A game was started and is running.
+     * - The active player must have the given tile in their supply.
+     *
+     * Postconditions:
+     * - The given tile is removed from the active players supply.
+     *
+     * @returns This method does not return anything (`Unit`).
+     *
+     * @throws IllegalStateException If there is no started and running game, or if the active
+     *                               player does not have the given tile in their supply.
+     *
+     * @sample discardTile(BonsaiTile(TileType.WOOD))
+     */
+    fun discardTile(tile: BonsaiTile) {
+        val game = rootService.currentGame
+        checkNotNull(game) { "No game is currently active." }
+
+        require(
+            tile in game.currentState.players[game.currentState.currentPlayer].supply
+        ) { "The given tile is not in the active players supply."}
+
+        game.currentState.players[game.currentState.currentPlayer].supply.remove(tile)
     }
 
     /**

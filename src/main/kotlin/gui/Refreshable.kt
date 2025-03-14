@@ -23,7 +23,6 @@ interface Refreshable {
     fun refreshAfterStartNewGame() {}
     fun refreshAfterDrawCard(card: ZenCard){}
 
-
     /**
      * perform refreshes after a player claims a goal card
      * @param goalCard the claimed [GoalCard]
@@ -36,9 +35,20 @@ interface Refreshable {
     fun refreshAfterUndoRedo() {}
 
     /**
+     * Refresh affected GUI Elements after a turn has ended.
+     */
+    fun refreshAfterEndTurn() {}
+
+    /**
+     * Select a tile to discard.
+     */
+    fun refreshAfterDiscardTile() {}
+
+    /**
      * perform refreshes that are necessary when a player choose a tile between
      */
     fun refreshToPromptTileChoice() {}
+
     /**
      * perform refreshes that are necessary after a [HelperCard] has been drawn
      *  this refresh is called in [Meditate] when a [HelperCard] has been drawn
