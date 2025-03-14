@@ -1,6 +1,7 @@
 package entity
 
 import kotlinx.serialization.Serializable
+import serializer.HexGridSerializer
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -67,6 +68,7 @@ import kotlin.math.floor
  * @property maxIndex Maximum index of the internal array (Only for internal usage)
  * @constructor Create a [HexGrid] with coordinates ranging from -[size] to [size]
  */
+@Serializable(with = HexGridSerializer::class)
 class HexGrid private constructor(
     val size: Int,
     private val actualSize: Int,
@@ -88,7 +90,7 @@ class HexGrid private constructor(
      * @property IS_POT_MSG Exception for placing [BonsaiTile] in Pot area
      * @property outOfBounds Exception for coordinate out of bounds
      */
-    private companion object {
+    companion object {
         private val invalidCoordinate = NoSuchElementException("No BonsaiTile at the given coordinates")
         private val invalidTile = NoSuchElementException("This BonsaiTile isn't in the grid")
         private const val IS_POT_MSG = "Unable to place or get BonsaiTile in Pot area"
