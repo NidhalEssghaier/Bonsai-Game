@@ -44,4 +44,17 @@ interface Refreshable {
      */
     fun refreshAfterDrawHelperCard(helperCard: HelperCard) {}
 
+    /**
+     * refreshes the Game Scene when the places a tile
+     */
+    fun refreshAfterPlaceTile(placedTile: BonsaiTile) {}
+
+    /**
+     * * refreshes the game scene once the player achieves the requirement of at least one GoalCard
+     * player should see wich Goals have been achieved
+     * in gui : the player should then decide to claim or renounce of every achieved Goal
+     * then the Method  [decideGoalClaim(goalCard: GoalCard,claim: Boolean)] needs to be called for every decision
+     */
+    fun refreshAfterReachGoals(reachedGoals:List<GoalCard>){}
+
 }

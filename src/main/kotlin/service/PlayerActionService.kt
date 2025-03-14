@@ -225,11 +225,129 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
 
     }
 
-    private fun placeTile(tile: BonsaiTile, r: Int, q: Int){
+    private fun placeTile(tile: BonsaiTile, r: Int, q: Int) {
+        val game = rootService.currentGame ?: throw IllegalStateException("No active game")
+        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
+        val bonsai = currentPlayer.bonsai
+        val grid = bonsai.grid
 
+        // Ensure the placement position is valid
+        require(grid.isNotEmpty()) { "Cannot place a tile in an empty grid." }
+        require(grid.isEmpty(q, r)) { "Cannot place a tile on top of another tile." }
+        require(grid.isNotPot(q, r)) { "Cannot place a tile in the Pot Area." }
+
+        // Get neighboring tiles
+        val neighbors = grid.getNeighbors(q, r)
+
+        // Check placement rules based on tile type
+        when (tile.type) {
+            TileType.WOOD -> {
+                require(neighbors.any { it.type == TileType.WOOD }) {
+                    "A wood tile must be placed adjacent to another wood tile."
+                }
+            }
+            TileType.LEAF -> {
+                require(neighbors.any { it.type == TileType.WOOD }) {
+                    "A leaf tile must be placed adjacent to a wood tile."
+                }
+            }
+            TileType.FLOWER -> {
+                require(neighbors.any { it.type == TileType.LEAF }) {
+                    "A flower tile must be placed adjacent to a leaf tile."
+                }
+            }
+            TileType.FRUIT -> {
+                val adjacentLeaves = neighbors.filter { it.type == TileType.LEAF }
+                require(adjacentLeaves.size >= 2) {
+                    "A fruit tile must be placed between two adjacent leaf tiles."
+                }
+                require(neighbors.none { it.type == TileType.FRUIT }) {
+                    "A fruit tile cannot be placed adjacent to another fruit tile."
+                }
+            }
+            else -> {
+                throw IllegalStateException("Invalid tile type for placement.")
+            }
+        }
+
+        // Remove tile from player's supply
+        currentPlayer.supply.remove(tile)
+
+        // Place tile in bonsai grid
+        grid[q, r] = tile
+
+        // Update tile count
+        bonsai.tileCount[tile.type] = bonsai.tileCount.getOrDefault(tile.type, 0) + 1
+
+        // Refresh the game scene
+        onAllRefreshables { refreshAfterPlaceTile(tile) }
+
+        // Check if any goal condition is met
+       /* val metGoals = checkGoalsAfterPlacement(bonsai, grid)
+        onAllRefreshables { refreshAfterReachGoals(metGoals) }*/
     }
 
-    /**
+    /*private fun checkGoalsAfterPlacement(bonsai: Bonsai, grid: HexGrid): List<GoalCard> {
+        val game = rootService.currentGame ?: throw IllegalStateException("No active game")
+        val goalCards = game.currentState.goalCards
+
+        val metGoals = mutableListOf<GoalCard>()
+        for (goalCard in goalCards) {
+            val isGoalMet = when (goalCard.color) {
+                GoalColor.BROWN -> (bonsai.tileCount[TileType.WOOD] ?: 0) >= (when (goalCard.difficulty) {
+                    GoalDifficulty.LOW -> 8
+                    GoalDifficulty.INTERMEDIATE -> 10
+                    GoalDifficulty.HARD -> 12
+                })
+                GoalColor.ORANGE -> (bonsai.tileCount[TileType.FRUIT] ?: 0) >= (when (goalCard.difficulty) {
+                    GoalDifficulty.LOW -> 3
+                    GoalDifficulty.INTERMEDIATE -> 4
+                    GoalDifficulty.HARD -> 5
+                })
+                GoalColor.GREEN -> {
+                    val maxAdjacentLeaves = bonsai.grid.tilesList().filter { it.type == TileType.LEAF }
+                        .map { grid.getNeighbors(it).count { neighbor -> neighbor.type == TileType.LEAF } }
+                        .maxOrNull() ?: 0
+                    maxAdjacentLeaves >= (when (goalCard.difficulty) {
+                        GoalDifficulty.LOW -> 5
+                        GoalDifficulty.INTERMEDIATE -> 7
+                        GoalDifficulty.HARD -> 9
+                    })
+                }
+                GoalColor.RED -> {
+                    val leftProtrusions = bonsai.grid.tilesList().count { grid.isProtruding(it.q, it.r) && it.q <= -2 }
+                    val rightProtrusions = bonsai.grid.tilesList().count { grid.isProtruding(it.q, it.r) && it.q >= 3 }
+                    maxOf(leftProtrusions, rightProtrusions) >= (when (goalCard.difficulty) {
+                        GoalDifficulty.LOW -> 3
+                        GoalDifficulty.INTERMEDIATE -> 4
+                        GoalDifficulty.HARD -> 5
+                    })
+                }
+                GoalColor.BLUE -> {
+                    when (goalCard.difficulty) {
+                        GoalDifficulty.LOW -> bonsai.grid.tilesList().any { grid.isProtruding(it.q, it.r) && it.q >=3  }
+                        GoalDifficulty.INTERMEDIATE -> bonsai.grid.tilesList().any { grid.isProtruding(it.q, it.r) && it.q <= -2 } &&
+                                bonsai.grid.tilesList().any { grid.isProtruding(it.q, it.r) && it.q >= 3 }
+                        GoalDifficulty.HARD -> bonsai.grid.tilesList().any { grid.isProtruding(it.q, it.r) && it.q >= 3 } &&
+                                bonsai.grid.tilesList().any { grid.isProtruding(it.q, it.r) && it.r >= 2 } ||
+                                bonsai.grid.tilesList().any { grid.isProtruding(it.q, it.r) && it.q <= -2 } &&
+                                bonsai.grid.tilesList().any { grid.isProtruding(it.q, it.r) && it.r >= 2 }
+                    }
+                }
+            }
+            if (isGoalMet) {
+                metGoals.add(goalCard)
+            }
+        }
+        return metGoals
+
+    }*/
+
+
+
+
+
+/**
      * Decides whether to claim or renounce a goal card.
      *
      * @param goalCard The goal card being considered.
