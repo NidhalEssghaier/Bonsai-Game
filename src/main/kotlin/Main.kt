@@ -1,6 +1,6 @@
-import gui.SopraApplication
+import gui.BonsaiApplication
 
 fun main() {
-    SopraApplication().show()
+    BonsaiApplication().show()
     println("Application ended. Goodbye")
 }
