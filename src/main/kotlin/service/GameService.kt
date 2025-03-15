@@ -58,7 +58,7 @@ class GameService(
         val goalCards = prepareGoals(playerList.size, goalColors)
 
         rootService.currentGame = BonsaiGame(speed, playerList, goalCards, drawStack, openCards)
-        println("New game started")
+
         onAllRefreshables { refreshAfterStartNewGame() }
     }
 
