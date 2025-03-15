@@ -1,8 +1,6 @@
 package entity
 
 import kotlinx.serialization.Serializable
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Entity to represent the card type "Master"
@@ -10,7 +8,7 @@ import kotlin.uuid.Uuid
  * @property tiles The tiles the player is allowed to take with this card
  */
 @Serializable
-data class MasterCard @OptIn(ExperimentalUuidApi::class) constructor(
+data class MasterCard(
     val tiles: List<TileType>,
-    private val uuid: Uuid = Uuid.random()
+    val id: Int
 ) : ZenCard
