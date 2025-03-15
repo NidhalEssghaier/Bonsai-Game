@@ -28,26 +28,25 @@ class CardImageLoader {
     /** Provides the backside image of the [ZenCard]s */
     val backImage: ImageVisual get() = getImageByCoordinates(Pair(0, 0))
 
-    private val masterCards: List<Map<TileType, Int>> =
+    private val masterCards: List<List<TileType>> =
         listOf(
-            mapOf(TileType.GENERIC to 1),
-            mapOf(TileType.WOOD to 2),
-            mapOf(TileType.LEAF to 2),
-            mapOf(TileType.LEAF to 1, TileType.FRUIT to 1),
-            mapOf(TileType.LEAF to 1, TileType.FLOWER to 1),
-            mapOf(TileType.WOOD to 1, TileType.LEAF to 1),
-            mapOf(TileType.GENERIC to 1),
-            mapOf(TileType.WOOD to 1, TileType.LEAF to 1, TileType.FRUIT to 1),
-            mapOf(TileType.WOOD to 1, TileType.LEAF to 1, TileType.FLOWER to 1),
-            mapOf(TileType.LEAF to 1, TileType.FLOWER to 2),
+            listOf(TileType.GENERIC),
+            listOf(TileType.WOOD, TileType.WOOD),
+            listOf(TileType.LEAF, TileType.LEAF),
+            listOf(TileType.LEAF, TileType.FRUIT),
+            listOf(TileType.LEAF, TileType.FLOWER),
+            listOf(TileType.WOOD, TileType.LEAF),
+            listOf(TileType.WOOD, TileType.LEAF, TileType.FRUIT),
+            listOf(TileType.WOOD, TileType.LEAF, TileType.FLOWER),
+            listOf(TileType.LEAF, TileType.FLOWER, TileType.FLOWER),
         )
 
-    private val helperCards: List<Map<TileType, Int>> =
+    private val helperCards: List<List<TileType>> =
         listOf(
-            mapOf(TileType.GENERIC to 1, TileType.FLOWER to 1),
-            mapOf(TileType.GENERIC to 1, TileType.FRUIT to 1),
-            mapOf(TileType.GENERIC to 1, TileType.WOOD to 1),
-            mapOf(TileType.GENERIC to 1, TileType.LEAF to 1),
+            listOf(TileType.GENERIC, TileType.FLOWER),
+            listOf(TileType.GENERIC, TileType.FRUIT),
+            listOf(TileType.GENERIC, TileType.WOOD),
+            listOf(TileType.GENERIC, TileType.LEAF),
         )
 
     private fun getImageByCoordinates(coordinates: Pair<Int, Int>) =
@@ -80,7 +79,7 @@ class CardImageLoader {
             else -> throw IllegalArgumentException("Unknown card")
         }
 
-    private fun coordinateMasterCards(tiles: Map<TileType, Int>): Pair<Int, Int> =
+    private fun coordinateMasterCards(tiles: List<TileType>): Pair<Int, Int> =
         when (tiles) {
             masterCards[0] -> Pair(4, 1)
             masterCards[1] -> Pair(5, 1)
@@ -95,7 +94,7 @@ class CardImageLoader {
             else -> Pair(0, 0)
         }
 
-    private fun coordinateHelperCards(tiles: Map<TileType, Int>): Pair<Int, Int> =
+    private fun coordinateHelperCards(tiles: List<TileType>): Pair<Int, Int> =
         when (tiles) {
             helperCards[0] -> Pair(6, 2)
             helperCards[1] -> Pair(7, 2)
