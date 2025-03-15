@@ -1,6 +1,5 @@
 package gui
 
-import entity.TileType
 import entity.*
 import service.AbstractRefreshingService
 
@@ -62,7 +61,9 @@ interface Refreshable {
     /**
      * perform refreshes that are necessary after undo / redo
      */
-    fun refreshAfterRemoveTile(){}
+    fun refreshAfterRemoveTile() {}
 
+
+    fun refreshAfterEndGame(scoreList: List<Pair<Player,Int>>) {}
 
 }
