@@ -3,10 +3,9 @@ package gui
 import entity.*
 import gui.utility.CardImageLoader
 import gui.utility.ItemImageLoader
+import service.PlayerActionService
 import service.RootService
-import tools.aqua.bgw.animation.Animation
-import tools.aqua.bgw.animation.MovementAnimation
-import tools.aqua.bgw.animation.SequentialAnimation
+import tools.aqua.bgw.animation.*
 import tools.aqua.bgw.components.ComponentView
 import tools.aqua.bgw.components.container.Area
 import tools.aqua.bgw.components.container.CardStack
@@ -28,12 +27,15 @@ import tools.aqua.bgw.util.BidirectionalMap
 import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.*
 
+private const val ANIMATION_TIME = 1000
+
 // TODO add private val rootService: RootService,
 class GameScene(
     val rootService: RootService,
     val application: BonsaiApplication,
 ) : BoardGameScene(1920, 1080),
     Refreshable {
+    private lateinit var bonsaiGame: BonsaiGame
     private val cardImageLoader = CardImageLoader()
     private val itemImageLoader = ItemImageLoader()
     private val cardMap: BidirectionalMap<ZenCard, CardView> = BidirectionalMap()
@@ -41,7 +43,7 @@ class GameScene(
     private val tileMap: BidirectionalMap<BonsaiTile, HexagonView> = BidirectionalMap()
     private var currentPlayer = -1 // The currently active player
     private var shownPlayer = -1; // The player that is currently visible on the screen TODO use rootService.currentGame.currentPlayer
-    private val playerColors = listOf("#a2aca6", "#cc8c7e", "#409cab", "#9a92b8")
+    private val playerColors = mutableListOf("#a2aca6", "#cc8c7e", "#409cab", "#9a92b8")
     private val tilesToRemove = mutableListOf<BonsaiTile>()
     private var cardStacks: List<CardStack<CardView>> = listOf()
 
@@ -277,6 +279,7 @@ class GameScene(
     override fun refreshAfterStartNewGame() {
         val game = rootService.currentGame
         checkNotNull(game) { "No started game found." }
+        bonsaiGame = game
 
         cardMap.clear()
         tileMap.clear()
@@ -284,20 +287,37 @@ class GameScene(
         currentPlayer = game.currentState.currentPlayer
         shownPlayer = currentPlayer
 
-        initializeGameElements(game)
+        initializeGameElements(rootService, game)
         initializePlayerView(game)
     }
 
-    private fun initializeGameElements(game: BonsaiGame) {
+    override fun refreshAfterDrawCard(
+        drawnCard: ZenCard,
+        drawnCardIndex: Int,
+        chooseTilesByBoard: Boolean,
+        chooseTilesByCard: Boolean,
+    ) {
+        playDrawCardAnimation(drawnCardIndex + 1, chooseTilesByBoard, chooseTilesByCard)
+    }
+
+    override fun refreshAfterChooseTile() {
+        initializeSupplyTiles(bonsaiGame.currentState)
+    }
+
+    private fun initializeGameElements(
+        rootService: RootService,
+        game: BonsaiGame,
+    ) {
         initializeGoalCardGridPane(game)
-        initializeBoardPane(game)
+        initializeBoardPane(rootService.playerActionService, game)
         initializeGameOptionsGridPane()
+        initializePlayerColors(game.currentState.players)
     }
 
     private fun initializePlayerView(game: BonsaiGame) {
         // TODO use elements of given player
         initializePlayArea(game.currentState)
-        initializeBonsaiTiles(game.currentState)
+        initializeSupplyTiles(game.currentState)
         initializeSeishiTile(game.currentState)
         initializeSeishiCards(game.currentState)
         initializePlayerNamesGridPane(game)
@@ -305,7 +325,7 @@ class GameScene(
         initializeDrawnCardsStack(game.currentState)
     }
 
-    private fun initializeBonsaiTiles(state: GameState) {
+    private fun initializeSupplyTiles(state: GameState) {
         // TODO use bonsai tiles in players supply
 
         // clear views & map to include only tiles of shownPlayer
@@ -376,12 +396,15 @@ class GameScene(
         }
     }
 
-    private fun initializeBoardPane(game: BonsaiGame) {
+    private fun initializeBoardPane(
+        playerActionService: PlayerActionService,
+        game: BonsaiGame,
+    ) {
         val drawStackView = createDrawStackView(32, 33, game.currentState.drawStack, 0, false)
-        val cardStackView1 = createOpenCardView(216, 33, game.currentState.openCards[0], 1, true)
-        val cardStackView2 = createOpenCardView(371, 33, game.currentState.openCards[1], 2, true)
-        val cardStackView3 = createOpenCardView(525, 33, game.currentState.openCards[2], 3, true)
-        val cardStackView4 = createOpenCardView(679, 33, game.currentState.openCards[3], 4, true)
+        val cardStackView1 = createOpenCardView(playerActionService, 216, 33, game.currentState.openCards[0], 1, true)
+        val cardStackView2 = createOpenCardView(playerActionService, 371, 33, game.currentState.openCards[1], 2, true)
+        val cardStackView3 = createOpenCardView(playerActionService, 525, 33, game.currentState.openCards[2], 3, true)
+        val cardStackView4 = createOpenCardView(playerActionService, 679, 33, game.currentState.openCards[3], 4, true)
 
         cardStacks = listOf(drawStackView, cardStackView1, cardStackView2, cardStackView3, cardStackView4)
 
@@ -408,13 +431,7 @@ class GameScene(
                 width = 143,
                 height = 200,
                 visual = Visual.EMPTY,
-            ).apply {
-                if (number > 0) {
-                    onMouseClicked = {
-                        playDrawCardAnimation(number)
-                    }
-                }
-            }
+            )
 
         for (card in cardStack.reversed()) {
             val cardView =
@@ -434,6 +451,7 @@ class GameScene(
     }
 
     private fun createOpenCardView(
+        playerActionService: PlayerActionService,
         posX: Int = 0,
         posY: Int = 0,
         card: ZenCard,
@@ -450,7 +468,7 @@ class GameScene(
             ).apply {
                 if (number > 0) {
                     onMouseClicked = {
-                        playDrawCardAnimation(number)
+                        playerActionService.meditate(cardMap.backward(this.peek()))
                     }
                 }
             }
@@ -537,6 +555,17 @@ class GameScene(
             PotColor.RED -> seishiTile.visual = itemImageLoader.imageFor("seishis/seishi_red.png", 160, 242)
             PotColor.BLUE -> seishiTile.visual = itemImageLoader.imageFor("seishis/seishi_blue.png", 160, 242)
             PotColor.PURPLE -> seishiTile.visual = itemImageLoader.imageFor("seishis/seishi_purple.png", 160, 242)
+        }
+    }
+
+    private fun initializePlayerColors(players: List<Player>) {
+        players.forEach { player ->
+            when (player.potColor) {
+                PotColor.GRAY -> playerColors.add("#a2aca6")
+                PotColor.RED -> playerColors.add("#cc8c7e")
+                PotColor.BLUE -> playerColors.add("#409cab")
+                PotColor.PURPLE -> playerColors.add("#9a92b8")
+            }
         }
     }
 
@@ -637,10 +666,26 @@ class GameScene(
         }
     }
 
-    private fun playDrawCardAnimation(drawnCardIndex: Int) {
+    private fun playDrawCardAnimation(
+        drawnCardIndex: Int,
+        chooseTilesByBoard: Boolean,
+        chooseTilesByCard: Boolean,
+    ) {
         val animations = mutableListOf<Animation>()
         animations.add(getDrawnCardAnimation(drawnCardIndex))
         animations.addAll(getRefillCardsAnimation(drawnCardIndex))
+        // Add final animation that triggers tile refresh and tile selection if necessary
+        animations.add(
+            DelayAnimation(ANIMATION_TIME).apply {
+                onFinished = {
+                    initializeSupplyTiles(bonsaiGame.currentState)
+                    if (chooseTilesByBoard || chooseTilesByCard) {
+                        application.chooseTileScene = ChooseTileScene(rootService, application, chooseTilesByBoard, chooseTilesByCard)
+                        application.showMenuScene(application.chooseTileScene)
+                    }
+                }
+            },
+        )
         playAnimation(
             SequentialAnimation(
                 animations,
@@ -659,7 +704,7 @@ class GameScene(
                         else -> drawnCardsStack
                     },
                 scene = this,
-                duration = 1000,
+                duration = ANIMATION_TIME,
             ).apply {
                 onFinished = {
                     val target =
@@ -708,7 +753,7 @@ class GameScene(
                         componentView = cardStacks[idx].peek(),
                         toComponentViewPosition = cardStacks[idx + 1],
                         scene = this@GameScene,
-                        duration = 1000,
+                        duration = ANIMATION_TIME,
                     ).apply {
                         onFinished = {
                             val card = cardStacks[idx].peek()

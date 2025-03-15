@@ -14,6 +14,7 @@ class BonsaiApplication :
     val localGameScene = LocalGameScene(rootService, this)
     val onlineGameScene = OnlineGameScene(rootService, this)
     val joinGameScene = JoinGameScene(rootService, this)
+    var chooseTileScene = ChooseTileScene(rootService, this, false, false)
 
     private var gameScene = GameScene(rootService, this)
 
@@ -27,17 +28,24 @@ class BonsaiApplication :
             onlineGameScene,
             joinGameScene,
             gameScene,
+            chooseTileScene,
         )
 
         this.showMenuScene(mainMenuScene)
 
-//        this.showGameScene(gameScene)
-//        gameScene.playArea1.toFront()
 //        show()
     }
 
     override fun refreshAfterStartNewGame() {
         this.hideMenuScene()
         this.showGameScene(gameScene)
+    }
+
+    override fun refreshToPromptTileChoice(
+        chooseByBoard: Boolean,
+        chooseByCard: Boolean,
+    ) {
+        chooseTileScene = ChooseTileScene(rootService, this, chooseByBoard, chooseByCard)
+        this.showMenuScene(chooseTileScene)
     }
 }

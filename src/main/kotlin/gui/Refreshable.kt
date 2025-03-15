@@ -15,12 +15,17 @@ import service.AbstractRefreshingService
  *
  */
 interface Refreshable {
-
     /**
      * perform refreshes that are necessary after a new game started
      */
     fun refreshAfterStartNewGame() {}
-    fun refreshAfterDrawCard(card: ZenCard){}
+
+    fun refreshAfterDrawCard(
+        card: ZenCard,
+        drawnCardIndex: Int,
+        chooseTilesByBoard: Boolean,
+        chooseTilesByCard: Boolean,
+    ) {}
 
     /**
      * perform refreshes after a player claims a goal card
@@ -46,7 +51,10 @@ interface Refreshable {
     /**
      * perform refreshes that are necessary when a player choose a tile between
      */
-    fun refreshToPromptTileChoice() {}
+    fun refreshToPromptTileChoice(
+        chooseByBoard: Boolean,
+        chooseByCard: Boolean,
+    ) {}
 
     /**
      * perform refreshes that are necessary after a [HelperCard] has been drawn
@@ -63,7 +71,7 @@ interface Refreshable {
      */
     fun refreshAfterRemoveTile() {}
 
+    fun refreshAfterEndGame(scoreList: List<Pair<Player, Int>>) {}
 
-    fun refreshAfterEndGame(scoreList: List<Pair<Player,Int>>) {}
-
+    fun refreshAfterChooseTile() {}
 }
