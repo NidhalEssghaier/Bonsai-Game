@@ -41,13 +41,13 @@ class GameService(
         val drawStack = prepareCards(players.size)
         val openCards = drawStack.popAll(4).toMutableList()
         val playerList = mutableListOf<Player>()
-        for(triple in players) {
-            when(triple.second) {
+        for (triple in players) {
+            when (triple.second) {
                 0 -> playerList.add(LocalPlayer(triple.first, triple.third))
                 1 -> playerList.add(NetworkPlayer(triple.first, triple.third))
                 2 -> playerList.add(RandomBot(triple.first, triple.third))
                 3 -> playerList.add(SmartBot(triple.first, triple.third))
-                else -> throw  IllegalArgumentException()
+                else -> throw IllegalArgumentException()
             }
         }
 
@@ -59,73 +59,74 @@ class GameService(
     }
 
     @OptIn(kotlin.uuid.ExperimentalUuidApi::class)
-    private fun prepareCards(playerCount: Int) : ArrayDeque<ZenCard> {
+    private fun prepareCards(playerCount: Int): ArrayDeque<ZenCard> {
         val cardStack = ArrayDeque<ZenCard>()
 
-        //growth cards
-            cardStack.push(GrowthCard(TileType.WOOD,0))
-            cardStack.push(GrowthCard(TileType.WOOD,1))
-            cardStack.push(GrowthCard(TileType.LEAF,2))
-            cardStack.push(GrowthCard(TileType.LEAF,3))
-            cardStack.push(GrowthCard(TileType.FLOWER,4))
-            cardStack.push(GrowthCard(TileType.FLOWER,5))
-            cardStack.push(GrowthCard(TileType.FRUIT,6))
-            cardStack.push(GrowthCard(TileType.FRUIT,7))
+        // growth cards
+        cardStack.push(GrowthCard(TileType.WOOD, 0))
+        cardStack.push(GrowthCard(TileType.WOOD, 1))
+        cardStack.push(GrowthCard(TileType.LEAF, 2))
+        cardStack.push(GrowthCard(TileType.LEAF, 3))
+        cardStack.push(GrowthCard(TileType.FLOWER, 4))
+        cardStack.push(GrowthCard(TileType.FLOWER, 5))
+        cardStack.push(GrowthCard(TileType.FRUIT, 6))
+        cardStack.push(GrowthCard(TileType.FRUIT, 7))
 
-        if(playerCount>2) {
-            cardStack.push(GrowthCard(TileType.WOOD,8))
-            cardStack.push(GrowthCard(TileType.LEAF,9))
-            cardStack.push(GrowthCard(TileType.LEAF,10))
-            cardStack.push(GrowthCard(TileType.FLOWER,11))
+        if (playerCount > 2) {
+            cardStack.push(GrowthCard(TileType.WOOD, 8))
+            cardStack.push(GrowthCard(TileType.LEAF, 9))
+            cardStack.push(GrowthCard(TileType.LEAF, 10))
+            cardStack.push(GrowthCard(TileType.FLOWER, 11))
         }
-        if (playerCount>3) {
-            cardStack.push(GrowthCard(TileType.FLOWER,12))
-            cardStack.push(GrowthCard(TileType.FRUIT,13))
+        if (playerCount > 3) {
+            cardStack.push(GrowthCard(TileType.FLOWER, 12))
+            cardStack.push(GrowthCard(TileType.FRUIT, 13))
         }
 
-        //tool cards
-        val toolCardCount = when(playerCount) {
-            2 -> 3
-            3 -> 5
-            else -> 6
-        }
+        // tool cards
+        val toolCardCount =
+            when (playerCount) {
+                2 -> 3
+                3 -> 5
+                else -> 6
+            }
         repeat(toolCardCount) {
-            cardStack.push(ToolCard(it+41))
+            cardStack.push(ToolCard(it + 41))
         }
 
-        //master cards
-        cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.WOOD),21))
-        cardStack.push(MasterCard(listOf(TileType.LEAF,TileType.LEAF),22))
-        cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF),23))
-        cardStack.push(MasterCard(listOf(TileType.GENERIC),24))
-        cardStack.push(MasterCard(listOf(TileType.GENERIC),25))
-        cardStack.push(MasterCard(listOf(TileType.LEAF,TileType.LEAF),26))
-        cardStack.push(MasterCard(listOf(TileType.LEAF,TileType.FRUIT),27))
-        if(playerCount>2) {
-            cardStack.push(MasterCard(listOf(TileType.GENERIC),28))
-            cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF),29))
-            cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF),30))
-            cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF,TileType.FLOWER),31))
-            cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF,TileType.FRUIT),32))
+        // master cards
+        cardStack.push(MasterCard(listOf(TileType.WOOD, TileType.WOOD), 21))
+        cardStack.push(MasterCard(listOf(TileType.LEAF, TileType.LEAF), 22))
+        cardStack.push(MasterCard(listOf(TileType.WOOD, TileType.LEAF), 23))
+        cardStack.push(MasterCard(listOf(TileType.GENERIC), 24))
+        cardStack.push(MasterCard(listOf(TileType.GENERIC), 25))
+        cardStack.push(MasterCard(listOf(TileType.LEAF, TileType.LEAF), 26))
+        cardStack.push(MasterCard(listOf(TileType.LEAF, TileType.FRUIT), 27))
+        if (playerCount > 2) {
+            cardStack.push(MasterCard(listOf(TileType.GENERIC), 28))
+            cardStack.push(MasterCard(listOf(TileType.WOOD, TileType.LEAF), 29))
+            cardStack.push(MasterCard(listOf(TileType.WOOD, TileType.LEAF), 30))
+            cardStack.push(MasterCard(listOf(TileType.WOOD, TileType.LEAF, TileType.FLOWER), 31))
+            cardStack.push(MasterCard(listOf(TileType.WOOD, TileType.LEAF, TileType.FRUIT), 32))
         }
-        if(playerCount>3) {
-            cardStack.push((MasterCard(listOf(TileType.LEAF,TileType.FLOWER,TileType.FLOWER),33)))
+        if (playerCount > 3) {
+            cardStack.push((MasterCard(listOf(TileType.LEAF, TileType.FLOWER, TileType.FLOWER), 33)))
         }
 
-        //helper cards
-        repeat(3) {cardStack.push(HelperCard(listOf(TileType.GENERIC,TileType.WOOD),14+it))}
-        repeat(2) {cardStack.push(HelperCard(listOf(TileType.GENERIC,TileType.LEAF),17+it))}
-        cardStack.push(HelperCard(listOf(TileType.GENERIC,TileType.FLOWER),19))
-        cardStack.push(HelperCard(listOf(TileType.GENERIC,TileType.FRUIT),20))
+        // helper cards
+        repeat(3) { cardStack.push(HelperCard(listOf(TileType.GENERIC, TileType.WOOD), 14 + it)) }
+        repeat(2) { cardStack.push(HelperCard(listOf(TileType.GENERIC, TileType.LEAF), 17 + it)) }
+        cardStack.push(HelperCard(listOf(TileType.GENERIC, TileType.FLOWER), 19))
+        cardStack.push(HelperCard(listOf(TileType.GENERIC, TileType.FRUIT), 20))
 
-        //parchment cards
-        cardStack.push(ParchmentCard(2,ParchmentCardType.MASTER,34))
-        cardStack.push(ParchmentCard(2,ParchmentCardType.GROWTH,35))
-        cardStack.push(ParchmentCard(2,ParchmentCardType.HELPER,36))
-        cardStack.push(ParchmentCard(2,ParchmentCardType.FLOWER,37))
-        cardStack.push(ParchmentCard(2,ParchmentCardType.FRUIT,38))
-        cardStack.push(ParchmentCard(1,ParchmentCardType.LEAF,39))
-        cardStack.push(ParchmentCard(1,ParchmentCardType.WOOD,40))
+        // parchment cards
+        cardStack.push(ParchmentCard(2, ParchmentCardType.MASTER, 34))
+        cardStack.push(ParchmentCard(2, ParchmentCardType.GROWTH, 35))
+        cardStack.push(ParchmentCard(2, ParchmentCardType.HELPER, 36))
+        cardStack.push(ParchmentCard(2, ParchmentCardType.FLOWER, 37))
+        cardStack.push(ParchmentCard(2, ParchmentCardType.FRUIT, 38))
+        cardStack.push(ParchmentCard(1, ParchmentCardType.LEAF, 39))
+        cardStack.push(ParchmentCard(1, ParchmentCardType.WOOD, 40))
 
         cardStack.shuffle()
 
@@ -135,34 +136,34 @@ class GameService(
     private fun prepareGoals(
         playerCount: Int,
         goalColors: List<GoalColor>,
-    ): MutableList<GoalCard> {
-        val goals: MutableList<GoalCard> = mutableListOf()
+    ): MutableList<GoalCard?> {
+        val goals: MutableList<GoalCard?> = mutableListOf()
 
         goalColors.forEach { goalColor ->
             when (goalColor) {
                 GoalColor.BROWN -> {
                     goals.add(GoalCard(5, goalColor, GoalDifficulty.LOW))
-                    if (playerCount > 2) goals.add(GoalCard(10, goalColor, GoalDifficulty.INTERMEDIATE))
+                    if (playerCount > 2) goals.add(GoalCard(10, goalColor, GoalDifficulty.INTERMEDIATE)) else goals.add(null)
                     goals.add(GoalCard(15, goalColor, GoalDifficulty.HARD))
                 }
                 GoalColor.ORANGE -> {
                     goals.add(GoalCard(9, goalColor, GoalDifficulty.LOW))
-                    if (playerCount > 2) goals.add(GoalCard(11, goalColor, GoalDifficulty.INTERMEDIATE))
+                    if (playerCount > 2) goals.add(GoalCard(11, goalColor, GoalDifficulty.INTERMEDIATE)) else goals.add(null)
                     goals.add(GoalCard(13, goalColor, GoalDifficulty.HARD))
                 }
                 GoalColor.GREEN -> {
                     goals.add(GoalCard(6, goalColor, GoalDifficulty.LOW))
-                    if (playerCount > 2) goals.add(GoalCard(9, goalColor, GoalDifficulty.INTERMEDIATE))
+                    if (playerCount > 2) goals.add(GoalCard(9, goalColor, GoalDifficulty.INTERMEDIATE)) else goals.add(null)
                     goals.add(GoalCard(12, goalColor, GoalDifficulty.HARD))
                 }
                 GoalColor.RED -> {
                     goals.add(GoalCard(8, goalColor, GoalDifficulty.LOW))
-                    if (playerCount > 2) goals.add(GoalCard(12, goalColor, GoalDifficulty.INTERMEDIATE))
+                    if (playerCount > 2) goals.add(GoalCard(12, goalColor, GoalDifficulty.INTERMEDIATE)) else goals.add(null)
                     goals.add(GoalCard(16, goalColor, GoalDifficulty.HARD))
                 }
                 GoalColor.BLUE -> {
                     goals.add(GoalCard(7, goalColor, GoalDifficulty.LOW))
-                    if (playerCount > 2) goals.add(GoalCard(10, goalColor, GoalDifficulty.INTERMEDIATE))
+                    if (playerCount > 2) goals.add(GoalCard(10, goalColor, GoalDifficulty.INTERMEDIATE)) else goals.add(null)
                     goals.add(GoalCard(14, goalColor, GoalDifficulty.HARD))
                 }
             }
@@ -192,15 +193,15 @@ class GameService(
      * @sample endGame()
      */
 
-    fun endGame() : List<Pair<Player,Int>> {
+    fun endGame(): List<Pair<Player, Int>> {
         val game = rootService.currentGame
         checkNotNull(game)
         val playerList = game.currentState.players
 
         check(game.currentState.drawStack.isEmpty())
 
-        val pointsPerPlayer = mutableMapOf<Player,Int>()
-        for(player in playerList) {
+        val pointsPerPlayer = mutableMapOf<Player, Int>()
+        for (player in playerList) {
             val bonsai = player.bonsai
 
             var numberOfWoodTiles = 0
@@ -209,8 +210,8 @@ class GameService(
             var numberOfFruitTiles = 0
             var sumOfFlowerPoints = 0
 
-            for(tile in bonsai.grid.getInternalMap().keys) {
-                when(tile.type) {
+            for (tile in bonsai.grid.getInternalMap().keys) {
+                when (tile.type) {
                     TileType.WOOD -> numberOfWoodTiles += 1
                     TileType.LEAF -> numberOfLeafTiles += 1
                     TileType.FLOWER -> {
@@ -222,13 +223,13 @@ class GameService(
                 }
             }
 
-            val cardPoints = mutableMapOf<ParchmentCardType,Int>()
-            for(type in ParchmentCardType.entries) {
+            val cardPoints = mutableMapOf<ParchmentCardType, Int>()
+            for (type in ParchmentCardType.entries) {
                 cardPoints[type] = 0
             }
 
-            for(card in player.hiddenDeck) {
-                if(card is ParchmentCard) {
+            for (card in player.hiddenDeck) {
+                if (card is ParchmentCard) {
                     checkNotNull(cardPoints[card.type])
                     val newValue = cardPoints[card.type]?.plus(card.points)
                     checkNotNull(newValue)
@@ -243,7 +244,7 @@ class GameService(
             val tilePoints = finalWoodPoints + finalLeafPoints + finalFruitPoints + finalFlowerPoints
 
             var goalPoints = 0
-            for(goal in player.acceptedGoals) {
+            for (goal in player.acceptedGoals) {
                 goalPoints += goal.points
             }
 
@@ -252,7 +253,7 @@ class GameService(
             pointsPerPlayer[player] = points
         }
         val scoreList = pointsPerPlayer.toList().sortedByDescending { pair -> pair.second }
-        //a tie situation is already handled via sortedByDescending, because equal values stay in the same order
+        // a tie situation is already handled via sortedByDescending, because equal values stay in the same order
 
         onAllRefreshables { refreshAfterEndGame(scoreList) }
 

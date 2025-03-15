@@ -383,13 +383,13 @@ class GameScene(
     }
 
     private fun initializeGoalCardGridPane(game: BonsaiGame) {
-        // TODO use goalCard-entity & fill [goalMap] with goald-entites/view
         val gameGoalCards = game.currentState.goalCards
 
         val targetWidths = listOf(125, 139, 179)
 
         for ((idx, goalCard) in gameGoalCards.withIndex()) {
             if (goalCard != null) {
+                print(goalCard.difficulty.ordinal)
                 val goalCardView =
                     Button(
                         width = targetWidths[goalCard.difficulty.ordinal],
