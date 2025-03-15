@@ -55,21 +55,24 @@ class GameService(private val rootService:RootService):AbstractRefreshingService
         val cardStack = ArrayDeque<ZenCard>()
 
         //growth cards
-        repeat(2) {
-            cardStack.push(GrowthCard(TileType.WOOD))
-            cardStack.push(GrowthCard(TileType.LEAF))
-            cardStack.push(GrowthCard(TileType.FLOWER))
-            cardStack.push(GrowthCard(TileType.FRUIT))
-        }
+            cardStack.push(GrowthCard(TileType.WOOD,0))
+            cardStack.push(GrowthCard(TileType.WOOD,1))
+            cardStack.push(GrowthCard(TileType.LEAF,2))
+            cardStack.push(GrowthCard(TileType.LEAF,3))
+            cardStack.push(GrowthCard(TileType.FLOWER,4))
+            cardStack.push(GrowthCard(TileType.FLOWER,5))
+            cardStack.push(GrowthCard(TileType.FRUIT,6))
+            cardStack.push(GrowthCard(TileType.FRUIT,7))
+
         if(playerCount>2) {
-            cardStack.push(GrowthCard(TileType.WOOD))
-            cardStack.push(GrowthCard(TileType.LEAF))
-            cardStack.push(GrowthCard(TileType.LEAF))
-            cardStack.push(GrowthCard(TileType.FLOWER))
+            cardStack.push(GrowthCard(TileType.WOOD,8))
+            cardStack.push(GrowthCard(TileType.LEAF,9))
+            cardStack.push(GrowthCard(TileType.LEAF,10))
+            cardStack.push(GrowthCard(TileType.FLOWER,11))
         }
         if (playerCount>3) {
-            cardStack.push(GrowthCard(TileType.FLOWER))
-            cardStack.push(GrowthCard(TileType.FRUIT))
+            cardStack.push(GrowthCard(TileType.FLOWER,12))
+            cardStack.push(GrowthCard(TileType.FRUIT,13))
         }
 
         //tool cards
@@ -79,33 +82,33 @@ class GameService(private val rootService:RootService):AbstractRefreshingService
             else -> 6
         }
         repeat(toolCardCount) {
-            cardStack.push(ToolCard())
+            cardStack.push(ToolCard(it+41))
         }
 
         //master cards
-        cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.WOOD)))
-        cardStack.push(MasterCard(listOf(TileType.LEAF,TileType.LEAF)))
-        cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF)))
-        cardStack.push(MasterCard(listOf(TileType.GENERIC)))
-        cardStack.push(MasterCard(listOf(TileType.GENERIC)))
-        cardStack.push(MasterCard(listOf(TileType.LEAF,TileType.LEAF)))
-        cardStack.push(MasterCard(listOf(TileType.LEAF,TileType.FRUIT)))
+        cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.WOOD),21))
+        cardStack.push(MasterCard(listOf(TileType.LEAF,TileType.LEAF),22))
+        cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF),23))
+        cardStack.push(MasterCard(listOf(TileType.GENERIC),24))
+        cardStack.push(MasterCard(listOf(TileType.GENERIC),25))
+        cardStack.push(MasterCard(listOf(TileType.LEAF,TileType.LEAF),26))
+        cardStack.push(MasterCard(listOf(TileType.LEAF,TileType.FRUIT),27))
         if(playerCount>2) {
-            cardStack.push(MasterCard(listOf(TileType.GENERIC)))
-            cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF)))
-            cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF)))
-            cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF,TileType.FLOWER)))
-            cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF,TileType.FRUIT)))
+            cardStack.push(MasterCard(listOf(TileType.GENERIC),28))
+            cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF),29))
+            cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF),30))
+            cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF,TileType.FLOWER),31))
+            cardStack.push(MasterCard(listOf(TileType.WOOD,TileType.LEAF,TileType.FRUIT),32))
         }
         if(playerCount>3) {
-            cardStack.push((MasterCard(listOf(TileType.LEAF,TileType.FLOWER,TileType.FLOWER))))
+            cardStack.push((MasterCard(listOf(TileType.LEAF,TileType.FLOWER,TileType.FLOWER),33)))
         }
 
         //helper cards
-        repeat(3) {cardStack.push(HelperCard(listOf(TileType.GENERIC,TileType.WOOD)))}
-        repeat(2) {cardStack.push(HelperCard(listOf(TileType.GENERIC,TileType.LEAF)))}
-        cardStack.push(HelperCard(listOf(TileType.GENERIC,TileType.FLOWER)))
-        cardStack.push(HelperCard(listOf(TileType.GENERIC,TileType.FRUIT)))
+        repeat(3) {cardStack.push(HelperCard(listOf(TileType.GENERIC,TileType.WOOD),14+it))}
+        repeat(2) {cardStack.push(HelperCard(listOf(TileType.GENERIC,TileType.LEAF),17+it))}
+        cardStack.push(HelperCard(listOf(TileType.GENERIC,TileType.FLOWER),19))
+        cardStack.push(HelperCard(listOf(TileType.GENERIC,TileType.FRUIT),20))
 
         //parchment cards
         cardStack.push(ParchmentCard(2,ParchmentCardType.MASTER,34))

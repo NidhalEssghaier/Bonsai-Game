@@ -11,5 +11,5 @@ import kotlinx.serialization.Serializable
 data class ParchmentCard(
     val points: Int,
     val type: ParchmentCardType,
-    private val id: Int
+    val id: Int
 ) : ZenCard
