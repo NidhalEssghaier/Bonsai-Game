@@ -37,7 +37,7 @@ class GameService(private val rootService:RootService):AbstractRefreshingService
      *
      * @sample startNewGame(mutableListOf(Pair("Max Mustermann",0)),3,false)
      */
-    fun startNewGame(players: List<Triple<String, Int, PotColor>>, speed: Int, goalCards: List<GoalCard>) {
+    fun startNewGame(players: List<Triple<String, Int, PotColor>>, speed: Int, goalCards: MutableList<GoalCard>) {
         val drawStack = prepareCards(players.size)
         val openCards = drawStack.popAll(4).toMutableList()
         val playerList = mutableListOf<Player>()
