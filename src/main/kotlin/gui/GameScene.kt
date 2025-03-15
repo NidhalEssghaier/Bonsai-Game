@@ -137,7 +137,7 @@ class GameScene(
 
     private val endTurnButton =
         Button(1712, 970, 178, 80, text = "End Turn").apply {
-            onMouseClicked = {}
+            onMouseClicked = { rootService.playerActionService.endTurn() }
             visual =
                 ColorVisual(200, 150, 120, 255).apply {
                     style.borderRadius =
@@ -302,6 +302,14 @@ class GameScene(
 
     override fun refreshAfterChooseTile() {
         initializeSupplyTiles(bonsaiGame.currentState)
+    }
+
+    override fun refreshAfterEndTurn() {
+        currentPlayer = bonsaiGame.currentState.currentPlayer
+        shownPlayer = currentPlayer
+
+//        initializeGameElements(rootService, bonsaiGame)
+        initializePlayerView(bonsaiGame)
     }
 
     private fun initializeGameElements(
