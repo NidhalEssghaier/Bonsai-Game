@@ -1,8 +1,11 @@
 package service
 
 import entity.*
+import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class EndGameTest {
 
@@ -10,7 +13,10 @@ class EndGameTest {
     fun testEndGame() {
         //start a game
         val rootService = RootService()
-        val gameService = GameService(rootService)
+        val testRefreshable = TestRefreshable()
+        rootService.addRefreshable(testRefreshable)
+        val gameService = rootService.gameService
+        assertFalse { testRefreshable.refreshAfterEndGameCalled }
 
         val player0 = Triple("Alice",0, PotColor.RED)
         val player1 = Triple("Bob",0, PotColor.PURPLE)
@@ -47,9 +53,13 @@ class EndGameTest {
         game.currentState.players[0].hiddenDeck.add(parchmentCard)
         //+2 through wood tiles and parchment card
 
+        assertThrows<IllegalStateException> { gameService.endGame() }
+        game.currentState.drawStack.clear()
+
         val points = gameService.endGame()
         val player0Points = points[0].second
         assertEquals(player0Points,25)
+        assertTrue { testRefreshable.refreshAfterEndGameCalled }
 
     }
 }

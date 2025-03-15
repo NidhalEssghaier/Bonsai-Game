@@ -1,5 +1,6 @@
 package service
 
+import entity.Player
 import gui.Refreshable
 
 /**
@@ -14,6 +15,8 @@ class TestRefreshable : Refreshable {
     var refreshAfterStartNewGameCalled: Boolean = false
         private set
 
+    var refreshAfterEndGameCalled: Boolean = false
+
 
 
     /**
@@ -22,6 +25,7 @@ class TestRefreshable : Refreshable {
     fun reset() {
         refreshAfterStartTileRemoved = false
         refreshAfterStartNewGameCalled = false
+        refreshAfterEndGameCalled = false
     }
 
     override fun refreshAfterRemoveTile() {
@@ -30,6 +34,10 @@ class TestRefreshable : Refreshable {
 
     override fun refreshAfterStartNewGame() {
         refreshAfterStartNewGameCalled = true
+    }
+
+    override fun refreshAfterEndGame(scoreList: List<Pair<Player, Int>>) {
+        refreshAfterEndGameCalled = true
     }
 
 

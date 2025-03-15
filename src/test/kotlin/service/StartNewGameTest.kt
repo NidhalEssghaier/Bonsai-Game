@@ -5,6 +5,7 @@ import entity.GoalColor
 import entity.GoalDifficulty
 import entity.PotColor
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -43,6 +44,12 @@ class StartNewGameTest {
         var game = rootService.currentGame
         checkNotNull(game)
         assertEquals(game.currentState.drawStack.size, 28)
+
+        //test wrong initialization
+        val playerWrong = Triple("Error",5,PotColor.BLUE)
+        players.add(playerWrong)
+        assertThrows<IllegalArgumentException> { gameService.startNewGame(players,2,goalCards) }
+        players.remove(playerWrong)
 
         //test for three players (two players and a bot)
         val bot1 = Triple("Random",2,PotColor.BLUE)

@@ -30,11 +30,6 @@ class GameService(private val rootService:RootService):AbstractRefreshingService
      *
      * @return This method does not return anything ('Unit').
      *
-     * @throws IllegalArgumentException If a player name or type is missing.
-     * @throws IllegalArgumentException If the simulation speed is not set.
-     * @throws IllegalArgumentException If game type and player types are not matching
-     * (e.g. local players in remote).
-     *
      * @sample startNewGame(mutableListOf(Pair("Max Mustermann",0)),3,false)
      */
     fun startNewGame(players: List<Triple<String, Int, PotColor>>, speed: Int, goalCards: List<GoalCard>) {
@@ -47,6 +42,7 @@ class GameService(private val rootService:RootService):AbstractRefreshingService
                 1 -> playerList.add(NetworkPlayer(triple.first, triple.third))
                 2 -> playerList.add(RandomBot(triple.first, triple.third))
                 3 -> playerList.add(SmartBot(triple.first, triple.third))
+                else -> throw  IllegalArgumentException()
             }
         }
 
@@ -153,13 +149,11 @@ class GameService(private val rootService:RootService):AbstractRefreshingService
         checkNotNull(game)
         val playerList = game.currentState.players
 
+        check(game.currentState.drawStack.isEmpty())
+
         val pointsPerPlayer = mutableMapOf<Player,Int>()
         for(player in playerList) {
             val bonsai = player.bonsai
-            /*val numberOfLeafTiles = bonsai.tileCount[TileType.LEAF]
-            checkNotNull(numberOfLeafTiles)
-            val numberOfFruitTiles = bonsai.tileCount[TileType.FRUIT]
-            checkNotNull(numberOfFruitTiles)*/
 
             var numberOfWoodTiles = 0
             var numberOfLeafTiles = 0
