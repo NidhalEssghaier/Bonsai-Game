@@ -66,7 +66,6 @@ class ChooseTileScene(
             onMouseClicked = {
                 if (chooseByBoard) rootService.playerActionService.applyTileChoice(selectedTileByBoard!!.type, false)
                 if (chooseByCard) rootService.playerActionService.applyTileChoice(selectedTileByCard!!.type, true)
-                print("Confirmed")
             }
         }
 

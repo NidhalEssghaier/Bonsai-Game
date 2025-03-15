@@ -292,7 +292,6 @@ class PlayerActionService(
             is ParchmentCard -> currentPlayer.hiddenDeck += card // Store card within hiddenDeck
             is HelperCard -> {
                 currentPlayer.hiddenDeck += card
-//                onAllRefreshables { refreshAfterDrawHelperCard(card) }
             }
             is PlaceholderCard -> {}
         }

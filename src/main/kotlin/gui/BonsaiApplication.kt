@@ -16,7 +16,7 @@ class BonsaiApplication :
     val joinGameScene = JoinGameScene(rootService, this)
     var chooseTileScene = ChooseTileScene(rootService, this, false, false)
 
-    private var gameScene = GameScene(rootService, this)
+    var gameScene = GameScene(rootService, this)
 
     init {
         // all scenes and the application itself need too

@@ -42,7 +42,8 @@ class GameScene(
     private val goalMap: BidirectionalMap<GoalCard, Label> = BidirectionalMap()
     private val tileMap: BidirectionalMap<BonsaiTile, HexagonView> = BidirectionalMap()
     private var currentPlayer = -1 // The currently active player
-    private var shownPlayer = -1; // The player that is currently visible on the screen TODO use rootService.currentGame.currentPlayer
+    private var shownPlayer =
+        -1; // The player that is currently visible on the screen TODO use rootService.currentGame.currentPlayer
     private val playerColors = mutableListOf("#a2aca6", "#cc8c7e", "#409cab", "#9a92b8")
     private val tilesToRemove = mutableListOf<BonsaiTile>()
     private var cardStacks: List<CardStack<CardView>> = listOf()
@@ -297,7 +298,7 @@ class GameScene(
         chooseTilesByBoard: Boolean,
         chooseTilesByCard: Boolean,
     ) {
-        playDrawCardAnimation(drawnCardIndex + 1, chooseTilesByBoard, chooseTilesByCard)
+        playDrawCardAnimation(drawnCard, drawnCardIndex + 1, chooseTilesByBoard, chooseTilesByCard)
     }
 
     override fun refreshAfterChooseTile() {
@@ -308,7 +309,9 @@ class GameScene(
         currentPlayer = bonsaiGame.currentState.currentPlayer
         shownPlayer = currentPlayer
 
-//        initializeGameElements(rootService, bonsaiGame)
+        cardMap.clear()
+
+        initializeGameElements(rootService, bonsaiGame)
         initializePlayerView(bonsaiGame)
     }
 
@@ -367,14 +370,17 @@ class GameScene(
                 gridPanePlayArea[0, 0] = playAreaGrey
                 gridPanePot[0, 0] = potGrey
             }
+
             PotColor.RED -> {
                 gridPanePlayArea[0, 0] = playAreaRed
                 gridPanePot[0, 0] = potRed
             }
+
             PotColor.BLUE -> {
                 gridPanePlayArea[0, 0] = playAreaBlue
                 gridPanePot[0, 0] = potBlue
             }
+
             PotColor.PURPLE -> {
                 gridPanePlayArea[0, 0] = playAreaPurple
                 gridPanePot[0, 0] = potPurple
@@ -389,7 +395,6 @@ class GameScene(
 
         for ((idx, goalCard) in gameGoalCards.withIndex()) {
             if (goalCard != null) {
-                print(goalCard.difficulty.ordinal)
                 val goalCardView =
                     Button(
                         width = targetWidths[goalCard.difficulty.ordinal],
@@ -675,6 +680,7 @@ class GameScene(
     }
 
     private fun playDrawCardAnimation(
+        card: ZenCard,
         drawnCardIndex: Int,
         chooseTilesByBoard: Boolean,
         chooseTilesByCard: Boolean,
@@ -688,9 +694,11 @@ class GameScene(
                 onFinished = {
                     initializeSupplyTiles(bonsaiGame.currentState)
                     if (chooseTilesByBoard || chooseTilesByCard) {
-                        application.chooseTileScene = ChooseTileScene(rootService, application, chooseTilesByBoard, chooseTilesByCard)
+                        application.chooseTileScene =
+                            ChooseTileScene(rootService, application, chooseTilesByBoard, chooseTilesByCard)
                         application.showMenuScene(application.chooseTileScene)
                     }
+                    disableElementsAfterCardDrawn(card)
                 }
             },
         )
@@ -775,5 +783,17 @@ class GameScene(
         }
 
         return animations
+    }
+
+    private fun disableElementsAfterCardDrawn(card: ZenCard) {
+        cardStacks.forEach { cardStack -> cardStack.onMouseClicked = {} }
+
+        bonsaiTilesView1.forEach { bonsaiTilesView ->
+            if (card is HelperCard) {
+                bonsaiTilesView.isDraggable = card.tiles.contains(tileMap.backward(bonsaiTilesView).type)
+            } else {
+                bonsaiTilesView.isDraggable = false
+            }
+        }
     }
 }
