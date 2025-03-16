@@ -245,6 +245,7 @@ class PlayerActionService(
                 throw IllegalStateException("Tile placement not allowed based on Seishi StartingTile ans Growth Cards.")
             }
         }
+        onAllRefreshables { refreshAfterPlaceTile(tile) }
     }
 
     /**

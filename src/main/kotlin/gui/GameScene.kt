@@ -185,10 +185,11 @@ class GameScene(
         Label(width = 260, height = 174, visual = itemImageLoader.imageFor("pots/pot_purple.png", 360, 240))
 
     // bonsai placing area
-    private var playAreaGrey = createPlayArea(0)
-    private var playAreaRed = createPlayArea(1)
-    private var playAreaBlue = createPlayArea(2)
-    private var playAreaPurple = createPlayArea(3)
+    private var playAreaGrey = HexagonGrid<HexagonView>(coordinateSystem = HexagonGrid.CoordinateSystem.AXIAL)
+    private var playAreaRed = HexagonGrid<HexagonView>(coordinateSystem = HexagonGrid.CoordinateSystem.AXIAL)
+    private var playAreaBlue = HexagonGrid<HexagonView>(coordinateSystem = HexagonGrid.CoordinateSystem.AXIAL)
+    private var playAreaPurple = HexagonGrid<HexagonView>(coordinateSystem = HexagonGrid.CoordinateSystem.AXIAL)
+    private var playAreas = mutableListOf(playAreaGrey, playAreaRed, playAreaBlue, playAreaPurple)
 
     private fun createPlayArea(player: Int): HexagonGrid<HexagonView> {
         val playArea = HexagonGrid<HexagonView>(coordinateSystem = HexagonGrid.CoordinateSystem.AXIAL)
@@ -353,6 +354,12 @@ class GameScene(
         initializeClaimedGoalsGridPane(bonsaiGame.currentState)
     }
 
+    override fun refreshAfterPlaceTile(placedTile: BonsaiTile) {
+        initializeSupplyTiles(bonsaiGame.currentState)
+        initializeBonsai(bonsaiGame.currentState)
+        initializePlayArea(bonsaiGame.currentState)
+    }
+
     private fun initializeGameElements(
         rootService: RootService,
         game: BonsaiGame,
@@ -366,6 +373,7 @@ class GameScene(
 
     private fun initializePlayerView(game: BonsaiGame) {
         // TODO use elements of given player
+        initializeBonsai(game.currentState)
         initializePlayArea(game.currentState)
         initializeSupplyTiles(game.currentState)
         initializeSeishiTile(game.currentState)
@@ -400,6 +408,80 @@ class GameScene(
                 bonsaiTilesView2.add(tileView)
             }
             tileMap.add(tile, tileView)
+        }
+    }
+
+    private fun initializeBonsai(state: GameState) {
+        val playArea = HexagonGrid<HexagonView>(coordinateSystem = HexagonGrid.CoordinateSystem.AXIAL)
+
+        val bonsai = bonsaiGame.currentState.players[shownPlayer].bonsai
+        val gridSize = bonsai.grid.size
+        val bonsaiStructure = bonsai.grid.getCoordinateToTileMap()
+
+        // create whole grid
+        for (row in -gridSize..gridSize) {
+            for (col in -gridSize..gridSize) {
+                // Only add hexagons that would fit in a circle
+                if (row + col in -gridSize..gridSize) {
+                    val hexagon =
+                        HexagonView(
+                            visual =
+                                CompoundVisual(
+                                    ColorVisual(Color(playerColors[shownPlayer])).apply {
+                                        style.borderRadius =
+                                            BorderRadius.MEDIUM
+                                    },
+                                    TextVisual(
+                                        text = "$col, $row",
+                                        font = Font(10.0, Color(0x0f141f)),
+                                    ),
+                                ),
+                            size = 25,
+                        ).apply {
+                            dropAcceptor = { dragEvent ->
+                                when (dragEvent.draggedComponent) {
+                                    is HexagonView -> true
+                                    else -> false
+                                }
+                            }
+                            onDragDropped = { dragEvent ->
+                                rootService.playerActionService.cultivate(
+                                    tileMap.backward(dragEvent.draggedComponent as HexagonView),
+                                    row,
+                                    col,
+                                )
+                            }
+                        }
+                    playArea[col, row] = hexagon
+                }
+            }
+        }
+        // create bonsai
+        bonsaiStructure.forEach { coordinate, tile ->
+            val row = coordinate.first
+            val col = coordinate.second
+            val hexagon =
+                HexagonView(
+                    visual =
+                        CompoundVisual(
+                            itemImageLoader.imageFor(tile),
+                            TextVisual(
+                                text = "$col, $row",
+                                font = Font(10.0, Color(0x0f141f)),
+                            ),
+                        ),
+                    size = 25,
+                )
+            playArea[row, col] = hexagon
+        }
+
+//        val logPiece = HexagonView(visual = itemImageLoader.imageFor(BonsaiTile(TileType.WOOD)), size = 25)
+//        playArea[0, 0] = logPiece
+        when (state.players[shownPlayer].potColor) {
+            PotColor.GRAY -> playAreaGrey = playArea
+            PotColor.PURPLE -> playAreaPurple = playArea
+            PotColor.BLUE -> playAreaBlue = playArea
+            PotColor.RED -> playAreaRed = playArea
         }
     }
 
