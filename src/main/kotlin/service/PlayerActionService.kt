@@ -243,7 +243,6 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
         val grid = bonsai.grid
 
         // Ensure the placement position is valid
-        require(grid.isNotEmpty()) { "Cannot place a tile in an empty grid." }
         require(grid.isEmpty(q, r)) { "Cannot place a tile on top of another tile." }
         require(grid.isNotPot(q, r)) { "Cannot place a tile in the Pot Area." }
 
@@ -272,6 +271,11 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
                 require(adjacentLeaves.size >= 2) {
                     "A fruit tile must be placed between two adjacent leaf tiles."
                 }
+                // Ensure those two leaf tiles are adjacent to each other using hasAdjacentPair
+                require(hasAdjacentPair(adjacentLeaves)) {
+                    "The two leaf tiles must also be adjacent to each other."
+                }
+                // Ensure a fruit tile is not placed adjacent to another fruit tile
                 require(neighbors.none { it.type == TileType.FRUIT }) {
                     "A fruit tile cannot be placed adjacent to another fruit tile."
                 }

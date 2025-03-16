@@ -78,4 +78,7 @@ interface Refreshable {
      */
     fun refreshAfterReachGoals(reachedGoals:List<GoalCard>){}
 
+    fun refreshAfterEndGame(scoreList: List<Pair<Player,Int>>) {}
+
 }
+
