@@ -39,13 +39,10 @@ class GameScene(
     private val cardImageLoader = CardImageLoader()
     private val itemImageLoader = ItemImageLoader()
     private val cardMap: BidirectionalMap<ZenCard, CardView> = BidirectionalMap()
-    private val goalMap: BidirectionalMap<GoalCard, Label> = BidirectionalMap()
     private val tileMap: BidirectionalMap<BonsaiTile, HexagonView> = BidirectionalMap()
     private var currentPlayer = -1 // The currently active player
-    private var shownPlayer =
-        -1; // The player that is currently visible on the screen TODO use rootService.currentGame.currentPlayer
+    private var shownPlayer = -1; // The player that is currently visible on the screen TODO use rootService.currentGame.currentPlayer
     private val playerColors: MutableList<String> = mutableListOf()
-    private val tilesToRemove = mutableListOf<BonsaiTile>()
     private var cardStacks: List<CardStack<CardView>> = listOf()
 
     // drop area to remove bonsai tiles
@@ -189,51 +186,6 @@ class GameScene(
     private var playAreaRed = HexagonGrid<HexagonView>(coordinateSystem = HexagonGrid.CoordinateSystem.AXIAL)
     private var playAreaBlue = HexagonGrid<HexagonView>(coordinateSystem = HexagonGrid.CoordinateSystem.AXIAL)
     private var playAreaPurple = HexagonGrid<HexagonView>(coordinateSystem = HexagonGrid.CoordinateSystem.AXIAL)
-    private var playAreas = mutableListOf(playAreaGrey, playAreaRed, playAreaBlue, playAreaPurple)
-
-    private fun createPlayArea(player: Int): HexagonGrid<HexagonView> {
-        val playArea = HexagonGrid<HexagonView>(coordinateSystem = HexagonGrid.CoordinateSystem.AXIAL)
-        val size = 20
-        // Create three rings of hexagons
-        for (row in -size..size) {
-            for (col in -size..size) {
-                // Only add hexagons that would fit in a circle
-                if (row + col in -size..size) {
-                    val hexagon =
-                        HexagonView(
-                            visual =
-                                CompoundVisual(
-                                    ColorVisual(Color(playerColors[player])).apply {
-                                        style.borderRadius =
-                                            BorderRadius.MEDIUM
-                                    },
-                                    TextVisual(
-                                        text = "$col, $row",
-                                        font = Font(10.0, Color(0x0f141f)),
-                                    ),
-                                ),
-                            size = 25,
-                        ).apply {
-                            dropAcceptor = { dragEvent ->
-                                when (dragEvent.draggedComponent) {
-                                    is HexagonView -> true
-                                    else -> false
-                                }
-                            }
-                            onDragDropped = { dragEvent ->
-                                val view = dragEvent.draggedComponent as HexagonView
-                                view.removeFromParent()
-                                playArea[col, row] = view
-                            }
-                        }
-                    playArea[col, row] = hexagon
-                }
-            }
-        }
-        val logPiece = HexagonView(visual = itemImageLoader.imageFor(BonsaiTile(TileType.WOOD)), size = 25)
-        playArea[0, 0] = logPiece
-        return playArea
-    }
 
     // claimed goal cards
     private val claimedGoalCardsGridPane =
@@ -475,8 +427,6 @@ class GameScene(
             playArea[row, col] = hexagon
         }
 
-//        val logPiece = HexagonView(visual = itemImageLoader.imageFor(BonsaiTile(TileType.WOOD)), size = 25)
-//        playArea[0, 0] = logPiece
         when (state.players[shownPlayer].potColor) {
             PotColor.GRAY -> playAreaGrey = playArea
             PotColor.PURPLE -> playAreaPurple = playArea
