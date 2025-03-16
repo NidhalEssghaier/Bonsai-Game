@@ -715,9 +715,16 @@ class GameScene(
         val players = game.currentState.players
         val prevPlayer = (shownPlayer - 1 + players.size) % players.size
         val nextPlayer = (shownPlayer + 1) % players.size
+
         val prevPlayerPane = Pane<LabeledUIComponent>(0, 0, 150, 40)
+        val prevPlayerText =
+            if (prevPlayer == currentPlayer) {
+                "${players[prevPlayer].name} (Active)"
+            } else {
+                players[prevPlayer].name
+            }
         val prevPlayerButton =
-            Button(0, 0, 150, 40, text = players[prevPlayer].name).apply {
+            Button(0, 0, 150, 40, text = prevPlayerText).apply {
                 alignment = Alignment.CENTER_RIGHT
                 visual =
                     ColorVisual(Color(playerColors[prevPlayer])).apply {
@@ -735,8 +742,14 @@ class GameScene(
         prevPlayerPane.addAll(prevPlayerButton, leftArrow)
 
         val currentPlayerPane = Pane<LabeledUIComponent>(0, 0, 400, 40)
+        val currentPlayerText =
+            if (shownPlayer == currentPlayer) {
+                "${players[shownPlayer].name} (Active)"
+            } else {
+                players[shownPlayer].name
+            }
         val currentPlayerLabel =
-            Label(0, 0, 400, 40, text = players[shownPlayer].name).apply {
+            Label(0, 0, 400, 40, text = currentPlayerText).apply {
                 visual =
                     ColorVisual(Color(playerColors[shownPlayer])).apply {
                         style.borderRadius =
@@ -747,8 +760,14 @@ class GameScene(
         currentPlayerPane.add(currentPlayerLabel)
 
         val nextPlayerPane = Pane<LabeledUIComponent>(0, 0, 150, 40)
+        val nextPlayerText =
+            if (nextPlayer == currentPlayer) {
+                "${players[nextPlayer].name} (Active)"
+            } else {
+                players[nextPlayer].name
+            }
         val nextPlayerButton =
-            Button(0, 0, 150, 40, text = players[nextPlayer].name).apply {
+            Button(0, 0, 150, 40, text = nextPlayerText).apply {
                 alignment = Alignment.CENTER_LEFT
                 visual =
                     ColorVisual(Color(playerColors[nextPlayer])).apply {
