@@ -859,17 +859,7 @@ class GameScene(
                             else -> drawnCardsStack
                         }
 
-                    target.add(
-                        cardStacks[drawnCardIndex].pop().apply {
-                            if (target ==
-                                drawnCardsStack
-                            ) {
-                                showBack()
-                            } else {
-                                showFront()
-                            }
-                        },
-                    )
+                    target.add(cardStacks[drawnCardIndex].pop())
 
                     // update toolCardMultiplier if drawn card is tool card
                     if (target == toolCardsView) {
