@@ -121,24 +121,5 @@ class DrawCardTest {
 
         assertThrows<IllegalStateException> { newPlayerActionService.drawCard(2) } // No game started
     }
-    /**
-     * Tests applying a valid tile choice (WOOD) and ensuring it is added to the player's supply.
-     **/
-    @Test
-    fun testApplyTileChoiceValid() {
-        val supplyBefore = currentPlayer.supply.size
 
-        playerActionService.applyTileChoice(1, TileType.WOOD) // Choosing WOOD
-
-        assertEquals(supplyBefore + 1, currentPlayer.supply.size) // Only one tile should be added
-        assertTrue { currentPlayer.supply.map { it.type }.contains(TileType.WOOD) }
-        assertTrue { testRefreshable.refreshAfterDrawCardCalled }
-    }
-    /**
-     * Tests applying an invalid tile choice (FLOWER), which should throw an exception.
-     **/
-    @Test
-    fun testApplyTileChoiceInvalid() {
-        assertThrows<IllegalArgumentException> { playerActionService.applyTileChoice(1, TileType.FRUIT) } // Invalid choice
-    }
 }

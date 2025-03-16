@@ -62,6 +62,10 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
             game.currentState.players[game.currentState.currentPlayer].usedHelperTiles.clear()
             game.currentState.currentPlayer =
                 (game.currentState.currentPlayer + 1) % game.currentState.players.size
+
+            // Reset hasDrawnCard for the new player
+            game.currentState.players[game.currentState.currentPlayer].hasDrawnCard = false
+
             onAllRefreshables {
                 refreshAfterEndTurn()
             }
@@ -468,6 +472,13 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
     fun meditate(card: ZenCard) {
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
         val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
+
+        // Ensure the player has not already drawn a card this turn
+        if (currentPlayer.hasDrawnCard) {
+            throw IllegalStateException("The player has already drawn a card this turn")
+        }
+        // Mark the player as having drawn a card
+        currentPlayer.hasDrawnCard = true
 
         // Ensure there are available cards in openCards
         if (game.currentState.openCards.isEmpty()) throw IllegalStateException("No available cards to draw")

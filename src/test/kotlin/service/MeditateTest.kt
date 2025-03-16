@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.test.assertNotEquals
+
 
 class MeditateTest {
 
@@ -156,4 +158,71 @@ class MeditateTest {
         assertThrows<IllegalStateException> { playerActionService.meditate(toolCard) }
     }
 
+    /**
+     * Checks if a player can meditate only once per turn.
+     * The first meditation should succeed, while the second attempt in the same turn should fail.
+     */
+    @Test
+    fun testCannotMeditateMultipleTimesPerTurn() {
+        val masterCard = MasterCard(tiles = listOf(TileType.WOOD, TileType.LEAF), id = 2)
+        game.currentState.openCards[0] = masterCard
+
+        val supplyBefore = currentPlayer.supply.size
+
+        // First meditate should work
+        playerActionService.meditate(masterCard) // Adds WOOD and LEAF
+        assertEquals(supplyBefore + 2, currentPlayer.supply.size) // Expect 2 new tiles
+        assertTrue { currentPlayer.supply.map { it.type }.contains(TileType.WOOD) }
+        assertTrue { currentPlayer.supply.map { it.type }.contains(TileType.LEAF) }
+        assertTrue { testRefreshable.refreshAfterDrawCardCalled }
+
+        // Attempt to meditate again in the same turn
+        val anotherCard = GrowthCard(type = TileType.FLOWER, id = 3)
+        game.currentState.openCards[1] = anotherCard
+
+        // The player has already drawn a card, so this should fail
+        assertThrows<IllegalStateException> { playerActionService.meditate(anotherCard) }
+    }
+
+    /**
+     * Ensures that after a player ends their turn, the next player is allowed to meditate.
+     * This confirms that `hasDrawnCard` is reset when the turn changes.
+     */
+    @Test
+    fun testNextPlayerCanMeditateAfterEndTurn() {
+        val masterCard = MasterCard(tiles = listOf(TileType.WOOD, TileType.LEAF), id = 2)
+        game.currentState.openCards[0] = masterCard
+
+        val supplyBefore = currentPlayer.supply.size
+
+        // First player meditates
+        playerActionService.meditate(masterCard)
+        assertEquals(supplyBefore + 2, currentPlayer.supply.size) // Expect 2 new tiles
+        assertTrue { currentPlayer.supply.map { it.type }.contains(TileType.WOOD) }
+        assertTrue { currentPlayer.supply.map { it.type }.contains(TileType.LEAF) }
+        assertTrue { testRefreshable.refreshAfterDrawCardCalled }
+
+        // End turn -> Switch to next player
+        playerActionService.endTurn()
+
+        // Verify next player is active
+        val nextPlayer = game.currentState.players[game.currentState.currentPlayer]
+        assertNotEquals(currentPlayer, nextPlayer)
+
+        println("Next player before meditation: ${nextPlayer.name}, hasDrawnCard = ${nextPlayer.hasDrawnCard}")
+
+        // Reset test state for the new player
+        val nextCard = GrowthCard(type = TileType.FLOWER, id = 3)
+        game.currentState.openCards[0] = nextCard
+        val seishiGrowthBefore = nextPlayer.seishiGrowth.size
+
+        // Next player meditates successfully
+        playerActionService.meditate(nextCard)
+
+        println("Next player after meditation: ${nextPlayer.name}, hasDrawnCard = ${nextPlayer.hasDrawnCard}")
+
+        // Ensure the next player's meditation worked
+        assertEquals(seishiGrowthBefore + 1, nextPlayer.seishiGrowth.size)
+    }
 }
+

@@ -37,6 +37,7 @@ class SmartBot private constructor(
     override var supply: MutableList<BonsaiTile> = mutableListOf(),
     override var usedHelperTiles: MutableList<TileType> = mutableListOf(),
     override var usedHelperCards: MutableList<HelperCard> = mutableListOf() ,
+    override var hasDrawnCard: Boolean = false
 ): Player
 {
     /**
@@ -64,7 +65,7 @@ class SmartBot private constructor(
             supply.toMutableList(),
             usedHelperTiles.toMutableList(),
             usedHelperCards.toMutableList(),
-
+            hasDrawnCard
         )
     }
 }
