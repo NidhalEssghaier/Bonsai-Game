@@ -36,7 +36,7 @@ class TestRefreshable : Refreshable {
         refreshAfterStartNewGameCalled = true
     }
 
-    override fun refreshAfterEndGame(scoreList: List<Pair<Player, Int>>) {
+    override fun refreshAfterEndGame(scoreList: Map<Player, MutableList<Int>>) {
         refreshAfterEndGameCalled = true
     }
 
