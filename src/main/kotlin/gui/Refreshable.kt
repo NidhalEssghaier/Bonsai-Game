@@ -1,9 +1,5 @@
 package gui
 
-<<<<<<< src/main/kotlin/gui/Refreshable.kt
-
-=======
->>>>>>> src/main/kotlin/gui/Refreshable.kt
 import entity.*
 import service.AbstractRefreshingService
 
@@ -68,7 +64,7 @@ interface Refreshable {
     fun refreshAfterRemoveTile() {}
 
 
-<<<<<<< src/main/kotlin/gui/Refreshable.kt
+
     /**
      * refreshes the Game Scene when the places a tile
      */
