@@ -468,39 +468,47 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
         val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
 
+        // Ensure there are available cards in openCards
         if (game.currentState.openCards.isEmpty()) throw IllegalStateException("No available cards to draw")
 
-        // Find the card in openCards and ensure it's valid
+        // Find the selected card's position in openCards
         val cardIndex = game.currentState.openCards.indexOf(card)
         if (cardIndex == -1) throw IllegalStateException("The selected card is not in openCards")
 
-        // Draw the card and mark its position as taken
+        // Draw the selected card and handle its effects
         drawCard(cardIndex)
 
-        // Process card effects based on type
+        // Process the card's effect based on its type
         when (card) {
-            is GrowthCard -> currentPlayer.seishiGrowth.push(card)
+            is GrowthCard -> {
+                // Growth cards are added to the player's growth stack
+                currentPlayer.seishiGrowth.push(card)
+            }
             is ToolCard -> {
+                // Tool cards are added to the player's tool stack, increasing their tile limit
                 currentPlayer.seishiTool.push(card)
-                currentPlayer.supplyTileLimit += 2 // Increase tile limit for future turns
+                currentPlayer.supplyTileLimit += 2
             }
             is MasterCard -> {
-                currentPlayer.supply += card.tiles.map { BonsaiTile(it) } // Add tiles to supply
-                // Store the card in the hidden deck; tile limit checks will be enforced at the end of the turn
+                // Master cards provide tiles, which are added to the player's supply
+                currentPlayer.supply += card.tiles.map { BonsaiTile(it) }
                 currentPlayer.hiddenDeck += card
             }
-            is ParchmentCard -> currentPlayer.hiddenDeck += card // Store card within hiddenDeck
+            is ParchmentCard -> {
+                // Parchment cards are stored in the player's hidden deck
+                currentPlayer.hiddenDeck += card
+            }
             is HelperCard -> {
+                // Helper cards are stored in the hidden deck and trigger a UI refresh
                 currentPlayer.hiddenDeck += card
                 onAllRefreshables { refreshAfterDrawHelperCard(card) }
             }
-            is PlaceholderCard -> {}
+            is PlaceholderCard -> {}  // Placeholder cards do nothing
         }
 
+        // Replace the drawn card with a placeholder and shift remaining cards
         game.currentState.openCards[cardIndex] = PlaceholderCard
-        // Shift remaining cards and enforce game constraints
         shiftBoardAndRefill(cardIndex)
-
     }
 
 
