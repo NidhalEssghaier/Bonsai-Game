@@ -729,7 +729,7 @@ class GameScene(
         animations.addAll(getRefillCardsAnimation(drawnCardIndex))
         // Add final animation that triggers tile refresh and tile selection if necessary
         animations.add(
-            DelayAnimation(ANIMATION_TIME).apply {
+            ScaleAnimation(drawnCardsStack, 1, 1, 1, 1, duration = 1000).apply {
                 onFinished = {
                     initializeSupplyTiles(bonsaiGame.currentState)
                     if (chooseTilesByBoard || chooseTilesByCard) {
@@ -827,19 +827,7 @@ class GameScene(
     private fun disableElementsAfterCardDrawn(card: ZenCard) {
         cardStacks.forEach { cardStack -> cardStack.onMouseClicked = {} }
 
-        bonsaiTilesView1.forEach { bonsaiTilesView ->
-            if (card is HelperCard) {
-                bonsaiTilesView.isDraggable = card.tiles.contains(tileMap.backward(bonsaiTilesView).type)
-            } else {
-                bonsaiTilesView.isDraggable = false
-            }
-        }
-        bonsaiTilesView2.forEach { bonsaiTilesView ->
-            if (card is HelperCard) {
-                bonsaiTilesView.isDraggable = card.tiles.contains(tileMap.backward(bonsaiTilesView).type)
-            } else {
-                bonsaiTilesView.isDraggable = false
-            }
-        }
+        bonsaiTilesView1.forEach { it.isDraggable = card is HelperCard }
+        bonsaiTilesView2.forEach { it.isDraggable = card is HelperCard }
     }
 }
