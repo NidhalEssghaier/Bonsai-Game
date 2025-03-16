@@ -1,6 +1,9 @@
 package gui
 
+<<<<<<< src/main/kotlin/gui/Refreshable.kt
 
+=======
+>>>>>>> src/main/kotlin/gui/Refreshable.kt
 import entity.*
 import service.AbstractRefreshingService
 
@@ -62,9 +65,10 @@ interface Refreshable {
     /**
      * perform refreshes that are necessary after undo / redo
      */
-    fun refreshAfterRemoveTile(){}
+    fun refreshAfterRemoveTile() {}
 
 
+<<<<<<< src/main/kotlin/gui/Refreshable.kt
     /**
      * refreshes the Game Scene when the places a tile
      */
@@ -81,4 +85,5 @@ interface Refreshable {
     fun refreshAfterEndGame(scoreList: List<Pair<Player,Int>>) {}
 
 }
+
 
