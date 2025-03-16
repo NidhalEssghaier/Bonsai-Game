@@ -280,9 +280,7 @@ class GameService(private val rootService:RootService):AbstractRefreshingService
     fun loadGame() {
         check(saveFilePath.exists()) { "Save file doesn't exist." }
 
-        val content = saveFilePath.readText()
-        val game = jsonSerializer.decodeFromString(BonsaiGame.serializer(), content)
-        rootService.currentGame = game
+        rootService.currentGame = jsonSerializer.decodeFromString(BonsaiGame.serializer(), saveFilePath.readText())
         onAllRefreshables { refreshAfterStartNewGame() }
     }
 
