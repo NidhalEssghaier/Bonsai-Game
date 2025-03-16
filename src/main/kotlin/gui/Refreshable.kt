@@ -61,12 +61,11 @@ interface Refreshable {
 
     /**
      * perform refreshes that are necessary after a [HelperCard] has been drawn
-     *  this refresh is called in [Meditate] when a [HelperCard] has been drawn
+     *  this refresh is called in [meditate] when a [HelperCard] has been drawn
      * in gui : the player should  choose wich tile he wants to play and the position in wich the tile
      * should be placed , these parameters need to be passed to the cultivate Method and the cultivate method needs to
      * be called
      */
-
     fun refreshAfterDrawHelperCard(helperCard: HelperCard) {}
 
     /**
@@ -75,6 +74,20 @@ interface Refreshable {
     fun refreshAfterRemoveTile() {}
 
     fun refreshAfterEndGame(scoreList: List<Pair<Player, Int>>) {}
+
+
+    /**
+     * refreshes the Game Scene when the places a tile
+     */
+    fun refreshAfterPlaceTile(placedTile: BonsaiTile) {}
+
+    /**
+     * * refreshes the game scene once the player achieves the requirement of at least one GoalCard
+     * player should see wich Goals have been achieved
+     * in gui : the player should then decide to claim or renounce of every achieved Goal
+     * then the Method  [decideGoalClaim(goalCard: GoalCard,claim: Boolean)] needs to be called for every decision
+     */
+    fun refreshAfterReachGoals(reachedGoals:List<GoalCard>){}
 
     fun refreshAfterChooseTile() {}
 }

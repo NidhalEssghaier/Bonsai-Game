@@ -53,6 +53,10 @@ class PlayerActionService(
             if (game.currentState.endGameCounter > game.currentState.players.size) {
                 rootService.gameService.endGame()
             } else {
+                // clear used helper card tiles of the current player
+                game.currentState.players[game.currentState.currentPlayer]
+                    .usedHelperTiles
+                    .clear()
                 game.currentState.currentPlayer =
                     (game.currentState.currentPlayer + 1) % game.currentState.players.size
                 onAllRefreshables {
@@ -60,6 +64,10 @@ class PlayerActionService(
                 }
             }
         } else {
+            // clear used helper card tiles of the current player
+            game.currentState.players[game.currentState.currentPlayer]
+                .usedHelperTiles
+                .clear()
             game.currentState.currentPlayer =
                 (game.currentState.currentPlayer + 1) % game.currentState.players.size
             onAllRefreshables {
@@ -219,7 +227,7 @@ class PlayerActionService(
                     // wichtig: player´s usedHelperTiles must be cleared when the player ends his Turn
                 }
             } else {
-                throw IllegalStateException(" Unrespected placing rules according to Helper Card")
+                throw IllegalStateException(" violated placing rules according to Helper Card")
             }
         }
         // placing a Tile without a helper Card
@@ -235,6 +243,246 @@ class PlayerActionService(
                 placeTile(tile, r, q)
             } else {
                 throw IllegalStateException("Tile placement not allowed based on Seishi StartingTile ans Growth Cards.")
+            }
+        }
+    }
+
+    /**
+     * Places a tile on the bonsai grid, ensuring placement rules are followed.
+     *
+     * @param tile The BonsaiTile to be placed.
+     * @param r The row coordinate for placement.
+     * @param q The column coordinate for placement.
+     *
+     * @throws IllegalStateException If placement rules are violated.
+     */
+    private fun placeTile(
+        tile: BonsaiTile,
+        r: Int,
+        q: Int,
+    ) {
+        val game = rootService.currentGame ?: throw IllegalStateException("No active game")
+        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
+        val bonsai = currentPlayer.bonsai
+        val grid = bonsai.grid
+
+        // Ensure the placement position is valid
+        require(grid.isEmpty(q, r)) { "Cannot place a tile on top of another tile." }
+        require(grid.isNotPot(q, r)) { "Cannot place a tile in the Pot Area." }
+
+        // Get neighboring tiles
+        val neighbors = grid.getNeighbors(q, r)
+
+        // Check placement rules based on tile type
+        when (tile.type) {
+            TileType.WOOD -> {
+                require(neighbors.any { it.type == TileType.WOOD }) {
+                    "A wood tile must be placed adjacent to another wood tile."
+                }
+            }
+            TileType.LEAF -> {
+                require(neighbors.any { it.type == TileType.WOOD }) {
+                    "A leaf tile must be placed adjacent to a wood tile."
+                }
+            }
+            TileType.FLOWER -> {
+                require(neighbors.any { it.type == TileType.LEAF }) {
+                    "A flower tile must be placed adjacent to a leaf tile."
+                }
+            }
+            TileType.FRUIT -> {
+                val adjacentLeaves = neighbors.filter { it.type == TileType.LEAF }
+                require(adjacentLeaves.size >= 2) {
+                    "A fruit tile must be placed between two adjacent leaf tiles."
+                }
+                // Ensure those two leaf tiles are adjacent to each other using hasAdjacentPair
+                require(hasAdjacentPair(adjacentLeaves)) {
+                    "The two leaf tiles must also be adjacent to each other."
+                }
+                // Ensure a fruit tile is not placed adjacent to another fruit tile
+                require(neighbors.none { it.type == TileType.FRUIT }) {
+                    "A fruit tile cannot be placed adjacent to another fruit tile."
+                }
+            }
+            else -> {
+                throw IllegalStateException("Invalid tile type for placement.")
+            }
+        }
+
+        // Remove tile from player's supply
+        currentPlayer.supply.remove(tile)
+
+        // Place tile in bonsai grid
+        grid[q, r] = tile
+
+        // Update tile count
+        bonsai.tileCount[tile.type] = bonsai.tileCount.getOrDefault(tile.type, 0) + 1
+
+        // Refresh the game scene
+        onAllRefreshables { refreshAfterPlaceTile(tile) }
+
+        // Check if any goal condition is met
+        val metGoals = checkGoalsAfterPlacement(bonsai, grid)
+        onAllRefreshables { refreshAfterReachGoals(metGoals) }
+    }
+
+    /**
+     * Checks if any goal conditions are met after placing a tile.
+     *
+     * @param bonsai The player's bonsai tree.
+     * @param grid The hexagonal grid representing the bonsai.
+     * @return A list of GoalCards that have been achieved.
+     */
+    private fun checkGoalsAfterPlacement(
+        bonsai: Bonsai,
+        grid: HexGrid,
+    ): List<GoalCard> {
+        val game = rootService.currentGame ?: throw IllegalStateException("No active game")
+        val goalCards = game.currentState.goalCards
+
+        val metGoals = mutableListOf<GoalCard>()
+        val tiles = bonsai.grid.tilesList()
+        val protrudingTiles = tiles.filter { grid.isProtruding(it) }
+
+        for (goalCard in goalCards) {
+            if (goalCard != null) {
+                val isGoalMet =
+                    when (goalCard.color) {
+                        // Check if the required number of wood tiles is met
+                        GoalColor.BROWN ->
+                            (bonsai.tileCount[TileType.WOOD] ?: 0) >= (
+                                when (goalCard.difficulty) {
+                                    GoalDifficulty.LOW -> 8
+                                    GoalDifficulty.INTERMEDIATE -> 10
+                                    GoalDifficulty.HARD -> 12
+                                }
+                            )
+                        // Check if the required number of fruit tiles is met
+                        GoalColor.ORANGE ->
+                            (bonsai.tileCount[TileType.FRUIT] ?: 0) >= (
+                                when (goalCard.difficulty) {
+                                    GoalDifficulty.LOW -> 3
+                                    GoalDifficulty.INTERMEDIATE -> 4
+                                    GoalDifficulty.HARD -> 5
+                                }
+                            )
+                        // Find the largest connected group of leaf tiles
+                        GoalColor.GREEN -> {
+                            val maxLeafGroup = findLargestLeafGroup(grid, tiles)
+                            maxLeafGroup >= (
+                                when (goalCard.difficulty) {
+                                    GoalDifficulty.LOW -> 5
+                                    GoalDifficulty.INTERMEDIATE -> 7
+                                    GoalDifficulty.HARD -> 9
+                                }
+                            )
+                        }
+                        // Check conditions for blue goal cards
+                        GoalColor.RED -> {
+                            // Count tiles protruding on the left  side
+                            val leftProtrusions =
+                                protrudingTiles.count {
+                                    it.type == TileType.FLOWER && grid.getPotSide(it) == PotSide.LEFT
+                                }
+                            // Count tiles protruding on the left  side
+                            val rightProtrusions =
+                                protrudingTiles.count {
+                                    it.type == TileType.FLOWER && grid.getPotSide(it) == PotSide.RIGHT
+                                }
+                            maxOf(leftProtrusions, rightProtrusions) >= (
+                                when (goalCard.difficulty) {
+                                    GoalDifficulty.LOW -> 3
+                                    GoalDifficulty.INTERMEDIATE -> 4
+                                    GoalDifficulty.HARD -> 5
+                                }
+                            )
+                        }
+                        GoalColor.BLUE -> {
+                            // Check conditions for blue goal cards
+                            when (goalCard.difficulty) {
+                                GoalDifficulty.LOW -> protrudingTiles.any { grid.getPotSide(it) == PotSide.RIGHT }
+                                GoalDifficulty.INTERMEDIATE ->
+                                    protrudingTiles.any { grid.getPotSide(it) == PotSide.LEFT } &&
+                                        protrudingTiles.any { grid.getPotSide(it) == PotSide.RIGHT }
+                                GoalDifficulty.HARD ->
+                                    protrudingTiles.any { grid.getPotSide(it) == PotSide.BELOW } &&
+                                        (
+                                            protrudingTiles.any { grid.getPotSide(it) == PotSide.LEFT } ||
+                                                protrudingTiles.any { grid.getPotSide(it) == PotSide.RIGHT }
+                                        )
+                            }
+                        }
+                    }
+                if (isGoalMet) {
+                    metGoals.add(goalCard)
+                }
+            }
+        }
+        return metGoals
+    }
+
+    /**
+     * Finds the largest connected cluster of leaf tiles in the bonsai grid.
+     *
+     *  This function uses Depth-First Search (DFS) algorithm  to traverse all connected leaf tiles,
+     *  determining the largest contiguous group of leafs. It is used to evaluate whether the
+     *  GREEN goal cards' conditions are met.
+     *
+     * @param grid The hexagonal grid representing the bonsai.
+     * @param tiles The list of all tiles in the bonsai.
+     * @return The size of the largest connected group of leaf tiles.
+     */
+    private fun findLargestLeafGroup(
+        grid: HexGrid,
+        tiles: List<BonsaiTile>,
+    ): Int {
+        val visited = mutableSetOf<BonsaiTile>()
+        var maxClusterSize = 0
+
+        fun dfs(tile: BonsaiTile): Int {
+            if (tile in visited || tile.type != TileType.LEAF) return 0
+            visited.add(tile)
+            return 1 + grid.getNeighbors(tile).sumOf { dfs(it) }
+        }
+
+        for (tile in tiles.filter { it.type == TileType.LEAF }) {
+            if (tile !in visited) {
+                maxClusterSize = maxOf(maxClusterSize, dfs(tile))
+            }
+        }
+        return maxClusterSize
+    }
+
+    /**
+     * Decides whether to claim or renounce a goal card.
+     *
+     * @param goalCard The goal card being considered.
+     * @param claim If true, the player claims the goal. If false, the player renounces it.
+     *
+     * If the player claims the goal, the card is added to the player's accepted goals list,
+     * and all other goal cards of the same color  are forbidden.
+     * If the player renounces the goal, only this specific goal card is forbidden.
+     */
+    fun decideGoalClaim(
+        goalCard: GoalCard,
+        claim: Boolean,
+    ) {
+        val game = rootService.currentGame
+        checkNotNull(game) { "there is no active game" }
+        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
+        if (claim) {
+            // Add the claimed goal to acceptedGoals
+            (currentPlayer.acceptedGoals).add(goalCard)
+            onAllRefreshables { refreshAfterClaimGoal(goalCard) }
+
+            // Find all goal cards of the same color and forbid them
+            currentPlayer.forbiddenGoals.addAll(
+                currentPlayer.declinedGoals.filter { it.color == goalCard.color && it !in currentPlayer.forbiddenGoals },
+            )
+        } else {
+            // Only forbid this specific goal card
+            if (goalCard !in currentPlayer.forbiddenGoals) {
+                currentPlayer.forbiddenGoals.add(goalCard)
             }
         }
     }
@@ -316,47 +564,6 @@ class PlayerActionService(
 
         // refresh to show draw card animation & choose tiles optionally based on drawn card & chosen stack
         onAllRefreshables { refreshAfterDrawCard(card, cardIndex, chooseTilesByBoard, chooseTilesByCard) }
-    }
-
-    private fun placeTile(
-        tile: BonsaiTile,
-        r: Int,
-        q: Int,
-    ) {
-    }
-
-    /**
-     * Decides whether to claim or renounce a goal card.
-     *
-     * @param goalCard The goal card being considered.
-     * @param claim If true, the player claims the goal. If false, the player renounces it.
-     *
-     * If the player claims the goal, the card is added to the player's accepted goals list,
-     * and all other goal cards of the same color  are forbidden.
-     * If the player renounces the goal, only this specific goal card is forbidden.
-     */
-    fun decideGoalClaim(
-        goalCard: GoalCard,
-        claim: Boolean,
-    ) {
-        val game = rootService.currentGame
-        checkNotNull(game) { "there is no active game" }
-        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
-        if (claim) {
-            // Add the claimed goal to acceptedGoals
-            (currentPlayer.acceptedGoals).add(goalCard)
-            onAllRefreshables { refreshAfterClaimGoal(goalCard) }
-
-            // Find all goal cards of the same color and forbid them
-            currentPlayer.forbiddenGoals.addAll(
-                currentPlayer.declinedGoals.filter { it.color == goalCard.color && it !in currentPlayer.forbiddenGoals },
-            )
-        } else {
-            // Only forbid this specific goal card
-            if (goalCard !in currentPlayer.forbiddenGoals) {
-                currentPlayer.forbiddenGoals.add(goalCard)
-            }
-        }
     }
 
     /**

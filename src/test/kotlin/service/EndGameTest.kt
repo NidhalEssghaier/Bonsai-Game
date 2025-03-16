@@ -41,7 +41,7 @@ class EndGameTest {
 
         game.currentState.players[0]
             .acceptedGoals
-            .add(game.currentState.goalCards[0]) // 5
+            .add(game.currentState.goalCards[0]!!) // 5
 
         val parchmentCard = ParchmentCard(1, ParchmentCardType.WOOD, 99)
         game.currentState.players[0]

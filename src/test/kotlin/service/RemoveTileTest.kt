@@ -18,7 +18,7 @@ class RemoveTileTest {
 
         //test with no game
         assertThrows<IllegalStateException> {playerActionService.removeTile(BonsaiTile(TileType.WOOD))  }
-        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, listOf())
+        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, mutableListOf())
 
 
         //check game not null
@@ -38,7 +38,7 @@ class RemoveTileTest {
         val mc = RootService()
         val gameService = GameService(mc)
         val playerActionService = PlayerActionService(mc)
-        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, listOf())
+        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, mutableListOf())
 
         //check game not null
         val game = mc.currentGame
@@ -62,7 +62,7 @@ class RemoveTileTest {
         playerActionService.addRefreshable(testRefreshable)
 
 
-        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, listOf())
+        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, mutableListOf())
 
         //check game not null
         val game = mc.currentGame
