@@ -22,7 +22,7 @@ class EndGameTest {
         val player1 = Triple("Bob",0, PotColor.PURPLE)
         val players = mutableListOf(player0,player1)
 
-        val goalCards = listOf(
+        val goalCards = mutableListOf(
             GoalCard(5, GoalColor.BROWN, GoalDifficulty.LOW),
             GoalCard(10, GoalColor.BROWN, GoalDifficulty.INTERMEDIATE),
             GoalCard(15, GoalColor.BROWN, GoalDifficulty.HARD),
