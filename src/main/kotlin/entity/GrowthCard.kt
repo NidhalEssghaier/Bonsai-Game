@@ -1,5 +1,6 @@
 package entity
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
@@ -9,6 +10,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class GrowthCard(
+    @SerialName("TileType")
     val type: TileType,
     val id: Int
 ) : ZenCard

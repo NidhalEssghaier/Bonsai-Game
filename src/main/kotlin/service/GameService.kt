@@ -2,10 +2,51 @@ package service
 
 import entity.*
 import helper.*
+import java.io.File
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
+import java.io.IOException
 
 class GameService(
     private val rootService: RootService,
 ) : AbstractRefreshingService() {
+    /**
+     * A companion object that contains the path to the save file and jsonSerializer.
+     * @property dirPath The path to the directory where the save file is located.
+     * @property saveFilePath The path to the save file.
+     * @property jsonSerializer The [Json] object that contains the polymorphic serializer.
+     */
+    private companion object {
+        private val dirPath = File(
+            File(GameService::class.java.protectionDomain.codeSource.location.path).parentFile.parentFile,
+            "data"
+        )
+
+        private val saveFilePath = File(dirPath, "save.json")
+
+        private val jsonSerializer = Json {
+            serializersModule = SerializersModule {
+                polymorphic(ZenCard::class) {
+                    subclass(ToolCard::class)
+                    subclass(MasterCard::class)
+                    subclass(HelperCard::class)
+                    subclass(GrowthCard::class)
+                    subclass(ParchmentCard::class)
+                    subclass(PlaceholderCard::class)
+                }
+
+                polymorphic(Player::class) {
+                    subclass(LocalPlayer::class)
+                    subclass(NetworkPlayer::class)
+                    subclass(RandomBot::class)
+                    subclass(SmartBot::class)
+                }
+            }
+        }
+    }
+
     /**
      * Starts a new game and prepares different game elements
      * @param players A list of pairs that represent a player.
@@ -287,7 +328,12 @@ class GameService(
      * @throws IllegalStateException if the save file doesn't exist
      * @throws IOException if the save file can't be read
      */
-    fun loadGame() {}
+    fun loadGame() {
+        check(saveFilePath.exists()) { "Save file doesn't exist." }
+
+        rootService.currentGame = jsonSerializer.decodeFromString(BonsaiGame.serializer(), saveFilePath.readText())
+        onAllRefreshables { refreshAfterStartNewGame() }
+    }
 
     /**
      * Saves the current game state to a save file
@@ -308,5 +354,15 @@ class GameService(
      * @throws IllegalStateException if the game hasn't started yet
      * @throws IOException if the save file can't be written to
      */
-    fun saveGame() {}
+    fun saveGame() {
+        val game = rootService.currentGame
+        checkNotNull(game) { "No game has been started yet." }
+
+        if(!dirPath.exists())
+            if(!dirPath.mkdirs()) throw IOException("Unable to create directory.")
+
+        saveFilePath.writeText(
+            jsonSerializer.encodeToString(BonsaiGame.serializer(), game)
+        )
+    }
 }
