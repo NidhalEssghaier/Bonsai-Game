@@ -462,6 +462,7 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
      *
      * @throws IllegalStateException If there is no active game.
      * @throws IllegalStateException If the Game's stacks are empty.
+     * @throws IllegalArgumentException If the selected [card] is not in [openCards].
      *
      */
     fun meditate(card: ZenCard) {
@@ -470,6 +471,9 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
 
         // Ensure there are available cards in openCards
         if (game.currentState.openCards.isEmpty()) throw IllegalStateException("No available cards to draw")
+
+        // Validate that the selected card exists in openCards
+        require(card in game.currentState.openCards) { "The selected card is not in openCards" }
 
         // Find the selected card's position in openCards
         val cardIndex = game.currentState.openCards.indexOf(card)
@@ -574,10 +578,15 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
      */
 
     fun applyTileChoice(cardStack: Int, choice: TileType) {
-        val game = rootService.currentGame ?: return
+        val game = rootService.currentGame ?: throw IllegalStateException("No active game")
 
         // Validate that the choice is WOOD or LEAF; throw an exception if invalid
         require(choice == TileType.WOOD || choice == TileType.LEAF) { "Invalid choice" }
+
+        // Validate cardStack index to prevent out-of-bounds errors
+        if (cardStack !in game.currentState.openCards.indices) {
+            throw IllegalArgumentException("Invalid cardStack index: $cardStack")
+        }
 
         // Add the chosen tile to the current player's supply
         val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
@@ -593,14 +602,16 @@ class PlayerActionService(private val rootService: RootService):AbstractRefreshi
     fun shiftBoardAndRefill(cardStack: Int) {
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
 
-        if (game.currentState.drawStack.isEmpty()) return
-
         for (i in cardStack  downTo 1) {
             game.currentState.openCards[i] = game.currentState.openCards[i - 1]
         }
 
-        val newCard = game.currentState.drawStack.pop()
-        game.currentState.openCards[0] = newCard
+        if (game.currentState.drawStack.isNotEmpty()) {
+            val newCard = game.currentState.drawStack.pop()
+            game.currentState.openCards[0] = newCard
+        } else {
+            game.currentState.openCards[0] = PlaceholderCard // Ensures a valid state
+        }
     }
 
 
