@@ -44,7 +44,7 @@ class GameScene(
     private var currentPlayer = -1 // The currently active player
     private var shownPlayer =
         -1; // The player that is currently visible on the screen TODO use rootService.currentGame.currentPlayer
-    private val playerColors = mutableListOf("#a2aca6", "#cc8c7e", "#409cab", "#9a92b8")
+    private val playerColors: MutableList<String> = mutableListOf()
     private val tilesToRemove = mutableListOf<BonsaiTile>()
     private var cardStacks: List<CardStack<CardView>> = listOf()
 
@@ -364,10 +364,10 @@ class GameScene(
         rootService: RootService,
         game: BonsaiGame,
     ) {
+        initializePlayerColors(game.currentState.players)
         initializeGoalCardGridPane(game)
         initializeBoardPane(rootService.playerActionService, game)
         initializeGameOptionsGridPane()
-        initializePlayerColors(game.currentState.players)
         initializeTrash()
     }
 
