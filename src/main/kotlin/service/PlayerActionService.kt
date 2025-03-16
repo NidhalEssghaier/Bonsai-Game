@@ -33,14 +33,16 @@ class PlayerActionService(
         val game = rootService.currentGame
         checkNotNull(game) { "No game is currently active." }
 
-        while (
+        // discard tiles first if necessary
+        val tilesToDiscard =
             game.currentState.players[game.currentState.currentPlayer]
-                .supply.size >
-            game.currentState.players[game.currentState.currentPlayer].supplyTileLimit
-        ) {
+                .supply.size -
+                game.currentState.players[game.currentState.currentPlayer].supplyTileLimit
+        if (tilesToDiscard > 0) {
             onAllRefreshables {
-                refreshAfterDiscardTile()
+                refreshAfterDiscardTile(tilesToDiscard, null)
             }
+            return // break to allow discarding tiles
         }
 
         game.undoStack.push(game.currentState)
@@ -93,9 +95,18 @@ class PlayerActionService(
             tile in game.currentState.players[game.currentState.currentPlayer].supply,
         ) { "The given tile is not in the active players supply." }
 
+        val tilesToDiscard =
+            game.currentState.players[game.currentState.currentPlayer]
+                .supply.size -
+                game.currentState.players[game.currentState.currentPlayer].supplyTileLimit
+
+        require(tilesToDiscard > 0) { "The current supply size is equal to or lower than the supply tile limit." }
+
         game.currentState.players[game.currentState.currentPlayer]
             .supply
             .remove(tile)
+
+        onAllRefreshables { refreshAfterDiscardTile(tilesToDiscard - 1, tile) }
     }
 
     /**
@@ -260,6 +271,9 @@ class PlayerActionService(
         // Find the card in openCards and ensure it's valid
         val cardIndex = game.currentState.openCards.indexOf(card)
         if (cardIndex == -1) throw IllegalStateException("The selected card is not in openCards")
+
+        // save state to allow undo
+        game.undoStack.push(game.currentState.copy())
 
         // Draw the card and mark its position as taken
         val receivedTiles = drawCard(cardIndex)

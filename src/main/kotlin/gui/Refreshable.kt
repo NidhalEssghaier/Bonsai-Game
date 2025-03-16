@@ -46,7 +46,10 @@ interface Refreshable {
     /**
      * Select a tile to discard.
      */
-    fun refreshAfterDiscardTile() {}
+    fun refreshAfterDiscardTile(
+        tilesToDiscard: Int,
+        removedTile: BonsaiTile?,
+    ) {}
 
     /**
      * perform refreshes that are necessary when a player choose a tile between

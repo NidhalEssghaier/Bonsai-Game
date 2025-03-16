@@ -49,24 +49,25 @@ class GameScene(
     private var cardStacks: List<CardStack<CardView>> = listOf()
 
     // drop area to remove bonsai tiles
-    private val thrashArea =
-        Area<HexagonView>(150, 500, 100, 100, visual = ColorVisual.ORANGE)
-//            .apply {
-//            dropAcceptor = { dragEvent ->
-//                when (dragEvent.draggedComponent) {
-//                    is HexagonView -> true
-//                    else -> false
-//                }
-//            }
-//            onDragDropped = { dragEvent ->
-//                val view = dragEvent.draggedComponent as HexagonView
-//                view.removeFromParent()
-//                // TODO call service removeTile
-//                bonsaiTiles.remove(tileMap.backward(view))
-//
-//                tileMap.removeBackward(view)
-//            }
-//        }
+    private val trashInfo = Label(30, 396, 192, 50, isWrapText = true)
+    private val trashArea =
+        Area<HexagonView>(
+            30,
+            446,
+            192,
+            192,
+            visual = itemImageLoader.imageFor("icons/delete_icon.png", 192, 192),
+        ).apply {
+            dropAcceptor = { dragEvent ->
+                when (dragEvent.draggedComponent) {
+                    is HexagonView -> true
+                    else -> false
+                }
+            }
+            onDragDropped = { dragEvent ->
+                rootService.playerActionService.discardTile(tileMap.backward(dragEvent.draggedComponent as HexagonView))
+            }
+        }
 
     // elements of the game scene that are equal for everyone
     // grid pane to arrange goal cards
@@ -261,7 +262,8 @@ class GameScene(
             goalCardsPane,
             boardPane,
             gameOptionsGridPane,
-            thrashArea,
+            trashArea,
+            trashInfo,
             bonsaiTilesView1,
             bonsaiTilesView2,
             toolCardsView,
@@ -310,9 +312,40 @@ class GameScene(
         shownPlayer = currentPlayer
 
         cardMap.clear()
+        tileMap.clear()
 
         initializeGameElements(rootService, bonsaiGame)
         initializePlayerView(bonsaiGame)
+    }
+
+    override fun refreshAfterUndoRedo() {
+        cardMap.clear()
+        tileMap.clear()
+
+        currentPlayer = bonsaiGame.currentState.currentPlayer
+        shownPlayer = currentPlayer
+
+        initializeGameElements(rootService, bonsaiGame)
+        initializePlayerView(bonsaiGame)
+    }
+
+    override fun refreshAfterDiscardTile(
+        tilesToDiscard: Int,
+        removedTile: BonsaiTile?,
+    ) {
+        trashInfo.text = "Supply size contains $tilesToDiscard tiles more than allowed"
+        trashInfo.isVisible = true
+        trashArea.isVisible = true
+
+        // make tiles removable as they are being disbaled after drawin a card to avoid miss-input
+        bonsaiTilesView1.forEach { it.isDraggable = true }
+        bonsaiTilesView2.forEach { it.isDraggable = true }
+
+        if (removedTile != null) {
+            val view = tileMap.forward(removedTile)
+            view.removeFromParent()
+            tileMap.remove(removedTile, view)
+        }
     }
 
     private fun initializeGameElements(
@@ -323,6 +356,7 @@ class GameScene(
         initializeBoardPane(rootService.playerActionService, game)
         initializeGameOptionsGridPane()
         initializePlayerColors(game.currentState.players)
+        initializeTrash()
     }
 
     private fun initializePlayerView(game: BonsaiGame) {
@@ -529,6 +563,11 @@ class GameScene(
                 }
             gameOptionsGridPane[idx, 0] = menuOptionButton
         }
+    }
+
+    private fun initializeTrash() {
+        trashInfo.isVisible = false
+        trashArea.isVisible = false
     }
 
     private fun initializeSeishiCards(state: GameState) {
@@ -789,6 +828,13 @@ class GameScene(
         cardStacks.forEach { cardStack -> cardStack.onMouseClicked = {} }
 
         bonsaiTilesView1.forEach { bonsaiTilesView ->
+            if (card is HelperCard) {
+                bonsaiTilesView.isDraggable = card.tiles.contains(tileMap.backward(bonsaiTilesView).type)
+            } else {
+                bonsaiTilesView.isDraggable = false
+            }
+        }
+        bonsaiTilesView2.forEach { bonsaiTilesView ->
             if (card is HelperCard) {
                 bonsaiTilesView.isDraggable = card.tiles.contains(tileMap.backward(bonsaiTilesView).type)
             } else {
