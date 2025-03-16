@@ -18,6 +18,7 @@ import kotlinx.serialization.Serializable
  * @property bonsai The bonsai of the player
  */
 @Serializable
+@Polymorphic
 sealed interface Player
 {
     val name: String
