@@ -19,7 +19,7 @@ import serializer.ArrayDequeZenCardSerializer
 class GameState(
     val gameSpeed: Int,
     val players: List<@Polymorphic Player>,
-    val goalCards: List<GoalCard?>,
+    val goalCards: MutableList<GoalCard?>,
     @Serializable(with = ArrayDequeZenCardSerializer::class)
     val drawStack: ArrayDeque<ZenCard>,
     val openCards: MutableList<@Polymorphic ZenCard>,

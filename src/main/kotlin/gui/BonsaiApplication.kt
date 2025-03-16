@@ -1,5 +1,6 @@
 package gui
 
+import entity.GoalCard
 import service.RootService
 import tools.aqua.bgw.core.BoardGameApplication
 
@@ -47,5 +48,10 @@ class BonsaiApplication :
     ) {
         chooseTileScene = ChooseTileScene(rootService, this, chooseByBoard, chooseByCard)
         this.showMenuScene(chooseTileScene)
+    }
+
+    override fun refreshAfterReachGoals(reachedGoals: List<GoalCard>) {
+        val claimGoalScene = ClaimGoalScene(rootService, this, reachedGoals)
+        this.showMenuScene(claimGoalScene)
     }
 }

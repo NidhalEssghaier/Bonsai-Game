@@ -323,7 +323,7 @@ class PlayerActionService(
 
         // Check if any goal condition is met
         val metGoals = checkGoalsAfterPlacement(bonsai, grid)
-        onAllRefreshables { refreshAfterReachGoals(metGoals) }
+        if (metGoals.isNotEmpty()) onAllRefreshables { refreshAfterReachGoals(metGoals) }
     }
 
     /**
@@ -473,7 +473,9 @@ class PlayerActionService(
         if (claim) {
             // Add the claimed goal to acceptedGoals
             (currentPlayer.acceptedGoals).add(goalCard)
-            onAllRefreshables { refreshAfterClaimGoal(goalCard) }
+
+            // remove goal from game
+            game.currentState.goalCards[game.currentState.goalCards.indexOf(goalCard)] = null
 
             // Find all goal cards of the same color and forbid them
             currentPlayer.forbiddenGoals.addAll(
@@ -485,6 +487,7 @@ class PlayerActionService(
                 currentPlayer.forbiddenGoals.add(goalCard)
             }
         }
+        onAllRefreshables { refreshAfterDecideGoal() }
     }
 
     /**

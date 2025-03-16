@@ -348,6 +348,11 @@ class GameScene(
         }
     }
 
+    override fun refreshAfterDecideGoal() {
+        initializeGoalCardGridPane(bonsaiGame)
+        initializeClaimedGoalsGridPane(bonsaiGame.currentState)
+    }
+
     private fun initializeGameElements(
         rootService: RootService,
         game: BonsaiGame,
@@ -447,6 +452,9 @@ class GameScene(
         playerActionService: PlayerActionService,
         game: BonsaiGame,
     ) {
+        // remove existing stackViews to avoid stacking of stackView-objects due to new initialization after refreshOnEndTurn
+        cardStacks.forEach { it.removeFromParent() }
+
         val drawStackView = createDrawStackView(32, 33, game.currentState.drawStack, 0, false)
         val cardStackView1 = createOpenCardView(playerActionService, 216, 33, game.currentState.openCards[0], 1, true)
         val cardStackView2 = createOpenCardView(playerActionService, 371, 33, game.currentState.openCards[1], 2, true)

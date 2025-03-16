@@ -31,7 +31,7 @@ interface Refreshable {
      * perform refreshes after a player claims a goal card
      * @param goalCard the claimed [GoalCard]
      */
-    fun refreshAfterClaimGoal(goalCard: GoalCard) {}
+    fun refreshAfterDecideGoal() {}
 
     /**
      * perform refreshes that are necessary after undo / redo
@@ -75,7 +75,6 @@ interface Refreshable {
 
     fun refreshAfterEndGame(scoreList: List<Pair<Player, Int>>) {}
 
-
     /**
      * refreshes the Game Scene when the places a tile
      */
@@ -87,7 +86,7 @@ interface Refreshable {
      * in gui : the player should then decide to claim or renounce of every achieved Goal
      * then the Method  [decideGoalClaim(goalCard: GoalCard,claim: Boolean)] needs to be called for every decision
      */
-    fun refreshAfterReachGoals(reachedGoals:List<GoalCard>){}
+    fun refreshAfterReachGoals(reachedGoals: List<GoalCard>) {}
 
     fun refreshAfterChooseTile() {}
 }
