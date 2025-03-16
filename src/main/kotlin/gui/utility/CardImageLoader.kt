@@ -65,8 +65,8 @@ class CardImageLoader {
         when (card) {
             is GrowthCard -> coordinateGrowthCards(card.type)
             is ToolCard -> Pair(1, 0)
-            is HelperCard -> coordinateHelperCards(card.tiles)
-            is MasterCard -> coordinateMasterCards(card.tiles)
+            is HelperCard -> coordinateHelperCards( card.tiles.associateWith { 1 })
+            is MasterCard -> coordinateMasterCards( card.tiles.associateWith { 1 })
             is ParchmentCard ->
                 when (card.type) {
                     ParchmentCardType.FLOWER -> Pair(1, 3)

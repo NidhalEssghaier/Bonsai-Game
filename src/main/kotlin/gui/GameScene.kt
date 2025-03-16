@@ -43,9 +43,15 @@ class GameScene : BoardGameScene(1920, 1080) {
     // dummy variables for testing without service layer
     private val playerNames = listOf("player1", "player2", "player3", "player4")
     private val drawStack = Stack<ZenCard>(ToolCard(2))
-    private val cardStack1 = Stack<ZenCard>(MasterCard(mapOf(TileType.WOOD to 2)))
-    private val cardStack2 = Stack<ZenCard>(GrowthCard(TileType.WOOD))
-    private val cardStack3 = Stack<ZenCard>(GrowthCard(TileType.WOOD))
+    private val cardStack1 = Stack<ZenCard>(MasterCard(listOf(TileType.WOOD,TileType.WOOD),21))
+    private val cardStack2 = Stack<ZenCard>(GrowthCard(
+        TileType.WOOD,
+        id = 0
+    ))
+    private val cardStack3 = Stack<ZenCard>(GrowthCard(
+        TileType.WOOD,
+        id = 1
+    ))
     private val cardStack4 = Stack<ZenCard>(ToolCard(2))
     private lateinit var cardStacks: List<CardStack<CardView>>
     private val bonsaiTiles =
@@ -586,7 +592,7 @@ class GameScene : BoardGameScene(1920, 1080) {
 
     private fun initializeDrawnCardsStack() {
         // TODO use drawn cards of shownPlayer to initialize
-        val drawnCards = Stack(ParchmentCard(ParchmentCardType.WOOD))
+        val drawnCards = Stack(ParchmentCard(1,ParchmentCardType.WOOD,40))
         drawnCardsStack.clear()
         for (card in drawnCards.peekAll().reversed()) {
             drawnCardsStack.add(
