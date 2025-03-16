@@ -193,14 +193,14 @@ class GameService(
      * @sample endGame()
      */
 
-    fun endGame(): List<Pair<Player, Int>> {
+    fun endGame(): Map<Player, List<Int>> {
         val game = rootService.currentGame
         checkNotNull(game)
         val playerList = game.currentState.players
 
         check(game.currentState.drawStack.isEmpty())
 
-        val pointsPerPlayer = mutableMapOf<Player, Int>()
+        val pointsPerPlayer = mutableMapOf<Player, MutableList<Int>>()
         for (player in playerList) {
             val bonsai = player.bonsai
 
@@ -237,25 +237,30 @@ class GameService(
                 }
             }
 
-            val finalWoodPoints = numberOfWoodTiles * cardPoints.getValue(ParchmentCardType.WOOD)
-            val finalLeafPoints = numberOfLeafTiles * (3 + cardPoints.getValue(ParchmentCardType.LEAF))
-            val finalFruitPoints = numberOfFruitTiles * (7 + cardPoints.getValue(ParchmentCardType.FRUIT))
-            val finalFlowerPoints = sumOfFlowerPoints + numberOfFlowerTiles * cardPoints.getValue(ParchmentCardType.FLOWER)
-            val tilePoints = finalWoodPoints + finalLeafPoints + finalFruitPoints + finalFlowerPoints
+            val cardWoodPoints = numberOfWoodTiles * cardPoints.getValue(ParchmentCardType.WOOD)
+            val leafPoints = numberOfLeafTiles * 3
+            val cardLeafPoints = numberOfLeafTiles * cardPoints.getValue(ParchmentCardType.LEAF)
+            val fruitPoints = numberOfFruitTiles * 7
+            val cardFruitPoints = numberOfFruitTiles * cardPoints.getValue(ParchmentCardType.FRUIT)
+            //sumOfFlowerPoints
+            val cardFlowerPoints = numberOfFlowerTiles * cardPoints.getValue(ParchmentCardType.FLOWER)
+
+            val sumCardPoints = cardWoodPoints + cardLeafPoints + cardFruitPoints + cardFlowerPoints
+            //val tilePoints = finalWoodPoints + finalLeafPoints + finalFruitPoints + finalFlowerPoints
 
             var goalPoints = 0
             for (goal in player.acceptedGoals) {
                 goalPoints += goal.points
             }
 
-            val points = tilePoints + goalPoints
+            val sumOfPoints = leafPoints + sumOfFlowerPoints + fruitPoints + sumCardPoints + goalPoints
 
-            pointsPerPlayer[player] = points
+            pointsPerPlayer[player] = mutableListOf(leafPoints,sumOfFlowerPoints,fruitPoints,sumCardPoints,goalPoints,sumOfPoints)
         }
-        val scoreList = pointsPerPlayer.toList().sortedByDescending { pair -> pair.second }
+        val scoreList = pointsPerPlayer.toList().sortedByDescending { pair -> pair.second.last() }.toMap()
         // a tie situation is already handled via sortedByDescending, because equal values stay in the same order
 
-//        onAllRefreshables { refreshAfterEndGame(scoreList) }
+        onAllRefreshables { refreshAfterEndGame(scoreList) }
 
         return scoreList
     }

@@ -56,7 +56,7 @@ class BonsaiApplication :
         this.showMenuScene(claimGoalScene)
     }
 
-    override fun refreshAfterEndGame(scoreList: Map<Player, List<Int>>) {
+    override fun refreshAfterEndGame(scoreList: Map<Player, MutableList<Int>>) {
         val resultScene = ResultScene(scoreList)
         resultScene.mainMenuButton.apply {
             this@BonsaiApplication.showMenuScene(mainMenuScene)

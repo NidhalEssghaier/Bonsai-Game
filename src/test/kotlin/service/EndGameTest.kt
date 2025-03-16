@@ -53,7 +53,7 @@ class EndGameTest {
         game.currentState.drawStack.clear()
 
         val points = gameService.endGame()
-        val player0Points = points[0].second
+        val player0Points = points[game.currentState.players[0]]?.last()
         assertEquals(player0Points, 25)
         assertTrue { testRefreshable.refreshAfterEndGameCalled }
     }

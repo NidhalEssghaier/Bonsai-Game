@@ -73,7 +73,7 @@ interface Refreshable {
      */
     fun refreshAfterRemoveTile() {}
 
-    fun refreshAfterEndGame(scoreList: Map<Player, List<Int>>) {}
+    fun refreshAfterEndGame(scoreList: Map<Player, MutableList<Int>>) {}
 
     /**
      * refreshes the Game Scene when the places a tile
