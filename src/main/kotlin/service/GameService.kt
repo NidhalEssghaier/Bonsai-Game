@@ -255,7 +255,7 @@ class GameService(
         val scoreList = pointsPerPlayer.toList().sortedByDescending { pair -> pair.second }
         // a tie situation is already handled via sortedByDescending, because equal values stay in the same order
 
-        onAllRefreshables { refreshAfterEndGame(scoreList) }
+//        onAllRefreshables { refreshAfterEndGame(scoreList) }
 
         return scoreList
     }
