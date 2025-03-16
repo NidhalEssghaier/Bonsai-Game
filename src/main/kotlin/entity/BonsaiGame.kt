@@ -30,7 +30,7 @@ class BonsaiGame private constructor(
     constructor(
         gameSpeed: Int,
         players: List<Player>,
-        goalCards: List<GoalCard>,
+        goalCards: MutableList<GoalCard>,
         drawStack: ArrayDeque<ZenCard>,
         openCards: MutableList<ZenCard>
     ) : this(
