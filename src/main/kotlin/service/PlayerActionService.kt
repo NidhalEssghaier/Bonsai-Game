@@ -297,7 +297,7 @@ class PlayerActionService(
                     "A fruit tile must be placed between two adjacent leaf tiles."
                 }
                 // Ensure those two leaf tiles are adjacent to each other using hasAdjacentPair
-                require(hasAdjacentPair(adjacentLeaves)) {
+                require(TileUtils.hasAdjacentPair(adjacentLeaves,grid)) {
                     "The two leaf tiles must also be adjacent to each other."
                 }
                 // Ensure a fruit tile is not placed adjacent to another fruit tile
@@ -679,7 +679,7 @@ class PlayerActionService(
         ) { "player can play wood" }
 
         // is it part of the least number of tiles to be removed to make placing a wood possible
-        val leastGroupOfTilesToBeRemoved = leastGroupOfTilesToBeRemoved(currentPlayerBonsaiTiles)
+        val leastGroupOfTilesToBeRemoved = TileUtils.leastGroupOfTilesToBeRemoved(currentPlayerBonsaiTiles,grid)
         check(leastGroupOfTilesToBeRemoved.contains(tile)) {
             "tile not part of the least number of tiles to be removed to make placing a wood possible"
         }
@@ -692,76 +692,4 @@ class PlayerActionService(
         }
     }
 
-    private fun leastGroupOfTilesToBeRemoved(tiles: List<BonsaiTile>): List<BonsaiTile> {
-        // check if game is running
-        val game = rootService.currentGame
-        checkNotNull(game) { "there is no active game" }
-
-        return tiles.filter { tile ->
-            // get grid
-            val grid =
-                game.currentState.players[game.currentState.currentPlayer]
-                    .bonsai.grid
-
-            // get neighbors of tile
-            val neighbors = grid.getNeighbors(tile)
-
-            // tile is not neighbor to wood
-            if (!neighbors.any { neighbor -> neighbor.type == TileType.WOOD }) return@filter false
-            // tile is wood
-            if (tile.type.equals(TileType.WOOD)) return@filter false
-            // tile is surrounded
-            if (neighbors.size == 6) return@filter false
-            // tile is fruit or flower
-            if (tile.type.equals(TileType.FLOWER) || tile.type.equals(TileType.FRUIT)) return@filter true
-
-            // tile is leaf
-            if (tile.type == TileType.LEAF) {
-                val neighborFruits = neighbors.filter { neighbor -> neighbor.type == TileType.FRUIT }
-                val neighborFlowers = neighbors.filter { neighbor -> neighbor.type == TileType.FLOWER }
-
-                // has no fruit or flower neighbors
-                if (neighborFlowers.isEmpty() && neighborFruits.isEmpty()) {
-                    return@filter true
-                } // neighbor flower have less than 2 leaves
-                else if (
-                    neighborFlowers.any { flower ->
-                        (grid.getNeighbors(flower).filter { neighbor -> neighbor.type == TileType.LEAF }.size) < 2
-                    }
-                ) {
-                    return@filter false
-                }
-
-                // neighbor fruit has no 2 adjacent leafs after deletion
-                for (fruit in neighborFruits) {
-                    val fruitLeafNeighbors =
-                        grid
-                            .getNeighbors(fruit)
-                            .filter { neighbor -> neighbor.type == TileType.LEAF && !neighbor.equals(tile) }
-                    if (!hasAdjacentPair(fruitLeafNeighbors)) {
-                        return@filter false
-                    }
-                }
-                return@filter true
-            }
-            return@filter false
-        }
-    }
-
-    private fun hasAdjacentPair(leafTiles: List<BonsaiTile>): Boolean {
-        // check if game is running
-        val game = rootService.currentGame
-        checkNotNull(game) { "there is no active game" }
-
-        val grid =
-            game.currentState.players[game.currentState.currentPlayer]
-                .bonsai.grid
-
-        for (leaf in leafTiles) {
-            if (grid.getNeighbors(leaf).any { it in leafTiles }) {
-                return true
-            }
-        }
-        return false
-    }
 }
