@@ -479,6 +479,13 @@ class GameScene(
 
         val targetWidths = listOf(125, 139, 179)
 
+        // clear elements
+        for (row in 0..<goalCardsPane.rows) {
+            for (column in 0..<goalCardsPane.columns) {
+                goalCardsPane[row, column] = null
+            }
+        }
+
         for ((idx, goalCard) in gameGoalCards.withIndex()) {
             if (goalCard != null) {
                 val goalCardView =
@@ -773,12 +780,19 @@ class GameScene(
     }
 
     private fun initializeClaimedGoalsGridPane(state: GameState) {
-        // TODO use claimedGoalCards of shownPlayer
         val claimedGameGoalCards = state.players[shownPlayer].acceptedGoals
         val targetWidths = listOf(178, 139, 124)
         val targetHeight = 80
 
+        // clear elements
+        for (row in 0..<claimedGoalCardsGridPane.rows) {
+            for (column in 0..<claimedGoalCardsGridPane.columns) {
+                claimedGoalCardsGridPane[row, column] = null
+            }
+        }
+
         for ((idx, goalCard) in claimedGameGoalCards.withIndex()) {
+            println("idx $idx, goalCard $goalCard")
             val claimedGoalCard =
                 Label(
                     width = targetWidths[idx],
@@ -803,7 +817,7 @@ class GameScene(
         animations.addAll(getRefillCardsAnimation(drawnCardIndex))
         // Add final animation that triggers tile refresh and tile selection if necessary
         animations.add(
-            ScaleAnimation(drawnCardsStack, 1, 1, 1, 1, duration = 1000).apply {
+            ScaleAnimation(drawnCardsStack, 1, 1, 1, 1, duration = ANIMATION_TIME).apply {
                 onFinished = {
                     initializeSupplyTiles(bonsaiGame.currentState)
                     if (chooseTilesByBoard || chooseTilesByCard) {
