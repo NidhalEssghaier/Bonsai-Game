@@ -4,6 +4,7 @@ import entity.BonsaiTile
 import entity.MasterCard
 import entity.TileType
 import gui.utility.ItemImageLoader
+import service.RootService
 import tools.aqua.bgw.components.layoutviews.GridPane
 import tools.aqua.bgw.components.uicomponents.Button
 import tools.aqua.bgw.components.uicomponents.Label
@@ -12,6 +13,7 @@ import tools.aqua.bgw.style.Cursor
 import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.Visual
+import java.util.*
 
 private const val BUTTON_WIDTH = 130
 private const val BUTTON_HEIGHT = 150
@@ -26,9 +28,12 @@ private const val HORIZONTAL_SPACING = 75
  * @property chooseByCard Determines if the scene was triggered by drawing a [MasterCard] with [TileType.GENERIC]
  */
 class ChooseTileScene(
+    val rootService: RootService,
+    val application: BonsaiApplication,
     val chooseByBoard: Boolean,
     val chooseByCard: Boolean,
-) : MenuScene(1920, 1080) {
+) : MenuScene(1920, 1080),
+    Refreshable {
     private val itemImageLoader = ItemImageLoader()
     private var selectedTileByBoard: BonsaiTile? = null
     private var selectedButtonByBoard: Button? = null
@@ -59,7 +64,8 @@ class ChooseTileScene(
         ).apply {
             isDisabled = true
             onMouseClicked = {
-                // TODO call chooseTile with selectedTileByBoard and/or selectedTileByCard
+                if (chooseByBoard) rootService.playerActionService.applyTileChoice(selectedTileByBoard!!.type, false)
+                if (chooseByCard) rootService.playerActionService.applyTileChoice(selectedTileByCard!!.type, true)
             }
         }
 
@@ -157,5 +163,9 @@ class ChooseTileScene(
             confirmButton.isDisabled = false
             confirmButton.visual = ColorVisual(211, 211, 211, 255).apply { style.cursor = Cursor.POINTER }
         }
+    }
+
+    override fun refreshAfterChooseTile() {
+        application.hideMenuScene()
     }
 }

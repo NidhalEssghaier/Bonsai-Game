@@ -19,28 +19,25 @@ import serializer.ArrayDequeZenCardSerializer
 class GameState(
     val gameSpeed: Int,
     val players: List<@Polymorphic Player>,
-    val goalCards: MutableList<GoalCard>,
+    val goalCards: MutableList<GoalCard?>,
     @Serializable(with = ArrayDequeZenCardSerializer::class)
     val drawStack: ArrayDeque<ZenCard>,
     val openCards: MutableList<@Polymorphic ZenCard>,
-
     var currentPlayer: Int = 0,
-    var endGameCounter: Int = 0
-)
-{
+    var endGameCounter: Int = 0,
+) {
     /**
      * Creates a deep copy of the game state.
      * @return A deep copy of the game state.
      */
-    fun copy(): GameState {
-        return GameState(
+    fun copy(): GameState =
+        GameState(
             gameSpeed,
             players.map { it.copy() },
             goalCards,
             ArrayDeque(drawStack),
             openCards,
             this.currentPlayer,
-            this.endGameCounter
+            this.endGameCounter,
         )
-    }
 }

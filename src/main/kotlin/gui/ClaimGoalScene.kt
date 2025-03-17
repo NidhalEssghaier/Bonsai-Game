@@ -2,6 +2,7 @@ package gui
 
 import entity.GoalCard
 import gui.utility.ItemImageLoader
+import service.RootService
 import tools.aqua.bgw.components.uicomponents.Button
 import tools.aqua.bgw.components.uicomponents.Label
 import tools.aqua.bgw.core.Color
@@ -12,11 +13,16 @@ import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.Visual
 
 class ClaimGoalScene(
-    private val goalCard: GoalCard,
+    private val rootService: RootService,
+    private val application: BonsaiApplication,
+    private val reachedGoals: List<GoalCard>,
 ) : MenuScene(1920, 1080) {
     private val itemImageLoader = ItemImageLoader()
     private val targetWidths = listOf(125, 139, 179)
     private val targetHeight = 80
+
+    private var currentGoal: Int = 0
+    private val goalCount: Int = reachedGoals.size
 
     private val goalTitle =
         Label(
@@ -40,17 +46,7 @@ class ClaimGoalScene(
             font = Font(size = 24, fontWeight = Font.FontWeight.BOLD),
         )
 
-    private val goal =
-        Label(
-            960 - (targetWidths[goalCard.difficulty.ordinal] * 2),
-            540 - (targetHeight * 2),
-            width = targetWidths[goalCard.difficulty.ordinal] * 4,
-            height = targetHeight * 4,
-            visual =
-                itemImageLoader.imageFor(goalCard).apply {
-                    style.borderRadius = BorderRadius.MEDIUM
-                },
-        )
+    private var goal = Label()
 
     val deny =
         Button(
@@ -65,11 +61,7 @@ class ClaimGoalScene(
                         BorderRadius.MEDIUM
                 },
             font = Font(size = 24, fontWeight = Font.FontWeight.BOLD, color = Color.WHITE),
-        ).apply {
-            onMouseClicked = {
-                // TODO call service denyGoal
-            }
-        }
+        )
 
     private val claim =
         Button(
@@ -84,13 +76,10 @@ class ClaimGoalScene(
                         BorderRadius.MEDIUM
                 },
             font = Font(size = 24, fontWeight = Font.FontWeight.BOLD),
-        ).apply {
-            onMouseClicked = {
-                // TODO call service claimGoal
-            }
-        }
+        )
 
     init {
+        initializeComponents()
 
         addComponents(
             goalTitle,
@@ -99,5 +88,46 @@ class ClaimGoalScene(
             deny,
             claim,
         )
+    }
+
+    // TODO show for each element in rechaedGoals -> show next on deny/claim if current < reachedGoals.size - 1, else exit scene
+    private fun initializeComponents() {
+        goal =
+            Label(
+                960 - (targetWidths[reachedGoals[currentGoal].difficulty.ordinal] * 2),
+                540 - (targetHeight * 2),
+                width = targetWidths[reachedGoals[currentGoal].difficulty.ordinal] * 4,
+                height = targetHeight * 4,
+                visual =
+                    itemImageLoader.imageFor(reachedGoals[currentGoal]).apply {
+                        style.borderRadius = BorderRadius.MEDIUM
+                    },
+            )
+
+        deny.apply {
+            onMouseClicked = {
+                rootService.playerActionService.decideGoalClaim(reachedGoals[currentGoal], false)
+                // show next goal if available
+                if (currentGoal < goalCount - 1) {
+                    currentGoal++
+                    initializeComponents()
+                } else {
+                    application.hideMenuScene()
+                }
+            }
+        }
+
+        claim.apply {
+            onMouseClicked = {
+                rootService.playerActionService.decideGoalClaim(reachedGoals[currentGoal], true)
+                // show next goal if available
+                if (currentGoal < goalCount - 1) {
+                    currentGoal++
+                    initializeComponents()
+                } else {
+                    application.hideMenuScene()
+                }
+            }
+        }
     }
 }

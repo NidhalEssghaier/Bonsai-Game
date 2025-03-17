@@ -15,19 +15,23 @@ import service.AbstractRefreshingService
  *
  */
 interface Refreshable {
-
     /**
      * perform refreshes that are necessary after a new game started
      */
     fun refreshAfterStartNewGame() {}
-    fun refreshAfterDrawCard(card: ZenCard){}
 
+    fun refreshAfterDrawCard(
+        card: ZenCard,
+        drawnCardIndex: Int,
+        chooseTilesByBoard: Boolean,
+        chooseTilesByCard: Boolean,
+    ) {}
 
     /**
      * perform refreshes after a player claims a goal card
      * @param goalCard the claimed [GoalCard]
      */
-    fun refreshAfterClaimGoal(goalCard: GoalCard) {}
+    fun refreshAfterDecideGoal() {}
 
     /**
      * perform refreshes that are necessary after undo / redo
@@ -42,12 +46,18 @@ interface Refreshable {
     /**
      * Select a tile to discard.
      */
-    fun refreshAfterDiscardTile() {}
+    fun refreshAfterDiscardTile(
+        tilesToDiscard: Int,
+        removedTile: BonsaiTile?,
+    ) {}
 
     /**
      * perform refreshes that are necessary when a player choose a tile between
      */
-    fun refreshToPromptTileChoice() {}
+    fun refreshToPromptTileChoice(
+        chooseByBoard: Boolean,
+        chooseByCard: Boolean,
+    ) {}
 
     /**
      * perform refreshes that are necessary after a [HelperCard] has been drawn
@@ -63,7 +73,7 @@ interface Refreshable {
      */
     fun refreshAfterRemoveTile() {}
 
-
+    fun refreshAfterEndGame(scoreList: Map<Player, MutableList<Int>>) {}
 
     /**
      * refreshes the Game Scene when the places a tile
@@ -76,10 +86,7 @@ interface Refreshable {
      * in gui : the player should then decide to claim or renounce of every achieved Goal
      * then the Method  [decideGoalClaim(goalCard: GoalCard,claim: Boolean)] needs to be called for every decision
      */
-    fun refreshAfterReachGoals(reachedGoals:List<GoalCard>){}
+    fun refreshAfterReachGoals(reachedGoals: List<GoalCard>) {}
 
-    fun refreshAfterEndGame(scoreList: List<Pair<Player,Int>>) {}
-
+    fun refreshAfterChooseTile() {}
 }
-
-
