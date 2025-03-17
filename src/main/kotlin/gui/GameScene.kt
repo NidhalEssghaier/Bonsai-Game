@@ -22,6 +22,7 @@ import tools.aqua.bgw.components.uicomponents.LabeledUIComponent
 import tools.aqua.bgw.core.Alignment
 import tools.aqua.bgw.core.BoardGameScene
 import tools.aqua.bgw.core.Color
+import tools.aqua.bgw.event.MouseButtonType
 import tools.aqua.bgw.style.BorderRadius
 import tools.aqua.bgw.util.BidirectionalMap
 import tools.aqua.bgw.util.Font
@@ -41,9 +42,10 @@ class GameScene(
     private val cardMap: BidirectionalMap<ZenCard, CardView> = BidirectionalMap()
     private val tileMap: BidirectionalMap<BonsaiTile, HexagonView> = BidirectionalMap()
     private var currentPlayer = -1 // The currently active player
-    private var shownPlayer = -1; // The player that is currently visible on the screen TODO use rootService.currentGame.currentPlayer
+    private var shownPlayer = -1; // The player that is currently visible on the screen
     private val playerColors: MutableList<String> = mutableListOf()
     private var cardStacks: List<CardStack<CardView>> = listOf()
+    private var tileToRemove: BonsaiTile? = null
 
     // drop area to remove bonsai tiles
     private val trashInfo = Label(30, 396, 192, 50, isWrapText = true)
@@ -89,6 +91,12 @@ class GameScene(
     private val gameOptionsGridPane =
         GridPane<Button>(1630, 30, 4, 1, spacing = 20, layoutFromCenter = false)
 
+    // button to remove selected tile from bonsai
+    private val removeTileButton =
+        Button(650, 390, 150, 40, "Remove selected tile").apply {
+            onMouseClicked = { tileToRemove?.let { tile -> rootService.playerActionService.removeTile(tile) } }
+        }
+
     // holds playArea to keep centering when expanding
     private val gridPanePlayArea =
         GridPane<HexagonGrid<HexagonView>>(
@@ -109,7 +117,7 @@ class GameScene(
             rows = 1,
             columns = 1,
             spacing = 10,
-        )
+        ).apply { isDisabled = true }
 
     // pane holding the elements of the player's bonsai
     private val bonsaiLayout =
@@ -129,7 +137,7 @@ class GameScene(
             target = bonsaiLayout,
             limitBounds = true,
             visual = ColorVisual(255, 255, 255, 100),
-        )
+        ).apply { panMouseButton = MouseButtonType.RIGHT_BUTTON }
 
     private val playerNamesGridPane =
         GridPane<Pane<LabeledUIComponent>>(830, 1007, 3, 1, 50, layoutFromCenter = false)
@@ -171,15 +179,31 @@ class GameScene(
     // growth cards
     private val growthCardsView = LinearLayout<CardView>(295, 808, 650, 200, spacing = -106)
 
-    // bonsai-pots
+    // bonsai-pots, disabled to allow tile selection for removal
     private val potGrey =
-        Label(width = 260, height = 174, visual = itemImageLoader.imageFor("pots/pot_grey.png", 360, 240))
+        Label(
+            width = 260,
+            height = 174,
+            visual = itemImageLoader.imageFor("pots/pot_grey.png", 360, 240),
+        ).apply { isDisabled = true }
     private val potRed =
-        Label(width = 260, height = 174, visual = itemImageLoader.imageFor("pots/pot_red.png", 360, 240))
+        Label(
+            width = 260,
+            height = 174,
+            visual = itemImageLoader.imageFor("pots/pot_red.png", 360, 240),
+        ).apply { isDisabled = true }
     private val potBlue =
-        Label(width = 260, height = 174, visual = itemImageLoader.imageFor("pots/pot_blue.png", 360, 240))
+        Label(
+            width = 260,
+            height = 174,
+            visual = itemImageLoader.imageFor("pots/pot_blue.png", 360, 240),
+        ).apply { isDisabled = true }
     private val potPurple =
-        Label(width = 260, height = 174, visual = itemImageLoader.imageFor("pots/pot_purple.png", 360, 240))
+        Label(
+            width = 260,
+            height = 174,
+            visual = itemImageLoader.imageFor("pots/pot_purple.png", 360, 240),
+        ).apply { isDisabled = true }
 
     // bonsai placing area
     private var playAreaGrey = HexagonGrid<HexagonView>(coordinateSystem = HexagonGrid.CoordinateSystem.AXIAL)
@@ -223,6 +247,7 @@ class GameScene(
             toolCardsMultiplierLabel,
             seishiTile,
             growthCardsView,
+            removeTileButton,
             playAreaCameraPane,
             playerNamesGridPane,
             claimedGoalCardsGridPane,
@@ -266,6 +291,7 @@ class GameScene(
 
         cardMap.clear()
         tileMap.clear()
+        tileToRemove = null
 
         initializeGameElements(rootService, bonsaiGame)
         initializePlayerView(bonsaiGame)
@@ -312,6 +338,10 @@ class GameScene(
         initializePlayArea(bonsaiGame.currentState)
     }
 
+    override fun refreshAfterRemoveTile() {
+        initializePlayerView(bonsaiGame)
+    }
+
     private fun initializeGameElements(
         rootService: RootService,
         game: BonsaiGame,
@@ -324,7 +354,6 @@ class GameScene(
     }
 
     private fun initializePlayerView(game: BonsaiGame) {
-        // TODO use elements of given player
         initializeBonsai(game.currentState)
         initializePlayArea(game.currentState)
         initializeSupplyTiles(game.currentState)
@@ -336,8 +365,6 @@ class GameScene(
     }
 
     private fun initializeSupplyTiles(state: GameState) {
-        // TODO use bonsai tiles in players supply
-
         // clear views & map to include only tiles of shownPlayer
         bonsaiTilesView1.clear()
         bonsaiTilesView2.clear()
@@ -348,11 +375,6 @@ class GameScene(
             val tileView =
                 HexagonView(visual = itemImageLoader.imageFor(tile), size = 25).apply {
                     isDraggable = true
-                    onDragGestureEnded = { _, success ->
-                        if (success) {
-                            this.isDraggable = false
-                        }
-                    }
                 }
             if (index < 9) {
                 bonsaiTilesView1.add(tileView)
@@ -414,16 +436,9 @@ class GameScene(
             val col = coordinate.second
             val hexagon =
                 HexagonView(
-                    visual =
-                        CompoundVisual(
-                            itemImageLoader.imageFor(tile),
-                            TextVisual(
-                                text = "$col, $row",
-                                font = Font(10.0, Color(0x0f141f)),
-                            ),
-                        ),
+                    visual = itemImageLoader.imageFor(tile),
                     size = 25,
-                )
+                ).apply { onMouseClicked = { tileToRemove = tile } } // make tiles clickable for removal
             playArea[row, col] = hexagon
         }
 
