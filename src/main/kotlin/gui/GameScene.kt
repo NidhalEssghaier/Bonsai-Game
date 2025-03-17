@@ -482,7 +482,7 @@ class GameScene(
         // clear elements
         for (row in 0..<goalCardsPane.rows) {
             for (column in 0..<goalCardsPane.columns) {
-                goalCardsPane[row, column] = null
+                goalCardsPane[column, row] = null
             }
         }
 
@@ -787,7 +787,7 @@ class GameScene(
         // clear elements
         for (row in 0..<claimedGoalCardsGridPane.rows) {
             for (column in 0..<claimedGoalCardsGridPane.columns) {
-                claimedGoalCardsGridPane[row, column] = null
+                claimedGoalCardsGridPane[column, row] = null
             }
         }
 
