@@ -99,8 +99,7 @@ class ItemImageLoader {
                 TileType.LEAF -> "tiles/leaf_piece$grayScaleAddition.png"
                 TileType.FLOWER -> "tiles/flower_piece$grayScaleAddition.png"
                 TileType.FRUIT -> "tiles/fruit_piece$grayScaleAddition.png"
-                TileType.GENERIC -> throw IllegalArgumentException("Not a playable tile type")
-                TileType.UNPLAYABLE -> throw IllegalArgumentException("Not a playable tile type")
+                else -> throw IllegalArgumentException("Not a playable tile type")
             }
 
         return ImageVisual(path, 100, 115)
