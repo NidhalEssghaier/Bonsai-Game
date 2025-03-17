@@ -33,17 +33,26 @@ class PlayerActionService(
         val game = rootService.currentGame
         checkNotNull(game) { "No game is currently active." }
 
+        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
+
+
         // discard tiles first if necessary
         val tilesToDiscard =
-            game.currentState.players[game.currentState.currentPlayer]
-                .supply.size -
-                game.currentState.players[game.currentState.currentPlayer].supplyTileLimit
+            currentPlayer.supply.size - currentPlayer.supplyTileLimit
         if (tilesToDiscard > 0) {
             onAllRefreshables {
                 refreshAfterDiscardTile(tilesToDiscard, null)
             }
             return // break to allow discarding tiles
         }
+        // fix Bug : insure helper cant be used in later rounds
+        // Ensure that any (fully)unused HelperCard is moved to usedHelperCards
+        val lastHelperCard = currentPlayer.hiddenDeck.lastOrNull { it is HelperCard } as? HelperCard
+        if (lastHelperCard != null ) {
+            currentPlayer.usedHelperCards.add(lastHelperCard)
+        }
+        // clear used helper card tiles of the current player
+        currentPlayer.usedHelperTiles.clear()
 
         game.undoStack.push(game.currentState)
         game.redoStack.clear()
@@ -53,10 +62,7 @@ class PlayerActionService(
             if (game.currentState.endGameCounter > game.currentState.players.size) {
                 rootService.gameService.endGame()
             } else {
-                // clear used helper card tiles of the current player
-                game.currentState.players[game.currentState.currentPlayer]
-                    .usedHelperTiles
-                    .clear()
+
                 game.currentState.currentPlayer =
                     (game.currentState.currentPlayer + 1) % game.currentState.players.size
                 onAllRefreshables {
@@ -64,10 +70,6 @@ class PlayerActionService(
                 }
             }
         } else {
-            // clear used helper card tiles of the current player
-            game.currentState.players[game.currentState.currentPlayer]
-                .usedHelperTiles
-                .clear()
             game.currentState.currentPlayer =
                 (game.currentState.currentPlayer + 1) % game.currentState.players.size
             onAllRefreshables {
@@ -208,23 +210,27 @@ class PlayerActionService(
 
         // placing a Tile when having  a helper Card
         if (helperCard != null) {
-            val respectedTile = helperCard.tiles.find { it == tile.type && it !in currentPlayer.usedHelperTiles }
+            val matchingTile  = helperCard.tiles.find { it == tile.type && it !in currentPlayer.usedHelperTiles }
             val genericTile =
                 helperCard.tiles.find {
                     it == TileType.GENERIC && it !in currentPlayer.usedHelperTiles
                 }
 
-            if (respectedTile != null || genericTile != null) {
+            if (matchingTile != null || genericTile != null) {
                 placeTile(tile, r, q)
-                currentPlayer.usedHelperCards.add(helperCard)
 
-                // add the specific tile that was matched to usedHelperTiles
-                if (respectedTile != null) {
-                    currentPlayer.usedHelperTiles.add(respectedTile)
+                // Mark the used tile type
+                if (matchingTile != null) {
+                    currentPlayer.usedHelperTiles.add(matchingTile)
                 } else if (genericTile != null) {
                     currentPlayer.usedHelperTiles.add(genericTile)
-
-                    // wichtig: player´s usedHelperTiles must be cleared when the player ends his Turn
+                }
+                // fix bug : allowing to place a "generic" tile after the "specific" one.
+                // Remove the helper card only if both tiles were used
+                // but if the player clicks on endTurn button this   helper Card will be added to usedHelperCard and
+                //cant be used in later rounds . see [endTurn]
+                if (currentPlayer.usedHelperTiles.containsAll(helperCard.tiles)) {
+                    currentPlayer.usedHelperCards.add(helperCard)
                 }
             } else {
                 throw IllegalStateException(" violated placing rules according to Helper Card")
@@ -340,87 +346,75 @@ class PlayerActionService(
     ): List<GoalCard> {
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
         val goalCards = game.currentState.goalCards
+        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
 
         val metGoals = mutableListOf<GoalCard>()
         val tiles = bonsai.grid.tilesList()
         val protrudingTiles = tiles.filter { grid.isProtruding(it) }
 
         for (goalCard in goalCards) {
-            if (goalCard != null) {
-                val isGoalMet =
-                    when (goalCard.color) {
-                        // Check if the required number of wood tiles is met
-                        GoalColor.BROWN ->
-                            (bonsai.tileCount[TileType.WOOD] ?: 0) >= (
-                                when (goalCard.difficulty) {
-                                    GoalDifficulty.LOW -> 8
-                                    GoalDifficulty.INTERMEDIATE -> 10
-                                    GoalDifficulty.HARD -> 12
-                                }
-                            )
-                        // Check if the required number of fruit tiles is met
-                        GoalColor.ORANGE ->
-                            (bonsai.tileCount[TileType.FRUIT] ?: 0) >= (
-                                when (goalCard.difficulty) {
-                                    GoalDifficulty.LOW -> 3
-                                    GoalDifficulty.INTERMEDIATE -> 4
-                                    GoalDifficulty.HARD -> 5
-                                }
-                            )
-                        // Find the largest connected group of leaf tiles
-                        GoalColor.GREEN -> {
-                            val maxLeafGroup = findLargestLeafGroup(grid, tiles)
-                            maxLeafGroup >= (
-                                when (goalCard.difficulty) {
-                                    GoalDifficulty.LOW -> 5
-                                    GoalDifficulty.INTERMEDIATE -> 7
-                                    GoalDifficulty.HARD -> 9
-                                }
-                            )
-                        }
-                        // Check conditions for blue goal cards
-                        GoalColor.RED -> {
-                            // Count tiles protruding on the left  side
-                            val leftProtrusions =
-                                protrudingTiles.count {
-                                    it.type == TileType.FLOWER && grid.getPotSide(it) == PotSide.LEFT
-                                }
-                            // Count tiles protruding on the left  side
-                            val rightProtrusions =
-                                protrudingTiles.count {
-                                    it.type == TileType.FLOWER && grid.getPotSide(it) == PotSide.RIGHT
-                                }
-                            maxOf(leftProtrusions, rightProtrusions) >= (
-                                when (goalCard.difficulty) {
-                                    GoalDifficulty.LOW -> 3
-                                    GoalDifficulty.INTERMEDIATE -> 4
-                                    GoalDifficulty.HARD -> 5
-                                }
-                            )
-                        }
-                        GoalColor.BLUE -> {
-                            // Check conditions for blue goal cards
-                            when (goalCard.difficulty) {
-                                GoalDifficulty.LOW -> protrudingTiles.any { grid.getPotSide(it) == PotSide.RIGHT }
-                                GoalDifficulty.INTERMEDIATE ->
-                                    protrudingTiles.any { grid.getPotSide(it) == PotSide.LEFT } &&
-                                        protrudingTiles.any { grid.getPotSide(it) == PotSide.RIGHT }
-                                GoalDifficulty.HARD ->
-                                    protrudingTiles.any { grid.getPotSide(it) == PotSide.BELOW } &&
-                                        (
-                                            protrudingTiles.any { grid.getPotSide(it) == PotSide.LEFT } ||
-                                                protrudingTiles.any { grid.getPotSide(it) == PotSide.RIGHT }
-                                        )
-                            }
-                        }
+            if (goalCard == null) continue
+
+             //fix Bug
+            // prevent checking goals that the player has manually declined or were automatically forbidden due to claiming another
+            if (goalCard in currentPlayer.declinedGoals || goalCard in currentPlayer.forbiddenGoals) continue
+
+            val isGoalMet = when (goalCard.color) {
+                GoalColor.BROWN ->
+                    (bonsai.tileCount[TileType.WOOD] ?: 0) >= when (goalCard.difficulty) {
+                        GoalDifficulty.LOW -> 8
+                        GoalDifficulty.INTERMEDIATE -> 10
+                        GoalDifficulty.HARD -> 12
                     }
-                if (isGoalMet) {
-                    metGoals.add(goalCard)
+
+                GoalColor.ORANGE ->
+                    (bonsai.tileCount[TileType.FRUIT] ?: 0) >= when (goalCard.difficulty) {
+                        GoalDifficulty.LOW -> 3
+                        GoalDifficulty.INTERMEDIATE -> 4
+                        GoalDifficulty.HARD -> 5
+                    }
+
+                GoalColor.GREEN -> {
+                    val maxLeafGroup = findLargestLeafGroup(grid, tiles)
+                    maxLeafGroup >= when (goalCard.difficulty) {
+                        GoalDifficulty.LOW -> 5
+                        GoalDifficulty.INTERMEDIATE -> 7
+                        GoalDifficulty.HARD -> 9
+                    }
+                }
+
+                GoalColor.RED -> {
+                    val leftProtrusions = protrudingTiles.count {
+                        it.type == TileType.FLOWER && grid.getPotSide(it) == PotSide.LEFT
+                    }
+                    val rightProtrusions = protrudingTiles.count {
+                        it.type == TileType.FLOWER && grid.getPotSide(it) == PotSide.RIGHT
+                    }
+                    maxOf(leftProtrusions, rightProtrusions) >= when (goalCard.difficulty) {
+                        GoalDifficulty.LOW -> 3
+                        GoalDifficulty.INTERMEDIATE -> 4
+                        GoalDifficulty.HARD -> 5
+                    }
+                }
+
+                GoalColor.BLUE -> when (goalCard.difficulty) {
+                    GoalDifficulty.LOW -> protrudingTiles.any { grid.getPotSide(it) == PotSide.RIGHT }
+                    GoalDifficulty.INTERMEDIATE -> protrudingTiles.any { grid.getPotSide(it) == PotSide.LEFT } &&
+                            protrudingTiles.any { grid.getPotSide(it) == PotSide.RIGHT }
+                    GoalDifficulty.HARD -> protrudingTiles.any { grid.getPotSide(it) == PotSide.BELOW } &&
+                            (protrudingTiles.any { grid.getPotSide(it) == PotSide.LEFT } ||
+                                    protrudingTiles.any { grid.getPotSide(it) == PotSide.RIGHT })
                 }
             }
+
+            if (isGoalMet) {
+                metGoals.add(goalCard)
+            }
         }
+
         return metGoals
     }
+
 
     /**
      * Finds the largest connected cluster of leaf tiles in the bonsai grid.
@@ -480,12 +474,13 @@ class PlayerActionService(
 
             // Find all goal cards of the same color and forbid them
             currentPlayer.forbiddenGoals.addAll(
-                currentPlayer.declinedGoals.filter { it.color == goalCard.color && it !in currentPlayer.forbiddenGoals },
+                game.currentState.goalCards.filter {
+                    it?.color == goalCard.color && it !in currentPlayer.forbiddenGoals }.filterNotNull()
             )
         } else {
             // Only forbid this specific goal card
-            if (goalCard !in currentPlayer.forbiddenGoals) {
-                currentPlayer.forbiddenGoals.add(goalCard)
+            if (goalCard !in currentPlayer.declinedGoals) {
+                currentPlayer.declinedGoals.add(goalCard)
             }
         }
         onAllRefreshables { refreshAfterDecideGoal() }
