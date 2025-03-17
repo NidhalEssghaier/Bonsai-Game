@@ -1,6 +1,7 @@
 package service
 
 import entity.*
+import helper.TileUtils
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
@@ -9,6 +10,19 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class RemoveTileTest {
+
+    fun setUpGrid():HexGrid {
+        val mc = RootService()
+        val gameService = GameService(mc)
+        val playerActionService = PlayerActionService(mc)
+        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, listOf())
+
+        //check game not null
+        val game = mc.currentGame
+        checkNotNull(game)
+        return game.currentState.players[0].bonsai.grid
+    }
+
 
     @Test
     fun `test remove tile when you can place wood`() {
@@ -126,6 +140,7 @@ class RemoveTileTest {
             exception.message)
 
         assertFalse { testRefreshable.refreshAfterStartTileRemoved }
+
         //removing a valid leaf
         assertDoesNotThrow {  playerActionService.removeTile(leafTile2)}
 
@@ -135,6 +150,17 @@ class RemoveTileTest {
 
     }
 
+    @Test
+    fun `test leastGroupOfTilesToBeRemoved with valid flower tile`() {
+        val grid =setUpGrid()
+        val flowerTile = BonsaiTile(TileType.FLOWER)
+        val leafTile1=BonsaiTile(TileType.LEAF)
+        grid[1, -1] = leafTile1
+        grid[0, -1] = flowerTile
+        val result = TileUtils.leastGroupOfTilesToBeRemoved(grid.tilesList.invoke(), grid)
+        assertTrue(result.contains(flowerTile), "Flower tiles should be removable")
+        assertTrue(!result.contains(leafTile1), "Flower tiles should be removable")
+    }
 
 }
 
