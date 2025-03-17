@@ -25,7 +25,11 @@ class NetworkPlayer private constructor(
 
     override var bonsai: Bonsai,
     override var supplyTileLimit: Int = 5,
-    override var treeTileLimit: MutableMap<TileType, Int> = mutableMapOf(),
+    override var treeTileLimit: MutableMap<TileType, Int> = mutableMapOf(
+        TileType.GENERIC to 1,
+        TileType.WOOD to 1,
+        TileType.LEAF to 1
+    ),
     override var declinedGoals: MutableList<GoalCard> = mutableListOf(),
     override var acceptedGoals: MutableList<GoalCard> = mutableListOf(),
     override val forbiddenGoals: MutableList<GoalCard> = mutableListOf(),

@@ -22,20 +22,19 @@ class BonsaiGame private constructor(
     val undoStack: ArrayDeque<GameState>,
     @Serializable(with = ArrayDequeGameStateSerializer::class)
     val redoStack: ArrayDeque<GameState>,
-)
-{
+) {
     /**
      * Secondary public constructor for public access
      */
     constructor(
         gameSpeed: Int,
         players: List<Player>,
-        goalCards: MutableList<GoalCard>,
+        goalCards: MutableList<GoalCard?>,
         drawStack: ArrayDeque<ZenCard>,
-        openCards: MutableList<ZenCard>
+        openCards: MutableList<ZenCard>,
     ) : this(
         GameState(gameSpeed, players, goalCards, drawStack, openCards),
         ArrayDeque(),
-        ArrayDeque()
+        ArrayDeque(),
     )
 }

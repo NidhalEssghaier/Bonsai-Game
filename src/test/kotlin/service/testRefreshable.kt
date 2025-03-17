@@ -73,6 +73,10 @@ class TestRefreshable : Refreshable {
         refreshAfterStartNewGameCalled = true
     }
 
+    override fun refreshAfterEndGame(scoreList: Map<Player, MutableList<Int>>) {
+        refreshAfterEndGameCalled = true
+    }
+
     override fun refreshAfterDrawCard(card: ZenCard) {
         refreshAfterDrawCardCalled = true
     }
