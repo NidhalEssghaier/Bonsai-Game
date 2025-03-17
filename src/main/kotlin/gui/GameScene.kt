@@ -278,6 +278,7 @@ class GameScene(
         chooseTilesByBoard: Boolean,
         chooseTilesByCard: Boolean,
     ) {
+        this.lock()
         playDrawCardAnimation(drawnCard, drawnCardIndex + 1, chooseTilesByBoard, chooseTilesByCard)
     }
 
@@ -826,6 +827,7 @@ class GameScene(
                         application.showMenuScene(application.chooseTileScene)
                     }
                     disableElementsAfterCardDrawn(card)
+                    this@GameScene.unlock()
                 }
             },
         )
