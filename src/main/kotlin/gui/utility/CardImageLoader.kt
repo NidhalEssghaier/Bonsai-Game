@@ -3,6 +3,7 @@ package gui.utility
 import entity.*
 import tools.aqua.bgw.style.BorderRadius
 import tools.aqua.bgw.visual.ImageVisual
+import tools.aqua.bgw.visual.Visual
 import java.util.*
 
 private const val CARDS_FILE = "zen_cards.jpg"
@@ -23,7 +24,11 @@ class CardImageLoader {
      *
      * @throws IllegalArgumentException If the card is unknown.
      */
-    fun frontImageFor(card: ZenCard) = getImageByCoordinates(getImageCoordinates(card))
+    fun frontImageFor(card: ZenCard) =
+        when (card) {
+            PlaceholderCard -> Visual.EMPTY
+            else -> getImageByCoordinates(getImageCoordinates(card))
+        }
 
     /** Provides the backside image of the [ZenCard]s */
     val backImage: ImageVisual get() = getImageByCoordinates(Pair(0, 0))
