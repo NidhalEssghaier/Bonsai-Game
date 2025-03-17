@@ -257,7 +257,8 @@ class GameService(
                     TileType.LEAF -> numberOfLeafTiles += 1
                     TileType.FLOWER -> {
                         numberOfFlowerTiles += 1
-                        sumOfFlowerPoints += 6 - bonsai.grid.getNeighbors(tile).size
+                        sumOfFlowerPoints += 6 - bonsai.grid.getNeighbors(tile)
+                            .filter { neighbor->neighbor.type!=TileType.UNPLAYABLE  }.size
                     }
                     TileType.FRUIT -> numberOfFruitTiles += 1
                     else -> {}
