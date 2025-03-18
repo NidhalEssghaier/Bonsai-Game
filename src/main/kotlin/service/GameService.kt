@@ -18,31 +18,29 @@ class GameService(
      * @property saveFilePath The path to the save file.
      * @property jsonSerializer The [Json] object that contains the polymorphic serializer.
      */
-    private companion object {
-        private val dirPath = File(
-            File(GameService::class.java.protectionDomain.codeSource.location.path).parentFile.parentFile,
-            "data"
-        )
+    private val dirPath = File("src/main/resources/data").apply {
+        if (!exists()) mkdirs() // Ensure the directory exists
+    }
 
-        private val saveFilePath = File(dirPath, "save.json")
+    private val saveFilePath = File(dirPath, "save.json")
 
-        private val jsonSerializer = Json {
-            serializersModule = SerializersModule {
-                polymorphic(ZenCard::class) {
-                    subclass(ToolCard::class)
-                    subclass(MasterCard::class)
-                    subclass(HelperCard::class)
-                    subclass(GrowthCard::class)
-                    subclass(ParchmentCard::class)
-                    subclass(PlaceholderCard::class)
-                }
+    private val jsonSerializer = Json {
+        serializersModule = SerializersModule {
+            allowStructuredMapKeys = true
+            polymorphic(ZenCard::class) {
+                subclass(ToolCard::class)
+                subclass(MasterCard::class)
+                subclass(HelperCard::class)
+                subclass(GrowthCard::class)
+                subclass(ParchmentCard::class)
+                subclass(PlaceholderCard::class)
+            }
 
-                polymorphic(Player::class) {
-                    subclass(LocalPlayer::class)
-                    subclass(NetworkPlayer::class)
-                    subclass(RandomBot::class)
-                    subclass(SmartBot::class)
-                }
+            polymorphic(Player::class) {
+                subclass(LocalPlayer::class)
+                subclass(NetworkPlayer::class)
+                subclass(RandomBot::class)
+                subclass(SmartBot::class)
             }
         }
     }
