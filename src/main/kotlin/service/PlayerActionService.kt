@@ -194,8 +194,8 @@ class PlayerActionService(
      */
     fun cultivate(
         tile: BonsaiTile,
-        r: Int,
         q: Int,
+        r: Int,
     ) {
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
         val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
@@ -217,7 +217,7 @@ class PlayerActionService(
                 }
 
             if (matchingTile != null || genericTile != null) {
-                placeTile(tile, r, q)
+                placeTile(tile, q, r)
 
                 // Mark the used tile type
                 if (matchingTile != null) {
@@ -246,7 +246,7 @@ class PlayerActionService(
             val isPlacementAllowed = tile.type in allowedTiles
 
             if (isPlacementAllowed) {
-                placeTile(tile, r, q)
+                placeTile(tile, q, r)
             } else {
                 throw IllegalStateException("Tile placement not allowed based on Seishi StartingTile ans Growth Cards.")
             }
@@ -265,8 +265,8 @@ class PlayerActionService(
      */
     private fun placeTile(
         tile: BonsaiTile,
-        r: Int,
         q: Int,
+        r: Int,
     ) {
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
         val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
