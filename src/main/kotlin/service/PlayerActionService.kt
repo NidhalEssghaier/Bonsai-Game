@@ -53,27 +53,38 @@ class PlayerActionService(
             if (game.currentState.endGameCounter > game.currentState.players.size) {
                 rootService.gameService.endGame()
             } else {
-                // clear used helper card tiles of the current player
-                game.currentState.players[game.currentState.currentPlayer]
-                    .usedHelperTiles
-                    .clear()
-                game.currentState.currentPlayer =
-                    (game.currentState.currentPlayer + 1) % game.currentState.players.size
+                switchPlayer(game)
                 onAllRefreshables {
                     refreshAfterEndTurn()
                 }
             }
         } else {
-            // clear used helper card tiles of the current player
-            game.currentState.players[game.currentState.currentPlayer]
-                .usedHelperTiles
-                .clear()
-            game.currentState.currentPlayer =
-                (game.currentState.currentPlayer + 1) % game.currentState.players.size
+            switchPlayer(game)
             onAllRefreshables {
                 refreshAfterEndTurn()
             }
         }
+    }
+
+    /**
+     * Switches the active player to the next player in the game.
+     * This method is called in endTurn() and BonsaiGameSerializer.
+     * @param game the [BonsaiGame] object representing the game
+     *
+     * Preconditions:
+     * - A game was started and is running.
+     *
+     * Postconditions:
+     * - The current player is switched to the next player in the game.
+     * - The used helper tiles of the current player are cleared.
+     */
+    fun switchPlayer(game: BonsaiGame) {
+        // clear used helper card tiles of the current player
+        game.currentState.players[game.currentState.currentPlayer]
+            .usedHelperTiles
+            .clear()
+        game.currentState.currentPlayer =
+            (game.currentState.currentPlayer + 1) % game.currentState.players.size
     }
 
     /**
