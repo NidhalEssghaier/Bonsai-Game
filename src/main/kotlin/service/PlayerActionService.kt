@@ -678,6 +678,21 @@ class PlayerActionService(
         }
     }
 
+    /**
+    In the improbable case that, at the beginning of a turn, it is not
+    possible to add a wood tile to the [Player.bonsai], player may remove the least number of
+    tiles from it (put them in the common supply) needed to make it possible again.
+     * Preconditions:
+     * - A game must be active.
+     * - The choice must be from players bonsai.
+     * - it should not be possible to play a wood
+     * - removed tile should be a part of leat number of tiles to be removed
+     *
+     * **Postconditions:**
+     * - tile is removed from player bonsai.
+     *
+     * @throws IllegalStateException If there is no active game, invalid tile.
+     */
     fun removeTile(tile: BonsaiTile) {
         // check if game is running
         val game = rootService.currentGame
