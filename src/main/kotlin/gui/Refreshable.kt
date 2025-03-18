@@ -20,6 +20,10 @@ interface Refreshable {
      */
     fun refreshAfterStartNewGame() {}
 
+    /**
+     * Performs necessary refresh operations after a card has been drawn.
+     * @param card The card that was drawn.
+     */
     fun refreshAfterDrawCard(
         card: ZenCard,
         drawnCardIndex: Int,
@@ -52,7 +56,12 @@ interface Refreshable {
     ) {}
 
     /**
-     * perform refreshes that are necessary when a player choose a tile between
+     * Performs refresh operations necessary when a player is prompted to choose a tile
+     * while meditating, if the drawn card is in the first position.
+     *
+     * This refreshable function must call `applyTileChoice(cardStack: Int, choice: TileType)`
+     * from the game service to apply the necessary logical updates based on the player's choice.
+     * It ensures that the game state and UI are updated accordingly.
      */
     fun refreshToPromptTileChoice(
         chooseByBoard: Boolean,

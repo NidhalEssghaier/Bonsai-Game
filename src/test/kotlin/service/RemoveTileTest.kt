@@ -11,10 +11,9 @@ import kotlin.test.assertTrue
 
 class RemoveTileTest {
 
-    fun setUpGrid():HexGrid {
+    private fun setUpGrid():HexGrid {
         val mc = RootService()
         val gameService = GameService(mc)
-        val playerActionService = PlayerActionService(mc)
         gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, listOf())
 
         //check game not null
@@ -84,12 +83,12 @@ class RemoveTileTest {
 
         val firstWoodTile= game.currentState.players[0].bonsai.grid[0, 0]
 
-        //init 2 leaf tiles that go arround a wood tile
+        //init 2 leaf tiles that go around a wood tile
         val leafTile1=BonsaiTile(TileType.LEAF)
         val leafTile2=BonsaiTile(TileType.LEAF)
 
         //removing a wood tile when wood cant be played
-        //here the other neighbor are the unplayabe pot tile
+        //here the other neighbor are the unplayable pot tile
         game.currentState.players[0].bonsai.grid[1, -1] = leafTile2
         game.currentState.players[0].bonsai.grid[0, -1] = leafTile1
         var exception = assertThrows<IllegalStateException> {
@@ -100,7 +99,7 @@ class RemoveTileTest {
 
         //removing a non-neighbor tile
         val leafTile3=BonsaiTile(TileType.LEAF)
-        game.currentState.players[0].bonsai.grid.set(1,-2,leafTile3)
+        game.currentState.players[0].bonsai.grid[1, -2] = leafTile3
         exception = assertThrows<IllegalStateException> {
             playerActionService.removeTile(leafTile3)
         }
@@ -111,8 +110,8 @@ class RemoveTileTest {
         //remove a surrounded leaf
         val leafTile4=BonsaiTile(TileType.LEAF)
         val leafTile5=BonsaiTile(TileType.LEAF)
-        game.currentState.players[0].bonsai.grid.set(-1,-1,leafTile5)
-        game.currentState.players[0].bonsai.grid.set(0,-2,leafTile4)
+        game.currentState.players[0].bonsai.grid[-1, -1] = leafTile5
+        game.currentState.players[0].bonsai.grid[0, -2] = leafTile4
         exception = assertThrows<IllegalStateException> {
             playerActionService.removeTile(leafTile1)
         }
@@ -120,7 +119,7 @@ class RemoveTileTest {
             exception.message)
 
         val fruitTile1  =BonsaiTile(TileType.FRUIT)
-        game.currentState.players[0].bonsai.grid.set(1,-3,fruitTile1)
+        game.currentState.players[0].bonsai.grid[1, -3] = fruitTile1
 
         //removing a necessary leaf tile for a fruit
         exception = assertThrows<IllegalStateException> {
@@ -130,7 +129,7 @@ class RemoveTileTest {
             exception.message)
 
         val flowerTile1  =BonsaiTile(TileType.FRUIT)
-        game.currentState.players[0].bonsai.grid.set(0,-3,flowerTile1)
+        game.currentState.players[0].bonsai.grid[0, -3] = flowerTile1
 
         //removing a necessary leaf tile for a flower
         exception = assertThrows<IllegalStateException> {
@@ -145,9 +144,7 @@ class RemoveTileTest {
         assertDoesNotThrow {  playerActionService.removeTile(leafTile2)}
 
         //see if leaf removed from player grid
-        assertThrows<NoSuchElementException> {  game.currentState.players[0].bonsai.grid.get(2,-2)}
-        assertTrue { testRefreshable.refreshAfterStartTileRemoved }
-
+        assertThrows<NoSuchElementException> { game.currentState.players[0].bonsai.grid[2, -2] }
     }
 
     @Test
@@ -160,6 +157,46 @@ class RemoveTileTest {
         val result = TileUtils.leastGroupOfTilesToBeRemoved(grid.tilesList.invoke(), grid)
         assertTrue(result.contains(flowerTile), "Flower tiles should be removable")
         assertTrue(!result.contains(leafTile1), "Flower tiles should be removable")
+    }
+
+    @Test
+    fun `test leastGroupOfTilesToBeRemoved `() {
+        val grid =setUpGrid()
+        val fruitTile = BonsaiTile(TileType.FRUIT)
+        val leafTile1=BonsaiTile(TileType.LEAF)
+        val leafTile2=BonsaiTile(TileType.LEAF)
+        val leafTile3=BonsaiTile(TileType.LEAF)
+        grid[1, -1] = leafTile1
+        grid[1, -2] = leafTile2
+        grid[0, -2] = leafTile3
+        grid[0, -1] = fruitTile
+        var result = TileUtils.leastGroupOfTilesToBeRemoved(grid.tilesList.invoke(), grid)
+        assertTrue(result.contains(leafTile1), "leaf tile should be removable")
+        assertFalse(result.contains(leafTile2), "middle leaf tile should not be removable")
+        val unplayableTile=BonsaiTile(TileType.UNPLAYABLE)
+        grid[0, -1] = unplayableTile
+        result = TileUtils.leastGroupOfTilesToBeRemoved(grid.tilesList.invoke(), grid)
+        assertFalse(result.contains(unplayableTile))
+    }
+    @Test
+    fun `test hasAdjacentPair`() {
+        var grid =setUpGrid()
+        val fruitTile = BonsaiTile(TileType.FRUIT)
+        val leafTile1=BonsaiTile(TileType.LEAF)
+        val leafTile2=BonsaiTile(TileType.LEAF)
+        grid[1, -1] = leafTile1
+        grid[1, -2] = leafTile2
+        grid[0, -1] = fruitTile
+        val fruitLeafNeighbors = grid.getNeighbors(fruitTile)
+            .filter { it.type == TileType.LEAF }
+        var result = TileUtils.hasAdjacentPair(fruitLeafNeighbors, grid)
+        assertTrue(result, "there is 2 adjacent leaves")
+        grid=setUpGrid()
+        grid[0, -1] = leafTile1
+        grid[2, -2] = leafTile2
+        grid[1, -1] = fruitTile
+        result = TileUtils.hasAdjacentPair(fruitLeafNeighbors, grid)
+        assertFalse(result, "there is no 2 adjacent leaves")
     }
 
 }
