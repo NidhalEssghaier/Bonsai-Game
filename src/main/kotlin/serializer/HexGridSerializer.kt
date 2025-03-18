@@ -2,7 +2,6 @@ package serializer
 
 import entity.BonsaiTile
 import entity.HexGrid
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.PairSerializer
@@ -43,7 +42,6 @@ class HexGridSerializer: KSerializer<HexGrid> {
      * @param decoder The decoder to use
      * @return The deserialized HexGrid
      */
-    @OptIn(ExperimentalSerializationApi::class)
     override fun deserialize(decoder: Decoder): HexGrid {
         return decoder.decodeStructure(descriptor) {
             var size = 0

@@ -2,7 +2,6 @@ package serializer
 
 import entity.BonsaiGame
 import entity.GameState
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.*
@@ -23,7 +22,6 @@ class BonsaiGameSerializer: KSerializer<BonsaiGame> {
         }
     }
 
-    @OptIn(ExperimentalSerializationApi::class)
     override fun deserialize(decoder: Decoder): BonsaiGame {
         return decoder.decodeStructure(descriptor) {
             var undoStack = ArrayDeque<GameState>()
