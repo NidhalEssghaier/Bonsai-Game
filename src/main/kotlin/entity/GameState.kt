@@ -34,9 +34,9 @@ class GameState(
         GameState(
             gameSpeed,
             players.map { it.copy() },
-            goalCards,
+            goalCards.toMutableList(),
             ArrayDeque(drawStack),
-            openCards,
+            openCards.toMutableList(),
             this.currentPlayer,
             this.endGameCounter,
         )
