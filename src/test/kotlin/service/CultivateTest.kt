@@ -1,8 +1,9 @@
-/*package service
+package service
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import entity.*
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertTrue
 import kotlin.test.assertFalse
@@ -47,7 +48,7 @@ class CultivateTest {
         testPlayer.supply.add(woodTile) // Ensure tile is in the player's supply
 
         // Cultivate a tile legally
-        playerActionService.cultivate(woodTile, 0, -1)
+        assertDoesNotThrow { playerActionService.cultivate(woodTile, 0, -1) }
 
         // Verify tile placement
         assertTrue(bonsai.grid.isNotEmpty(0, -1))
@@ -117,4 +118,3 @@ class CultivateTest {
         assertTrue(exception.message!!.contains("this Tile is not in your personal supply"))
     }
 }
-*/
