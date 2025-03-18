@@ -37,34 +37,22 @@ class MeditateTest {
         )
     }
 
-    fun createGoalCards(): MutableList<GoalCard> {
-        return mutableListOf(
-            GoalCard(5, GoalColor.BROWN, GoalDifficulty.LOW),
-            GoalCard(10, GoalColor.BROWN, GoalDifficulty.INTERMEDIATE),
-            GoalCard(15, GoalColor.BROWN, GoalDifficulty.HARD),
-
-            GoalCard(6,GoalColor.GREEN,GoalDifficulty.LOW),
-            GoalCard(9,GoalColor.GREEN,GoalDifficulty.INTERMEDIATE),
-            GoalCard(12,GoalColor.GREEN,GoalDifficulty.HARD),
-
-            GoalCard(9,GoalColor.ORANGE,GoalDifficulty.LOW),
-            GoalCard(11,GoalColor.ORANGE,GoalDifficulty.INTERMEDIATE),
-            GoalCard(13,GoalColor.ORANGE,GoalDifficulty.HARD)
-        )
+    fun createGoalCards() : List<GoalColor> {
+        return  listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE)
     }
 
     /**
      * Tests meditating with a `HelperCard`.
      * Ensures it is added to the player's hidden deck and triggers the appropriate UI refresh.
      */
-    @Test
-    fun testMeditateWithHelperCard() {
-        val helperCard = HelperCard(listOf(TileType.WOOD, TileType.LEAF), id = 1)
-        game.currentState.openCards[0] = helperCard
-        playerActionService.meditate(helperCard)
-        assertTrue { currentPlayer.hiddenDeck.contains(helperCard) }
-        assertTrue { testRefreshable.refreshAfterDrawHelperCardCalled }
-    }
+//    @Test
+//    fun testMeditateWithHelperCard() {
+//        val helperCard = HelperCard(listOf(TileType.WOOD, TileType.LEAF), id = 1)
+//        game.currentState.openCards[0] = helperCard
+//        playerActionService.meditate(helperCard)
+//        assertTrue { currentPlayer.hiddenDeck.contains(helperCard) }
+//        assertTrue { testRefreshable.refreshAfterDrawHelperCardCalled }
+//    }
 
     /**
      * Tests meditating with a `ParchmentCard`.

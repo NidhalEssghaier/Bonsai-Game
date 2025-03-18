@@ -35,20 +35,8 @@ class ShiftBoardAndRefillTest {
         )
     }
 
-    fun createGoalCards(): MutableList<GoalCard> {
-        return mutableListOf(
-            GoalCard(5, GoalColor.BROWN, GoalDifficulty.LOW),
-            GoalCard(10, GoalColor.BROWN, GoalDifficulty.INTERMEDIATE),
-            GoalCard(15, GoalColor.BROWN, GoalDifficulty.HARD),
-
-            GoalCard(6,GoalColor.GREEN,GoalDifficulty.LOW),
-            GoalCard(9,GoalColor.GREEN,GoalDifficulty.INTERMEDIATE),
-            GoalCard(12,GoalColor.GREEN,GoalDifficulty.HARD),
-
-            GoalCard(9,GoalColor.ORANGE,GoalDifficulty.LOW),
-            GoalCard(11,GoalColor.ORANGE,GoalDifficulty.INTERMEDIATE),
-            GoalCard(13,GoalColor.ORANGE,GoalDifficulty.HARD)
-        )
+    fun createGoalCards() : List<GoalColor> {
+        return  listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE)
     }
     /**
      * Tests shifting board and refilling when a valid index (2) is given.

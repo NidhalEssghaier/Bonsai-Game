@@ -73,17 +73,18 @@ class TestRefreshable : Refreshable {
         refreshAfterStartNewGameCalled = true
     }
 
-    override fun refreshAfterEndGame(scoreList: Map<Player, MutableList<Int>>) {
-        refreshAfterEndGameCalled = true
-    }
-
-    override fun refreshAfterDrawCard(card: ZenCard) {
+    override fun refreshAfterDrawCard(
+        card: ZenCard,
+        drawnCardIndex: Int,
+        chooseTilesByBoard: Boolean,
+        chooseTilesByCard: Boolean,
+    )  {
         refreshAfterDrawCardCalled = true
     }
 
-    override fun refreshAfterClaimGoal(goalCard: GoalCard) {
-        refreshAfterClaimGoalCalled = true
-    }
+//    override fun  refreshAfterReachGoals (reachedGoals: List<GoalCard>) {
+//        refreshAfterClaimGoalCalled = true
+//    }
 
     override fun refreshAfterUndoRedo() {
         refreshAfterUndoRedoCalled = true
@@ -93,11 +94,17 @@ class TestRefreshable : Refreshable {
         refreshAfterEndTurnCalled = true
     }
 
-    override fun refreshAfterDiscardTile() {
+    override fun refreshAfterDiscardTile(
+        tilesToDiscard: Int,
+        removedTile: BonsaiTile?,
+    ) {
         refreshAfterDiscardTileCalled = true
     }
 
-    override fun refreshToPromptTileChoice() {
+    override fun  refreshToPromptTileChoice(
+        chooseByBoard: Boolean,
+        chooseByCard: Boolean,
+    ) {
         refreshToPromptTileChoiceCalled = true
     }
 
@@ -117,7 +124,7 @@ class TestRefreshable : Refreshable {
         refreshAfterReachGoalsCalled = true
     }
 
-    override fun refreshAfterEndGame(scoreList: List<Pair<Player, Int>>) {
+    override fun refreshAfterEndGame(scoreList: Map<Player, MutableList<Int>>) {
         refreshAfterEndGameCalled = true
     }
 
