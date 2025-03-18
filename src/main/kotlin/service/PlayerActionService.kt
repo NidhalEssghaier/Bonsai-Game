@@ -292,6 +292,17 @@ class PlayerActionService(
     ) {
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
         val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
+
+        // Bug fix ensure player cant cultivate after drawing a card
+        val helperCard =
+            currentPlayer.hiddenDeck.find {
+                it is HelperCard && it !in currentPlayer.usedHelperCards
+            } as? HelperCard
+        check(!currentPlayer.hasDrawnCard || (helperCard!=null && helperCard !in currentPlayer.usedHelperCards)){
+            "you cant cultivate after meditating or you have drawn a helper Card and have fully used it "
+        }
+
+        // Mark that the player has placed a Tile
         currentPlayer.hasCultivated= true
 
         val bonsai = currentPlayer.bonsai
