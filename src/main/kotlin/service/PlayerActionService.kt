@@ -45,7 +45,7 @@ class PlayerActionService(
             return // break to allow discarding tiles
         }
 
-        game.undoStack.push(game.currentState)
+        game.undoStack.push(game.currentState.copy())
         game.redoStack.clear()
 
         if (game.currentState.drawStack.isEmpty()) {
@@ -523,9 +523,6 @@ class PlayerActionService(
         // Find the card in openCards and ensure it's valid
         val cardIndex = game.currentState.openCards.indexOf(card)
         if (cardIndex == -1) throw IllegalStateException("The selected card is not in openCards")
-
-        // save state to allow undo
-        game.undoStack.push(game.currentState.copy())
 
         // Draw the card and mark its position as taken
         val receivedTiles = drawCard(cardIndex)
