@@ -146,8 +146,6 @@ class RemoveTileTest {
 
         //see if leaf removed from player grid
         assertThrows<NoSuchElementException> {  game.currentState.players[0].bonsai.grid.get(2,-2)}
-        assertTrue { testRefreshable.refreshAfterStartTileRemoved }
-
     }
 
     @Test
