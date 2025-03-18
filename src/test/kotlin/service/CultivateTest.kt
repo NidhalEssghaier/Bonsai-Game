@@ -63,10 +63,10 @@ class CultivateTest {
         val helperCard = HelperCard(listOf(TileType.LEAF, TileType.GENERIC), id = 1)
         testPlayer.hiddenDeck.add(helperCard)
 
-        playerActionService.cultivate(leafTile, 0, 1)
+        playerActionService.cultivate(leafTile, 0, -1)
 
         // Verify tile placement
-        assertTrue(bonsai.grid.isNotEmpty(0, 1))
+        assertTrue(bonsai.grid.isNotEmpty(0, -1))
         assertFalse(testPlayer.supply.contains(leafTile))
 
         // Verify that the helper card was partially used
@@ -81,7 +81,7 @@ class CultivateTest {
 
         // Attempt to place fruit tile where it's not allowed
         val exception = assertThrows<IllegalStateException> {
-            playerActionService.cultivate(fruitTile, 0, 1)
+            playerActionService.cultivate(fruitTile, 0, -1)
         }
 
         assertTrue(exception.message!!.contains("Tile placement not allowed"))
@@ -97,12 +97,12 @@ class CultivateTest {
         testPlayer.hiddenDeck.add(helperCard)
 
         // Place first tile
-        playerActionService.cultivate(woodTile, 0, 1)
+        playerActionService.cultivate(woodTile, 0, -1)
         assertTrue(testPlayer.usedHelperTiles.contains(TileType.WOOD))
         assertFalse(testPlayer.usedHelperCards.contains(helperCard)) // Not fully used
 
         // Place second tile
-        playerActionService.cultivate(leafTile, 0, 2)
+        playerActionService.cultivate(leafTile, 0, -2)
         assertTrue(testPlayer.usedHelperTiles.contains(TileType.LEAF))
         assertTrue(testPlayer.usedHelperCards.contains(helperCard)) // Now it should be removed
     }
@@ -112,10 +112,9 @@ class CultivateTest {
         val tile = BonsaiTile(TileType.WOOD)
 
         val exception = assertThrows<IllegalStateException> {
-            playerActionService.cultivate(tile, 0, 1)
+            playerActionService.cultivate(tile, 0, -1)
         }
 
         assertTrue(exception.message!!.contains("this Tile is not in your personal supply"))
     }
-}
-*/
+}*/
