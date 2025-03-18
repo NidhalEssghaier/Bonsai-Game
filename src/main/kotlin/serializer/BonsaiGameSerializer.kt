@@ -28,17 +28,12 @@ class BonsaiGameSerializer: KSerializer<BonsaiGame> {
         return decoder.decodeStructure(descriptor) {
             var undoStack = ArrayDeque<GameState>()
             var redoStack = ArrayDeque<GameState>()
-            if (decodeSequentially()) {
-                undoStack = decodeSerializableElement(descriptor, 0, stackSerializer)
-                redoStack = decodeSerializableElement(descriptor, 1, stackSerializer)
-            } else {
-                while (true) {
-                    when (val index = decodeElementIndex(descriptor)) {
-                        0 -> undoStack = decodeSerializableElement(descriptor, index, stackSerializer)
-                        1 -> redoStack = decodeSerializableElement(descriptor, index, stackSerializer)
-                        CompositeDecoder.DECODE_DONE -> break
-                        else -> error("Unexpected index: $index")
-                    }
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> undoStack = decodeSerializableElement(descriptor, index, stackSerializer)
+                    1 -> redoStack = decodeSerializableElement(descriptor, index, stackSerializer)
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
                 }
             }
             val game = BonsaiGame(undoStack, redoStack)

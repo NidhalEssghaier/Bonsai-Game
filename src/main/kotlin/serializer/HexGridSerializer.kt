@@ -48,25 +48,16 @@ class HexGridSerializer: KSerializer<HexGrid> {
         return decoder.decodeStructure(descriptor) {
             var size = 0
             var map = mapOf<BonsaiTile, Pair<Int, Int>>()
-            if (decodeSequentially()) {
-                size = decodeIntElement(descriptor, 0)
-                map = decodeSerializableElement(
-                    descriptor,
-                    1,
-                    MapSerializer(BonsaiTile.serializer(), PairSerializer(Int.serializer(), Int.serializer())),
-                )
-            } else {
-                while (true) {
-                    when (val index = decodeElementIndex(descriptor)) {
-                        0 -> size = decodeIntElement(descriptor, index)
-                        1 -> map = decodeSerializableElement(
-                            descriptor,
-                            index,
-                            MapSerializer(BonsaiTile.serializer(), PairSerializer(Int.serializer(), Int.serializer())),
-                        )
-                        CompositeDecoder.DECODE_DONE -> break
-                        else -> error("Unexpected index: $index")
-                    }
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> size = decodeIntElement(descriptor, index)
+                    1 -> map = decodeSerializableElement(
+                        descriptor,
+                        index,
+                        MapSerializer(BonsaiTile.serializer(), PairSerializer(Int.serializer(), Int.serializer())),
+                    )
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
                 }
             }
             HexGrid(size, map.toMutableMap())
