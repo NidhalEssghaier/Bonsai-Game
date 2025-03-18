@@ -18,6 +18,7 @@ import kotlinx.serialization.Serializable
  * @property bonsai The bonsai of the player
  */
 @Serializable
+@Polymorphic
 sealed interface Player
 {
     val name: String
@@ -35,6 +36,7 @@ sealed interface Player
     var supply: MutableList<BonsaiTile>
     var usedHelperCards: MutableList<HelperCard>
     var usedHelperTiles: MutableList<TileType>
+    var hasDrawnCard: Boolean
 
 
     /**

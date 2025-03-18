@@ -1,5 +1,6 @@
 package gui
 
+import entity.Player
 import gui.utility.ItemImageLoader
 import tools.aqua.bgw.components.layoutviews.GridPane
 import tools.aqua.bgw.components.uicomponents.Button
@@ -10,7 +11,7 @@ import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.Visual
 
 class ResultScene(
-    private val results: Map<String, List<Int>>,
+    private val results: Map<Player, List<Int>>,
 ) : MenuScene(1920, 1080) {
     private val itemImageLoader = ItemImageLoader()
 
@@ -47,7 +48,7 @@ class ResultScene(
                     0,
                     150,
                     45,
-                    text = player,
+                    text = player.name,
                     visual = Visual.EMPTY,
                     font = Font(size = 20, fontWeight = Font.FontWeight.BOLD),
                 )
