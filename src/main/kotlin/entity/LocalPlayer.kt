@@ -41,7 +41,8 @@ class LocalPlayer private constructor(
     override var supply: MutableList<BonsaiTile> = mutableListOf(),
     override var usedHelperTiles: MutableList<TileType> = mutableListOf(),
     override var usedHelperCards: MutableList<HelperCard> = mutableListOf() ,
-    override var hasCultivated: Boolean =false
+    override var hasDrawnCard: Boolean = false,
+    override var hasCultivated: Boolean = false
 ): Player
 {
     /**
@@ -69,6 +70,7 @@ class LocalPlayer private constructor(
             supply.toMutableList(),
             usedHelperTiles.toMutableList(),
             usedHelperCards.toMutableList(),
+            hasDrawnCard,
             hasCultivated
         )
     }

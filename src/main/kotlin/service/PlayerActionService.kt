@@ -6,6 +6,31 @@ import helper.*
 class PlayerActionService(
     private val rootService: RootService,
 ) : AbstractRefreshingService() {
+
+    /**
+     * The companion object contains the [switchPlayer] method, which is used to switch the active player
+     */
+    companion object {
+        /**
+         * Switches the active player to the next player in the game.
+         * This method is called in endTurn() and BonsaiGameSerializer.
+         * @param game the [BonsaiGame] object representing the game
+         *
+         * Preconditions:
+         * - A game was started and is running.
+         *
+         * Postconditions:
+         * - The current player is switched to the next player in the game.
+         * - The used helper tiles of the current player are cleared.
+         */
+        fun switchPlayer(game: BonsaiGame) {
+            game.currentState.currentPlayer =
+                (game.currentState.currentPlayer + 1) % game.currentState.players.size
+            // Reset hasDrawnCard for the new player
+            game.currentState.players[game.currentState.currentPlayer].hasDrawnCard = false
+        }
+    }
+
     /**
      * Ends the active players turn and advances the game to the next player.
      *
@@ -54,7 +79,7 @@ class PlayerActionService(
         // clear used helper card tiles of the current player
         currentPlayer.usedHelperTiles.clear()
 
-        game.undoStack.push(game.currentState)
+        game.undoStack.push(game.currentState.copy())
         game.redoStack.clear()
 
         if (game.currentState.drawStack.isEmpty()) {
@@ -62,16 +87,13 @@ class PlayerActionService(
             if (game.currentState.endGameCounter > game.currentState.players.size) {
                 rootService.gameService.endGame()
             } else {
-
-                game.currentState.currentPlayer =
-                    (game.currentState.currentPlayer + 1) % game.currentState.players.size
+                switchPlayer(game)
                 onAllRefreshables {
                     refreshAfterEndTurn()
                 }
             }
         } else {
-            game.currentState.currentPlayer =
-                (game.currentState.currentPlayer + 1) % game.currentState.players.size
+            switchPlayer(game)
             onAllRefreshables {
                 refreshAfterEndTurn()
             }
@@ -305,7 +327,7 @@ class PlayerActionService(
                     "A fruit tile must be placed between two adjacent leaf tiles."
                 }
                 // Ensure those two leaf tiles are adjacent to each other using hasAdjacentPair
-                require(hasAdjacentPair(adjacentLeaves)) {
+                require(TileUtils.hasAdjacentPair(adjacentLeaves,grid)) {
                     "The two leaf tiles must also be adjacent to each other."
                 }
                 // Ensure a fruit tile is not placed adjacent to another fruit tile
@@ -509,6 +531,7 @@ class PlayerActionService(
      *
      * @throws IllegalStateException If there is no active game.
      * @throws IllegalStateException If the Game's stacks are empty.
+     * @throws IllegalArgumentException If the selected [card] is not in [openCards].
      *
      */
     fun meditate(card: ZenCard) {
@@ -518,14 +541,22 @@ class PlayerActionService(
         // Bug fix ensure player cant meditate after cultivating
         check(!currentPlayer.hasCultivated){"cant meditate after cultivate"}
 
+        // Ensure the player has not already drawn a card this turn
+        if (currentPlayer.hasDrawnCard) {
+            throw IllegalStateException("The player has already drawn a card this turn")
+        }
+        // Mark the player as having drawn a card
+        currentPlayer.hasDrawnCard = true
+
+        // Ensure there are available cards in openCards
         if (game.currentState.openCards.isEmpty()) throw IllegalStateException("No available cards to draw")
 
-        // Find the card in openCards and ensure it's valid
+        // Validate that the selected card exists in openCards
+        require(card in game.currentState.openCards) { "The selected card is not in openCards" }
+
+        // Find the selected card's position in openCards
         val cardIndex = game.currentState.openCards.indexOf(card)
         if (cardIndex == -1) throw IllegalStateException("The selected card is not in openCards")
-
-        // save state to allow undo
-        game.undoStack.push(game.currentState.copy())
 
         // Draw the card and mark its position as taken
         val receivedTiles = drawCard(cardIndex)
@@ -538,12 +569,13 @@ class PlayerActionService(
             currentPlayer.supply += receivedTiles
         }
 
-        // Process card effects based on type
+        // Process the card's effect based on its type
         when (card) {
             is GrowthCard -> currentPlayer.seishiGrowth.push(card)
             is ToolCard -> {
+                // Tool cards are added to the player's tool stack, increasing their tile limit
                 currentPlayer.seishiTool.push(card)
-                currentPlayer.supplyTileLimit += 2 // Increase tile limit for future turns
+                currentPlayer.supplyTileLimit += 2
             }
             is MasterCard -> {
                 // can choose tile later if master card contains generic tile type
@@ -559,11 +591,11 @@ class PlayerActionService(
             is HelperCard -> {
                 currentPlayer.hiddenDeck += card
             }
-            is PlaceholderCard -> {}
+            is PlaceholderCard -> {}  // Placeholder cards do nothing
         }
 
+        // Replace the drawn card with a placeholder and shift remaining cards
         game.currentState.openCards[cardIndex] = PlaceholderCard
-        // Shift remaining cards and enforce game constraints
         shiftBoardAndRefill(cardIndex)
 
         // refresh to show draw card animation & choose tiles optionally based on drawn card & chosen stack
@@ -624,7 +656,7 @@ class PlayerActionService(
         choice: TileType,
         chooseFromAll: Boolean = false,
     ) {
-        val game = rootService.currentGame ?: return
+        val game = rootService.currentGame ?: throw IllegalStateException("No active game")
 
         // Validate that the choice is valid
         if (!chooseFromAll) {
@@ -648,16 +680,33 @@ class PlayerActionService(
     fun shiftBoardAndRefill(cardStack: Int) {
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
 
-        if (game.currentState.drawStack.isEmpty()) return
-
         for (i in cardStack downTo 1) {
             game.currentState.openCards[i] = game.currentState.openCards[i - 1]
         }
 
-        val newCard = game.currentState.drawStack.pop()
-        game.currentState.openCards[0] = newCard
+        if (game.currentState.drawStack.isNotEmpty()) {
+            val newCard = game.currentState.drawStack.pop()
+            game.currentState.openCards[0] = newCard
+        } else {
+            game.currentState.openCards[0] = PlaceholderCard // Ensures a valid state
+        }
     }
 
+    /**
+    In the improbable case that, at the beginning of a turn, it is not
+    possible to add a wood tile to the [Player.bonsai], player may remove the least number of
+    tiles from it (put them in the common supply) needed to make it possible again.
+     * Preconditions:
+     * - A game must be active.
+     * - The choice must be from players bonsai.
+     * - it should not be possible to play a wood
+     * - removed tile should be a part of leat number of tiles to be removed
+     *
+     * **Postconditions:**
+     * - tile is removed from player bonsai.
+     *
+     * @throws IllegalStateException If there is no active game, invalid tile.
+     */
     fun removeTile(tile: BonsaiTile) {
         // check if game is running
         val game = rootService.currentGame
@@ -679,7 +728,7 @@ class PlayerActionService(
         ) { "player can play wood" }
 
         // is it part of the least number of tiles to be removed to make placing a wood possible
-        val leastGroupOfTilesToBeRemoved = leastGroupOfTilesToBeRemoved(currentPlayerBonsaiTiles)
+        val leastGroupOfTilesToBeRemoved = TileUtils.leastGroupOfTilesToBeRemoved(currentPlayerBonsaiTiles,grid)
         check(leastGroupOfTilesToBeRemoved.contains(tile)) {
             "tile not part of the least number of tiles to be removed to make placing a wood possible"
         }
@@ -692,76 +741,4 @@ class PlayerActionService(
         }
     }
 
-    private fun leastGroupOfTilesToBeRemoved(tiles: List<BonsaiTile>): List<BonsaiTile> {
-        // check if game is running
-        val game = rootService.currentGame
-        checkNotNull(game) { "there is no active game" }
-
-        return tiles.filter { tile ->
-            // get grid
-            val grid =
-                game.currentState.players[game.currentState.currentPlayer]
-                    .bonsai.grid
-
-            // get neighbors of tile
-            val neighbors = grid.getNeighbors(tile)
-
-            // tile is not neighbor to wood
-            if (!neighbors.any { neighbor -> neighbor.type == TileType.WOOD }) return@filter false
-            // tile is wood
-            if (tile.type.equals(TileType.WOOD)) return@filter false
-            // tile is surrounded
-            if (neighbors.size == 6) return@filter false
-            // tile is fruit or flower
-            if (tile.type.equals(TileType.FLOWER) || tile.type.equals(TileType.FRUIT)) return@filter true
-
-            // tile is leaf
-            if (tile.type == TileType.LEAF) {
-                val neighborFruits = neighbors.filter { neighbor -> neighbor.type == TileType.FRUIT }
-                val neighborFlowers = neighbors.filter { neighbor -> neighbor.type == TileType.FLOWER }
-
-                // has no fruit or flower neighbors
-                if (neighborFlowers.isEmpty() && neighborFruits.isEmpty()) {
-                    return@filter true
-                } // neighbor flower have less than 2 leaves
-                else if (
-                    neighborFlowers.any { flower ->
-                        (grid.getNeighbors(flower).filter { neighbor -> neighbor.type == TileType.LEAF }.size) < 2
-                    }
-                ) {
-                    return@filter false
-                }
-
-                // neighbor fruit has no 2 adjacent leafs after deletion
-                for (fruit in neighborFruits) {
-                    val fruitLeafNeighbors =
-                        grid
-                            .getNeighbors(fruit)
-                            .filter { neighbor -> neighbor.type == TileType.LEAF && !neighbor.equals(tile) }
-                    if (!hasAdjacentPair(fruitLeafNeighbors)) {
-                        return@filter false
-                    }
-                }
-                return@filter true
-            }
-            return@filter false
-        }
-    }
-
-    private fun hasAdjacentPair(leafTiles: List<BonsaiTile>): Boolean {
-        // check if game is running
-        val game = rootService.currentGame
-        checkNotNull(game) { "there is no active game" }
-
-        val grid =
-            game.currentState.players[game.currentState.currentPlayer]
-                .bonsai.grid
-
-        for (leaf in leafTiles) {
-            if (grid.getNeighbors(leaf).any { it in leafTiles }) {
-                return true
-            }
-        }
-        return false
-    }
 }

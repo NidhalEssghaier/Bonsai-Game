@@ -9,40 +9,37 @@ import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import java.io.IOException
 
+/**
+ * @property dirPath The path to the directory where the save file is located.
+ * @property saveFilePath The path to the save file.
+ * @property jsonSerializer The [Json] object that contains the polymorphic serializer.
+ */
 class GameService(
     private val rootService: RootService,
 ) : AbstractRefreshingService() {
-    /**
-     * A companion object that contains the path to the save file and jsonSerializer.
-     * @property dirPath The path to the directory where the save file is located.
-     * @property saveFilePath The path to the save file.
-     * @property jsonSerializer The [Json] object that contains the polymorphic serializer.
-     */
-    private companion object {
-        private val dirPath = File(
-            File(GameService::class.java.protectionDomain.codeSource.location.path).parentFile.parentFile,
-            "data"
-        )
 
-        private val saveFilePath = File(dirPath, "save.json")
+    val dirPath = File("data").apply {
+        if (!exists()) mkdirs() // Ensure the directory exists
+    }
+    val saveFilePath = File(dirPath, "save.json")
 
-        private val jsonSerializer = Json {
-            serializersModule = SerializersModule {
-                polymorphic(ZenCard::class) {
-                    subclass(ToolCard::class)
-                    subclass(MasterCard::class)
-                    subclass(HelperCard::class)
-                    subclass(GrowthCard::class)
-                    subclass(ParchmentCard::class)
-                    subclass(PlaceholderCard::class)
-                }
+    private val jsonSerializer = Json {
+        serializersModule = SerializersModule {
+            allowStructuredMapKeys = true
+            polymorphic(ZenCard::class) {
+                subclass(ToolCard::class)
+                subclass(MasterCard::class)
+                subclass(HelperCard::class)
+                subclass(GrowthCard::class)
+                subclass(ParchmentCard::class)
+                subclass(PlaceholderCard::class)
+            }
 
-                polymorphic(Player::class) {
-                    subclass(LocalPlayer::class)
-                    subclass(NetworkPlayer::class)
-                    subclass(RandomBot::class)
-                    subclass(SmartBot::class)
-                }
+            polymorphic(Player::class) {
+                subclass(LocalPlayer::class)
+                subclass(NetworkPlayer::class)
+                subclass(RandomBot::class)
+                subclass(SmartBot::class)
             }
         }
     }
@@ -95,6 +92,12 @@ class GameService(
         val goalCards = prepareGoals(playerList.size, goalColors)
 
         rootService.currentGame = BonsaiGame(speed, playerList, goalCards, drawStack, openCards)
+
+        val currentGame = rootService.currentGame
+        checkNotNull(currentGame) { "Internal error! currentGame is null, it shouldn't happened here." }
+
+        // Push the initial state to the undo stack
+        currentGame.undoStack.push(currentGame.currentState.copy())
 
         onAllRefreshables { refreshAfterStartNewGame() }
     }
@@ -257,7 +260,8 @@ class GameService(
                     TileType.LEAF -> numberOfLeafTiles += 1
                     TileType.FLOWER -> {
                         numberOfFlowerTiles += 1
-                        sumOfFlowerPoints += 6 - bonsai.grid.getNeighbors(tile).size
+                        sumOfFlowerPoints += 6 - bonsai.grid.getNeighbors(tile)
+                            .filter { neighbor->neighbor.type!=TileType.UNPLAYABLE  }.size
                     }
                     TileType.FRUIT -> numberOfFruitTiles += 1
                     else -> {}
@@ -357,9 +361,6 @@ class GameService(
     fun saveGame() {
         val game = rootService.currentGame
         checkNotNull(game) { "No game has been started yet." }
-
-        if(!dirPath.exists())
-            if(!dirPath.mkdirs()) throw IOException("Unable to create directory.")
 
         saveFilePath.writeText(
             jsonSerializer.encodeToString(BonsaiGame.serializer(), game)
