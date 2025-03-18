@@ -265,7 +265,8 @@ class PlayerActionService(
             val growthAllowedTiles = currentPlayer.seishiGrowth.map { (it as? GrowthCard)?.type }
 
             val allowedTiles = seishiAllowedTiles + growthAllowedTiles
-            val isPlacementAllowed = tile.type in allowedTiles
+            // Fix: Allow placement if Generic is in allowedTiles
+            val isPlacementAllowed = tile.type in allowedTiles || TileType.GENERIC in allowedTiles
 
             if (isPlacementAllowed) {
                 placeTile(tile, q, r)
@@ -298,8 +299,9 @@ class PlayerActionService(
         val grid = bonsai.grid
 
         // Ensure the placement position is valid
-        require(grid.isEmpty(q, r)) { "Cannot place a tile on top of another tile." }
         require(grid.isNotPot(q, r)) { "Cannot place a tile in the Pot Area." }
+        require(grid.isEmpty(q, r)) { "Cannot place a tile on top of another tile." }
+
 
         // Get neighboring tiles
         val neighbors = grid.getNeighbors(q, r)
