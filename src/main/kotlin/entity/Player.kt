@@ -36,6 +36,7 @@ sealed interface Player
     var supply: MutableList<BonsaiTile>
     var usedHelperCards: MutableList<HelperCard>
     var usedHelperTiles: MutableList<TileType>
+    var hasDrawnCard: Boolean
 
 
     /**

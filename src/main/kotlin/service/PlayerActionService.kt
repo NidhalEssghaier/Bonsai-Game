@@ -59,6 +59,10 @@ class PlayerActionService(
                     .clear()
                 game.currentState.currentPlayer =
                     (game.currentState.currentPlayer + 1) % game.currentState.players.size
+
+                // Reset hasDrawnCard for the new player
+                game.currentState.players[game.currentState.currentPlayer].hasDrawnCard = false
+
                 onAllRefreshables {
                     refreshAfterEndTurn()
                 }
@@ -70,6 +74,10 @@ class PlayerActionService(
                 .clear()
             game.currentState.currentPlayer =
                 (game.currentState.currentPlayer + 1) % game.currentState.players.size
+
+            // Reset hasDrawnCard for the new player
+            game.currentState.players[game.currentState.currentPlayer].hasDrawnCard = false
+
             onAllRefreshables {
                 refreshAfterEndTurn()
             }
@@ -512,15 +520,27 @@ class PlayerActionService(
      *
      * @throws IllegalStateException If there is no active game.
      * @throws IllegalStateException If the Game's stacks are empty.
+     * @throws IllegalArgumentException If the selected [card] is not in [openCards].
      *
      */
     fun meditate(card: ZenCard) {
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
         val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
 
+        // Ensure the player has not already drawn a card this turn
+        if (currentPlayer.hasDrawnCard) {
+            throw IllegalStateException("The player has already drawn a card this turn")
+        }
+        // Mark the player as having drawn a card
+        currentPlayer.hasDrawnCard = true
+
+        // Ensure there are available cards in openCards
         if (game.currentState.openCards.isEmpty()) throw IllegalStateException("No available cards to draw")
 
-        // Find the card in openCards and ensure it's valid
+        // Validate that the selected card exists in openCards
+        require(card in game.currentState.openCards) { "The selected card is not in openCards" }
+
+        // Find the selected card's position in openCards
         val cardIndex = game.currentState.openCards.indexOf(card)
         if (cardIndex == -1) throw IllegalStateException("The selected card is not in openCards")
 
@@ -535,12 +555,13 @@ class PlayerActionService(
             currentPlayer.supply += receivedTiles
         }
 
-        // Process card effects based on type
+        // Process the card's effect based on its type
         when (card) {
             is GrowthCard -> currentPlayer.seishiGrowth.push(card)
             is ToolCard -> {
+                // Tool cards are added to the player's tool stack, increasing their tile limit
                 currentPlayer.seishiTool.push(card)
-                currentPlayer.supplyTileLimit += 2 // Increase tile limit for future turns
+                currentPlayer.supplyTileLimit += 2
             }
             is MasterCard -> {
                 // can choose tile later if master card contains generic tile type
@@ -556,11 +577,11 @@ class PlayerActionService(
             is HelperCard -> {
                 currentPlayer.hiddenDeck += card
             }
-            is PlaceholderCard -> {}
+            is PlaceholderCard -> {}  // Placeholder cards do nothing
         }
 
+        // Replace the drawn card with a placeholder and shift remaining cards
         game.currentState.openCards[cardIndex] = PlaceholderCard
-        // Shift remaining cards and enforce game constraints
         shiftBoardAndRefill(cardIndex)
 
         // refresh to show draw card animation & choose tiles optionally based on drawn card & chosen stack
@@ -621,7 +642,7 @@ class PlayerActionService(
         choice: TileType,
         chooseFromAll: Boolean = false,
     ) {
-        val game = rootService.currentGame ?: return
+        val game = rootService.currentGame ?: throw IllegalStateException("No active game")
 
         // Validate that the choice is valid
         if (!chooseFromAll) {
@@ -645,14 +666,16 @@ class PlayerActionService(
     fun shiftBoardAndRefill(cardStack: Int) {
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
 
-        if (game.currentState.drawStack.isEmpty()) return
-
         for (i in cardStack downTo 1) {
             game.currentState.openCards[i] = game.currentState.openCards[i - 1]
         }
 
-        val newCard = game.currentState.drawStack.pop()
-        game.currentState.openCards[0] = newCard
+        if (game.currentState.drawStack.isNotEmpty()) {
+            val newCard = game.currentState.drawStack.pop()
+            game.currentState.openCards[0] = newCard
+        } else {
+            game.currentState.openCards[0] = PlaceholderCard // Ensures a valid state
+        }
     }
 
     fun removeTile(tile: BonsaiTile) {
