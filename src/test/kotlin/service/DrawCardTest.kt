@@ -4,7 +4,7 @@ import entity.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import kotlin.test.assertEquals
+import kotlin.test.*
 
 
 class DrawCardTest {
@@ -51,44 +51,48 @@ class DrawCardTest {
 
     }
     /**
-     *  Tests drawing a card from position 2, which should add WOOD and FLOWER to the player's supply.
+     * Tests drawing a card from position 2, which should return WOOD and FLOWER tiles.
      */
-  //  @Test
-//    fun testDrawCardWithValidPosition2() {
-//        val supplyBefore = currentPlayer.supply.size
-//
-//        playerActionService.drawCard(2) // Should add WOOD and FLOWER
-//
-////        assertEquals(supplyBefore + 2, currentPlayer.supply.size)
-//        assertTrue { currentPlayer.supply.map { it.type }.contains(TileType.WOOD) }
-//        assertTrue { currentPlayer.supply.map { it.type }.contains(TileType.FLOWER) }
-//
-//    }
+    @Test
+    fun testDrawCardWithValidPosition2() {
+        val tiles = playerActionService.drawCard(2)
+
+        assertEquals(2, tiles.size)
+        assertTrue(tiles.any { it.type == TileType.WOOD })
+        assertTrue(tiles.any { it.type == TileType.FLOWER })
+    }
 
     /**
-     *  Tests drawing a card from position 3, which should add LEAF and FRUIT to the player's supply.
-     * */
-//    @Test
-//    fun testDrawCardWithValidPosition3() {
-//        val supplyBefore = currentPlayer.supply.size
-//
-//        playerActionService.drawCard(3) // Should add LEAF and FRUIT
-//
-//        assertEquals(supplyBefore + 2, currentPlayer.supply.size)
-//        assertTrue { currentPlayer.supply.map { it.type }.contains(TileType.LEAF) }
-//        assertTrue { currentPlayer.supply.map { it.type }.contains(TileType.FRUIT) }
-//        assertTrue { testRefreshable.refreshAfterDrawCardCalled }
-//    }
+     * Tests drawing a card from position 3, which should return LEAF and FRUIT tiles.
+     */
+    @Test
+    fun testDrawCardWithValidPosition3() {
+        val tiles = playerActionService.drawCard(3)
 
-//    /**
-//     * Tests drawing a card from position 1, which should not add tiles but trigger a UI prompt for tile selection.
-//     **/
-//    @Test
-//    fun testDrawCardWithPosition1TriggersChoicePrompt() {
-//        playerActionService.drawCard(1) // Should NOT add tiles yet, instead prompt GUI
-//
-//        assertTrue { testRefreshable.refreshToPromptTileChoiceCalled } // Ensure GUI prompt triggered
-//    }
+        assertEquals(2, tiles.size)
+        assertTrue(tiles.any { it.type == TileType.LEAF })
+        assertTrue(tiles.any { it.type == TileType.FRUIT })
+    }
+
+    /**
+     * Tests drawing a card from position 0, which should return no tiles.
+     */
+    @Test
+    fun testDrawCardWithPosition0ReturnsEmptyList() {
+        val tiles = playerActionService.drawCard(0)
+
+        assertTrue(tiles.isEmpty())
+    }
+
+    /**
+     * Tests drawing a card from invalid position (e.g., 4), which should return no tiles.
+     */
+    @Test
+    fun testDrawCardWithInvalidPositionReturnsEmptyList() {
+        val tiles = playerActionService.drawCard(4)
+
+        assertTrue(tiles.isEmpty())
+    }
 
     /**
      *  Tests attempting to draw a card when the openCards stack is empty, which should throw an exception.
