@@ -9,20 +9,19 @@ import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import java.io.IOException
 
+/**
+ * @property dirPath The path to the directory where the save file is located.
+ * @property saveFilePath The path to the save file.
+ * @property jsonSerializer The [Json] object that contains the polymorphic serializer.
+ */
 class GameService(
     private val rootService: RootService,
 ) : AbstractRefreshingService() {
-    /**
-     * A companion object that contains the path to the save file and jsonSerializer.
-     * @property dirPath The path to the directory where the save file is located.
-     * @property saveFilePath The path to the save file.
-     * @property jsonSerializer The [Json] object that contains the polymorphic serializer.
-     */
-    private val dirPath = File("src/main/resources/data").apply {
+
+    val dirPath = File("data").apply {
         if (!exists()) mkdirs() // Ensure the directory exists
     }
-
-    private val saveFilePath = File(dirPath, "save.json")
+    val saveFilePath = File(dirPath, "save.json")
 
     private val jsonSerializer = Json {
         serializersModule = SerializersModule {
@@ -362,9 +361,6 @@ class GameService(
     fun saveGame() {
         val game = rootService.currentGame
         checkNotNull(game) { "No game has been started yet." }
-
-        if(!dirPath.exists())
-            if(!dirPath.mkdirs()) throw IOException("Unable to create directory.")
 
         saveFilePath.writeText(
             jsonSerializer.encodeToString(BonsaiGame.serializer(), game)
