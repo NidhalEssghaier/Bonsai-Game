@@ -514,7 +514,9 @@ class PlayerActionService(
     fun meditate(card: ZenCard) {
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
         val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
-        check(currentPlayer.hasCultivated){"cant meditate after cultivate"}
+
+        // Bug fix ensure player cant meditate after cultivating
+        check(!currentPlayer.hasCultivated){"cant meditate after cultivate"}
 
         if (game.currentState.openCards.isEmpty()) throw IllegalStateException("No available cards to draw")
 
