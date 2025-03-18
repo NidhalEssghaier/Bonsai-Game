@@ -99,5 +99,3 @@ interface Refreshable {
 
     fun refreshAfterChooseTile() {}
 }
-
-

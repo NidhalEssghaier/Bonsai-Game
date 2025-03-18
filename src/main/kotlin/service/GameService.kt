@@ -21,7 +21,7 @@ class GameService(
     val dirPath = File("data").apply {
         if (!exists()) mkdirs() // Ensure the directory exists
     }
-    private val saveFilePath = File(dirPath, "save.json")
+    val saveFilePath = File(dirPath, "save.json")
 
     private val jsonSerializer = Json {
         serializersModule = SerializersModule {
@@ -50,6 +50,7 @@ class GameService(
      * The pair consists of the player name and the type of the player as number:
      * local player (0), remote player (1), random bot (2), smart bot (3)
      * @param speed The simulation speed of the game.
+     * @param remote If the game is played in remote or in hotseat mode.
      *
      * Preconditions:
      * - The application is running.

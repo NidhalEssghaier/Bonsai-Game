@@ -1,5 +1,6 @@
 package service
 import entity.*
+import gui.*
 import helper.*
 
 class PlayerActionService(
@@ -512,7 +513,7 @@ class PlayerActionService(
     }
 
     /**
-     * Executes the "meditate" action, allowing the player to remove tiles and draw a card from the [BonsaiGame] openCards.
+     * Executes the "meditate" action, allowing the player to remove tiles and draw a card from the [BonsaiGame] [openCards].
      * Based on the card position, a [Player] receives bonsai tiles from the common supply and keep
      * them in his [Player.supply].
      * Based on the card type, a player can play a tile, recieve tiles or get a bonus
@@ -523,7 +524,7 @@ class PlayerActionService(
      * - the Board must have at least one card
      *
      * Postconditions:
-     * - [HelperCard], [MasterCard] and [ParchmentCard] will be added to [Player] hiddenDeck.
+     * - [HelperCard], [MasterCard] and [ParchmentCard] will be added to [Player] [hiddenDeck].
      * - [ToolCard] will be added to [Player.seishiTool].
      * - [GrowthCard] will be added to [Player.seishiGrowth].
      * - The player's turn will end.
@@ -532,7 +533,7 @@ class PlayerActionService(
      *
      * @throws IllegalStateException If there is no active game.
      * @throws IllegalStateException If the Game's stacks are empty.
-     * @throws IllegalArgumentException If the selected [card] is not in openCards.
+     * @throws IllegalArgumentException If the selected [card] is not in [openCards].
      *
      */
     fun meditate(card: ZenCard) {
@@ -638,23 +639,21 @@ class PlayerActionService(
     }
 
     /**
-     * Applies the player's tile choice after they are prompted by the GUI.
-     *
-     * This method is called once the player selects a tile type.
+     * Applies the player's tile choice for cardStack 1 after the GUI prompts them.
+     * This is called by the GUI after the player selects WOOD or LEAF.
      *
      * Preconditions:
      * - A game must be active.
-     * - The chosen tile must be valid.
+     * - The choice must be either WOOD or LEAF.
      *
      * Postconditions:
-     * - The selected tile is added to the player's supply.
+     * - The chosen tile is added to the player's supply.
      * - The UI is refreshed to reflect the change.
      *
-     * @param chooseFromAll Indicates whether the player can choose from all tile types (true) or only WOOD/LEAF (false).
-     * @param choice The tile type chosen by the player.
-     * @throws IllegalStateException if no active game is found.
-     * @throws IllegalArgumentException if the selected tile is invalid.
+     * @param cardStack The position in openCards (should be 1 for this case).
+     * @param choice The tile type chosen by the player (WOOD or LEAF).
      */
+
     fun applyTileChoice(
         choice: TileType,
         chooseFromAll: Boolean = false,
@@ -666,8 +665,7 @@ class PlayerActionService(
             require(choice == TileType.WOOD || choice == TileType.LEAF) { "Invalid choice" }
         } else {
             require(
-                choice == TileType.WOOD || choice == TileType.LEAF
-                        || choice == TileType.FLOWER || choice == TileType.FRUIT,
+                choice == TileType.WOOD || choice == TileType.LEAF || choice == TileType.FLOWER || choice == TileType.FRUIT,
             ) { "Invalid choice" }
         }
         // Add the chosen tile to the current player's supply
@@ -680,7 +678,6 @@ class PlayerActionService(
 
     /**
      * Shifts all face-up cards to the right and fills the empty position with a new card.
-     * @param cardStack The index of the card stack from which shifting starts.
      */
     fun shiftBoardAndRefill(cardStack: Int) {
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
@@ -696,26 +693,6 @@ class PlayerActionService(
             game.currentState.openCards[0] = PlaceholderCard // Ensures a valid state
         }
     }
-    /**
-     * Removes a specified tile from the current player's bonsai tree.
-     *
-     * Preconditions:
-     * - A game must be active.
-     * - The tile must exist in the current player's bonsai tree.
-     * - The player must not have an available WOOD tile placement.
-     * - The tile must be part of the minimal set required to be removed
-     *   in order to allow the placement of a WOOD tile.
-     *
-     * Postconditions:
-     * - The specified tile is removed from the bonsai grid.
-     * - The UI is updated to reflect the removal.
-     *
-     * @param tile The tile to be removed from the player's bonsai tree.
-     * @throws IllegalStateException if no active game exists.
-     * @throws IllegalArgumentException if the tile is not in the player's bonsai tree.
-     * @throws IllegalStateException if the player can already place a WOOD tile.
-     * @throws IllegalArgumentException if the tile is not required for enabling WOOD placement.
-     */
 
     /**
     In the improbable case that, at the beginning of a turn, it is not

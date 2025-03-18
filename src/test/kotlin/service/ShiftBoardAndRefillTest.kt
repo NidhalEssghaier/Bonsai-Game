@@ -28,14 +28,14 @@ class ShiftBoardAndRefillTest {
         game = rootService.currentGame ?: throw IllegalStateException("Game should be initialized")
         currentPlayer = game.currentState.players[game.currentState.currentPlayer]
     }
-    private fun createTestPlayers(): MutableList<Triple<String, Int, PotColor>> {
+    fun createTestPlayers(): MutableList<Triple<String, Int, PotColor>> {
         return mutableListOf(
             Triple("Alice", 0, PotColor.RED),
             Triple("Bob", 0, PotColor.PURPLE)
         )
     }
 
-    private fun createGoalCards() : List<GoalColor> {
+    fun createGoalCards() : List<GoalColor> {
         return  listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE)
     }
     /**
@@ -64,7 +64,6 @@ class ShiftBoardAndRefillTest {
     @Test
     fun testShiftBoardAndRefillWithEmptyDrawStack() {
         game.currentState.drawStack.clear() // Simulate empty drawStack
-        game.currentState.drawStack.isEmpty()
 
         val initialOpenCards = game.currentState.openCards.toList()
 
