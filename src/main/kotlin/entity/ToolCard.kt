@@ -3,9 +3,9 @@ package entity
 import kotlinx.serialization.Serializable
 
 /**
- * Represents a "Tool" card in the game, which provides a specific effect.
+ * Entity to represent the card type "Tool".
  *
- * @property id The unique identifier for this tool card.
+ * @property number The number of tiles the player can additionally place in the bonsai
  */
 @Serializable
 data class ToolCard(
