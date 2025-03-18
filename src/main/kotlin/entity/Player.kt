@@ -37,6 +37,7 @@ sealed interface Player
     var usedHelperCards: MutableList<HelperCard>
     var usedHelperTiles: MutableList<TileType>
     var hasDrawnCard: Boolean
+    var hasCultivated: Boolean
 
 
     /**

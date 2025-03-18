@@ -399,8 +399,8 @@ class GameScene(
                             onDragDropped = { dragEvent ->
                                 rootService.playerActionService.cultivate(
                                     tileMap.backward(dragEvent.draggedComponent as HexagonView),
-                                    row,
-                                    col,
+                                    r=row,
+                                    q=col,
                                 )
                             }
                         }
