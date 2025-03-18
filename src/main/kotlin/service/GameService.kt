@@ -94,6 +94,12 @@ class GameService(
 
         rootService.currentGame = BonsaiGame(speed, playerList, goalCards, drawStack, openCards)
 
+        val currentGame = rootService.currentGame
+        checkNotNull(currentGame) { "Internal error! currentGame is null, it shouldn't happened here." }
+
+        // Push the initial state to the undo stack
+        currentGame.undoStack.push(currentGame.currentState.copy())
+
         onAllRefreshables { refreshAfterStartNewGame() }
     }
 
