@@ -9,20 +9,19 @@ import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import java.io.IOException
 
+/**
+ * @property dirPath The path to the directory where the save file is located.
+ * @property saveFilePath The path to the save file.
+ * @property jsonSerializer The [Json] object that contains the polymorphic serializer.
+ */
 class GameService(
     private val rootService: RootService,
 ) : AbstractRefreshingService() {
-    /**
-     * A companion object that contains the path to the save file and jsonSerializer.
-     * @property dirPath The path to the directory where the save file is located.
-     * @property saveFilePath The path to the save file.
-     * @property jsonSerializer The [Json] object that contains the polymorphic serializer.
-     */
-    private val dirPath = File("src/main/resources/data").apply {
+
+    val dirPath = File("data").apply {
         if (!exists()) mkdirs() // Ensure the directory exists
     }
-
-    private val saveFilePath = File(dirPath, "save.json")
+    val saveFilePath = File(dirPath, "save.json")
 
     private val jsonSerializer = Json {
         serializersModule = SerializersModule {
@@ -77,6 +76,12 @@ class GameService(
         speed: Int,
         goalColors: List<GoalColor>,
     ) {
+        require(players.size in 2..4) { "Need 2-4 players to play the game" }
+        require(
+            goalColors.size == 3 &&
+                goalColors.size == goalColors.toSet().size,
+        ) { "Must select 3 different goal colors" }
+
         val drawStack = prepareCards(players.size)
         val openCards = drawStack.popAll(4).toMutableList()
         val playerList = mutableListOf<Player>()
@@ -93,6 +98,12 @@ class GameService(
         val goalCards = prepareGoals(playerList.size, goalColors)
 
         rootService.currentGame = BonsaiGame(speed, playerList, goalCards, drawStack, openCards)
+
+        val currentGame = rootService.currentGame
+        checkNotNull(currentGame) { "Internal error! currentGame is null, it shouldn't happened here." }
+
+        // Push the initial state to the undo stack
+        currentGame.undoStack.push(currentGame.currentState.copy())
 
         onAllRefreshables { refreshAfterStartNewGame() }
     }
@@ -356,9 +367,6 @@ class GameService(
     fun saveGame() {
         val game = rootService.currentGame
         checkNotNull(game) { "No game has been started yet." }
-
-        if(!dirPath.exists())
-            if(!dirPath.mkdirs()) throw IOException("Unable to create directory.")
 
         saveFilePath.writeText(
             jsonSerializer.encodeToString(BonsaiGame.serializer(), game)

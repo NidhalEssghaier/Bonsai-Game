@@ -8,8 +8,8 @@ import java.util.*
 
 private const val CARDS_FILE = "zen_cards.jpg"
 
-private const val IMG_HEIGHT = 520.5
-private const val IMG_WIDTH = 372
+private const val IMG_HEIGHT = 260.25
+private const val IMG_WIDTH = 186
 
 /**
  * Provides access to the src/main/resources/zen_cards.jpg file that contains all card images in a raster. The returned

@@ -1,5 +1,6 @@
 package service
 
+import entity.GoalColor
 import entity.PotColor
 import helper.peek
 import org.junit.jupiter.api.Test
@@ -15,8 +16,8 @@ class UndoRedoTest {
     fun `test undo`(){
         val mc = RootService()
         val testRefreshable =TestRefreshable()
-        val gameService = GameService(mc)
-        val playerActionService = PlayerActionService(mc)
+        val gameService = mc.gameService
+        val playerActionService = mc.playerActionService
         playerActionService.addRefreshable(testRefreshable)
 
         //check undoing with no gq,e
@@ -24,14 +25,14 @@ class UndoRedoTest {
         assertEquals("there is no active game",exception.message)
 
         gameService.startNewGame(listOf(Triple("Anas",0, PotColor.PURPLE),
-            Triple("Iyed",1,PotColor.PURPLE)),5, mutableListOf())
+            Triple("Iyed",1,PotColor.PURPLE)),5, listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
 
         //check game not null
         val game = mc.currentGame
         checkNotNull(game)
 
-        //undo and redo stack must be empty
-        assertTrue(game.undoStack.isEmpty())
+        //undo stach hols initial game state, redo stack must be empty
+        assertEquals(1, game.undoStack.size)
         assertTrue(game.redoStack.isEmpty())
 
         //currentGame stack should be added to undoStqck  after medidate should
@@ -40,7 +41,7 @@ class UndoRedoTest {
         assertTrue(game.redoStack.isEmpty())
 
         //assert not refreshed before undo
-        assertFalse { testRefreshable.refreshAfterUndoCalled }
+        assertFalse { testRefreshable.refreshAfterUndoRedoCalled }
 
         //assert removed game state from undoStack and added it to redoStack
         assertDoesNotThrow { playerActionService.undo() }
@@ -48,7 +49,7 @@ class UndoRedoTest {
         assertTrue(game.redoStack.isNotEmpty())
 
         //assert refreshed after undo
-        assertTrue { testRefreshable.refreshAfterUndoCalled }
+        assertTrue { testRefreshable.refreshAfterUndoRedoCalled }
     }
 
     @Test
@@ -64,14 +65,14 @@ class UndoRedoTest {
         assertEquals("there is no active game",exception.message)
 
         gameService.startNewGame(listOf(Triple("Anas",0, PotColor.PURPLE),
-            Triple("Iyed",1,PotColor.PURPLE)),5, mutableListOf())
+            Triple("Iyed",1,PotColor.PURPLE)),5, listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
 
         //check game not null
         val game = mc.currentGame
         checkNotNull(game)
 
-        //undo and redo stack must be empty
-        assertTrue(game.undoStack.isEmpty())
+        //undo stach hols initial game state, redo stack must be empty
+        assertEquals(1, game.undoStack.size)
         assertTrue(game.redoStack.isEmpty())
 
         //currentGame stack should be added to undoStack  after medidate should
@@ -84,7 +85,7 @@ class UndoRedoTest {
         testRefreshable.reset()
 
         //assert not refreshed before redo
-        assertFalse { testRefreshable.refreshAfterUndoCalled }
+        assertFalse { testRefreshable.refreshAfterUndoRedoCalled }
 
         //assert redo stack is popped and added game state to undp
         assertDoesNotThrow { playerActionService.redo() }
@@ -92,7 +93,7 @@ class UndoRedoTest {
         assertTrue(game.undoStack.isNotEmpty())
 
         //assert refreshed after redo
-        assertTrue { testRefreshable.refreshAfterUndoCalled }
+        assertTrue { testRefreshable.refreshAfterUndoRedoCalled }
     }
 
     @Test
@@ -105,7 +106,9 @@ class UndoRedoTest {
             listOf(
                 Triple("Anas", 0, PotColor.PURPLE),
                 Triple("Iyed", 1, PotColor.PURPLE)
-            ), 5, mutableListOf()
+            ),
+            5,
+            listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE)
         )
 
         //check game not null

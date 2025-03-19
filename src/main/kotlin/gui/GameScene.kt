@@ -28,9 +28,12 @@ import tools.aqua.bgw.util.BidirectionalMap
 import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.*
 
-private const val ANIMATION_TIME = 1000
+private const val ANIMATION_TIME = 100
 
-// TODO add private val rootService: RootService,
+/**
+ * This is the main scene for the [BonsaiGame].
+ * The scene shows alls game components and allows switching between the different players.
+ */
 class GameScene(
     val rootService: RootService,
     val application: BonsaiApplication,
@@ -136,7 +139,7 @@ class GameScene(
             height = 600,
             target = bonsaiLayout,
             limitBounds = true,
-            visual = ColorVisual(255, 255, 255, 100),
+            visual = Visual.EMPTY,
         ).apply { panMouseButton = MouseButtonType.RIGHT_BUTTON }
 
     private val playerNamesGridPane =
@@ -146,15 +149,15 @@ class GameScene(
         Button(1712, 970, 178, 80, text = "End Turn").apply {
             onMouseClicked = { rootService.playerActionService.endTurn() }
             visual =
-                ColorVisual(200, 150, 120, 255).apply {
+                ColorVisual(200, 66, 51, 255).apply {
                     style.borderRadius =
                         BorderRadius.MEDIUM
                 }
-            font = Font(size = 24, fontWeight = Font.FontWeight.BOLD)
+            font = Font(size = 24, fontWeight = Font.FontWeight.BOLD, color = Color.WHITE)
         }
 
     // elements of the players
-    // bonsai tiles
+    // bonsai tiles views
     private val bonsaiTilesView1 =
         LinearLayout<HexagonView>(30, 658, 530, 60, visual = ColorVisual(255, 255, 255, 100), spacing = 10).apply {
             alignment =
@@ -222,7 +225,7 @@ class GameScene(
             layoutFromCenter = false,
         )
 
-    // drawm cards
+    // drawn cards
     private val drawnCardsStack =
         CardStack<CardView>(
             1729,
@@ -257,6 +260,7 @@ class GameScene(
         playAreaCameraPane.interactive = true
     }
 
+    // refreshes
     override fun refreshAfterStartNewGame() {
         val game = rootService.currentGame
         checkNotNull(game) { "No started game found." }
@@ -268,8 +272,14 @@ class GameScene(
         currentPlayer = game.currentState.currentPlayer
         shownPlayer = currentPlayer
 
+        // initialize elements that do not change during the game
+        initializePlayerColors(game.currentState.players)
+        initializeGameOptionsGridPane()
+        initializeGridsForPlayers(game.currentState)
+
         initializeGameElements(rootService, game)
         initializePlayerView(game)
+        application.repaint()
     }
 
     override fun refreshAfterDrawCard(
@@ -278,7 +288,7 @@ class GameScene(
         chooseTilesByBoard: Boolean,
         chooseTilesByCard: Boolean,
     ) {
-        this.lock()
+        endTurnButton.isDisabled = true
         playDrawCardAnimation(drawnCard, drawnCardIndex + 1, chooseTilesByBoard, chooseTilesByCard)
     }
 
@@ -299,14 +309,8 @@ class GameScene(
     }
 
     override fun refreshAfterUndoRedo() {
-        cardMap.clear()
-        tileMap.clear()
-
-        currentPlayer = bonsaiGame.currentState.currentPlayer
-        shownPlayer = currentPlayer
-
-        initializeGameElements(rootService, bonsaiGame)
-        initializePlayerView(bonsaiGame)
+        // undo/redo acts as loading a new game
+        refreshAfterStartNewGame()
     }
 
     override fun refreshAfterDiscardTile(
@@ -339,30 +343,75 @@ class GameScene(
         initializePlayArea(bonsaiGame.currentState)
     }
 
-    override fun refreshAfterRemoveTile() {
-        initializePlayerView(bonsaiGame)
+    override fun refreshAfterRemoveTile(tile: BonsaiTile) {
+        val tileView = tileMap.forward(tile)
+        val playArea =
+            when (bonsaiGame.currentState.players[currentPlayer].potColor) {
+                PotColor.GRAY -> playAreaGrey
+                PotColor.PURPLE -> playAreaPurple
+                PotColor.BLUE -> playAreaBlue
+                PotColor.RED -> playAreaRed
+            }
+
+        // get coordinates of tile
+        val coordinateMap = playArea.getCoordinateMap()
+        var coordinates: Pair<Int, Int> = Pair(0, 0)
+        for ((key, value) in coordinateMap) {
+            if (value == tileView) {
+                coordinates = key
+            }
+        }
+
+        // remove tile from bonsai
+        tileView.removeFromParent()
+        tileMap.removeForward(tile)
+
+        // fill empty space in grid
+        val hexagon =
+            HexagonView(
+                visual = Visual.EMPTY,
+                size = 25,
+            ).apply {
+                dropAcceptor = { dragEvent ->
+                    when (dragEvent.draggedComponent) {
+                        is HexagonView -> true
+                        else -> false
+                    }
+                }
+                onDragDropped = { dragEvent ->
+                    rootService.playerActionService.cultivate(
+                        tileMap.backward(dragEvent.draggedComponent as HexagonView),
+                        r = coordinates.second,
+                        q = coordinates.first,
+                    )
+                }
+            }
+        playArea[coordinates.first, coordinates.second] = hexagon
+
+        initializeBonsai(bonsaiGame.currentState)
+        initializePlayArea(bonsaiGame.currentState)
     }
 
+    // initializes to set up game elements according to the state of the entities
     private fun initializeGameElements(
         rootService: RootService,
         game: BonsaiGame,
     ) {
-        initializePlayerColors(game.currentState.players)
         initializeGoalCardGridPane(game)
         initializeBoardPane(rootService.playerActionService, game)
-        initializeGameOptionsGridPane()
         initializeTrash()
     }
 
     private fun initializePlayerView(game: BonsaiGame) {
-        initializeBonsai(game.currentState)
-        initializePlayArea(game.currentState)
         initializeSupplyTiles(game.currentState)
         initializeSeishiTile(game.currentState)
         initializeSeishiCards(game.currentState)
+        initializeToolCardsMultiplier()
         initializePlayerNamesGridPane(game)
         initializeClaimedGoalsGridPane(game.currentState)
         initializeDrawnCardsStack(game.currentState)
+        initializeBonsai(game.currentState)
+        initializePlayArea(game.currentState)
     }
 
     private fun initializeSupplyTiles(state: GameState) {
@@ -386,53 +435,64 @@ class GameScene(
         }
     }
 
-    private fun initializeBonsai(state: GameState) {
-        val playArea = HexagonGrid<HexagonView>(coordinateSystem = HexagonGrid.CoordinateSystem.AXIAL)
+    private fun initializeGridsForPlayers(state: GameState) {
+        for (i in 0..<state.players.size) {
+            val playArea = HexagonGrid<HexagonView>(coordinateSystem = HexagonGrid.CoordinateSystem.AXIAL)
+            val bonsai = bonsaiGame.currentState.players[shownPlayer].bonsai
+            val gridSize = bonsai.grid.size
 
-        val bonsai = bonsaiGame.currentState.players[shownPlayer].bonsai
-        val gridSize = bonsai.grid.size
-        val bonsaiStructure = bonsai.grid.getCoordinateToTileMap()
-
-        // create whole grid
-        for (row in -gridSize..gridSize) {
-            for (col in -gridSize..gridSize) {
-                // Only add hexagons that would fit in a circle
-                if (row + col in -gridSize..gridSize) {
-                    val hexagon =
-                        HexagonView(
-                            visual =
-                                CompoundVisual(
-                                    ColorVisual(Color(playerColors[shownPlayer])).apply {
-                                        style.borderRadius =
-                                            BorderRadius.MEDIUM
-                                    },
-                                    TextVisual(
-                                        text = "$col, $row",
-                                        font = Font(10.0, Color(0x0f141f)),
-                                    ),
-                                ),
-                            size = 25,
-                        ).apply {
-                            dropAcceptor = { dragEvent ->
-                                when (dragEvent.draggedComponent) {
-                                    is HexagonView -> true
-                                    else -> false
+            // create whole grid
+            for (row in -gridSize..gridSize) {
+                for (col in -gridSize..gridSize) {
+                    // Only add hexagons that would fit in a circle
+                    if (row + col in -gridSize..gridSize) {
+                        val hexagon =
+                            HexagonView(
+                                visual = Visual.EMPTY,
+                                size = 25,
+                            ).apply {
+                                dropAcceptor = { dragEvent ->
+                                    when (dragEvent.draggedComponent) {
+                                        is HexagonView -> true
+                                        else -> false
+                                    }
+                                }
+                                onDragDropped = { dragEvent ->
+                                    rootService.playerActionService.cultivate(
+                                        tileMap.backward(dragEvent.draggedComponent as HexagonView),
+                                        r = row,
+                                        q = col,
+                                    )
                                 }
                             }
-                            onDragDropped = { dragEvent ->
-                                rootService.playerActionService.cultivate(
-                                    tileMap.backward(dragEvent.draggedComponent as HexagonView),
-                                    row,
-                                    col,
-                                )
-                            }
-                        }
-                    playArea[col, row] = hexagon
+                        playArea[col, row] = hexagon
+                    }
                 }
             }
+            // match play areas by player color
+            when (state.players[i].potColor) {
+                PotColor.GRAY -> playAreaGrey = playArea
+                PotColor.PURPLE -> playAreaPurple = playArea
+                PotColor.BLUE -> playAreaBlue = playArea
+                PotColor.RED -> playAreaRed = playArea
+            }
         }
+    }
+
+    private fun initializeBonsai(state: GameState) {
+        val playArea =
+            when (state.players[shownPlayer].potColor) {
+                PotColor.GRAY -> playAreaGrey
+                PotColor.PURPLE -> playAreaPurple
+                PotColor.BLUE -> playAreaBlue
+                PotColor.RED -> playAreaRed
+            }
+
+        val bonsai = bonsaiGame.currentState.players[shownPlayer].bonsai
+        val bonsaiStructure = bonsai.grid.getCoordinateToTileMap()
+
         // create bonsai
-        bonsaiStructure.forEach { coordinate, tile ->
+        bonsaiStructure.forEach { (coordinate, tile) ->
             val row = coordinate.first
             val col = coordinate.second
             val hexagon =
@@ -441,13 +501,7 @@ class GameScene(
                     size = 25,
                 ).apply { onMouseClicked = { tileToRemove = tile } } // make tiles clickable for removal
             playArea[row, col] = hexagon
-        }
-
-        when (state.players[shownPlayer].potColor) {
-            PotColor.GRAY -> playAreaGrey = playArea
-            PotColor.PURPLE -> playAreaPurple = playArea
-            PotColor.BLUE -> playAreaBlue = playArea
-            PotColor.RED -> playAreaRed = playArea
+            tileMap.add(tile, hexagon)
         }
     }
 
@@ -663,8 +717,16 @@ class GameScene(
         }
     }
 
+    private fun initializeToolCardsMultiplier() {
+        val toolCardsCount = toolCardsView.numberOfComponents()
+        if (toolCardsCount > 0) {
+            toolCardsMultiplierLabel.text = "*$toolCardsCount"
+        } else {
+            toolCardsMultiplierLabel.text = ""
+        }
+    }
+
     private fun initializeSeishiTile(state: GameState) {
-        // TODO get visual by function in ItemImageLoader
         when (state.players[shownPlayer].potColor) {
             PotColor.GRAY -> seishiTile.visual = itemImageLoader.imageFor("seishis/seishi_grey.png", 160, 242)
             PotColor.RED -> seishiTile.visual = itemImageLoader.imageFor("seishis/seishi_red.png", 160, 242)
@@ -674,6 +736,7 @@ class GameScene(
     }
 
     private fun initializePlayerColors(players: List<Player>) {
+        playerColors.clear()
         players.forEach { player ->
             when (player.potColor) {
                 PotColor.GRAY -> playerColors.add("#a2aca6")
@@ -766,14 +829,15 @@ class GameScene(
     private fun initializeDrawnCardsStack(state: GameState) {
         val drawnCards = state.players[shownPlayer].hiddenDeck
         drawnCardsStack.clear()
-        for (card in drawnCards.reversed()) {
+        // show only dummy card as other cards are not relevant for the GUI
+        if (drawnCards.isNotEmpty()) {
             drawnCardsStack.add(
                 CardView(
                     0,
                     0,
                     143,
                     200,
-                    front = cardImageLoader.frontImageFor(card),
+                    front = cardImageLoader.frontImageFor(drawnCards.last()),
                     back = cardImageLoader.backImage,
                 ),
             )
@@ -818,16 +882,23 @@ class GameScene(
         animations.addAll(getRefillCardsAnimation(drawnCardIndex))
         // Add final animation that triggers tile refresh and tile selection if necessary
         animations.add(
-            ScaleAnimation(drawnCardsStack, 1, 1, 1, 1, duration = ANIMATION_TIME).apply {
+            ScaleAnimation(
+                drawnCardsStack,
+                1,
+                1,
+                1,
+                1,
+                duration = ANIMATION_TIME * bonsaiGame.currentState.gameSpeed,
+            ).apply {
                 onFinished = {
-                    initializeSupplyTiles(bonsaiGame.currentState)
                     if (chooseTilesByBoard || chooseTilesByCard) {
                         application.chooseTileScene =
                             ChooseTileScene(rootService, application, chooseTilesByBoard, chooseTilesByCard)
                         application.showMenuScene(application.chooseTileScene)
+                    } else {
+                        initializeSupplyTiles(bonsaiGame.currentState)
                     }
-                    disableElementsAfterCardDrawn(card)
-                    this@GameScene.unlock()
+                    endTurnButton.isDisabled = false
                 }
             },
         )
@@ -849,7 +920,7 @@ class GameScene(
                         else -> drawnCardsStack
                     },
                 scene = this,
-                duration = ANIMATION_TIME,
+                duration = ANIMATION_TIME * bonsaiGame.currentState.gameSpeed,
             ).apply {
                 onFinished = {
                     val target =
@@ -863,7 +934,7 @@ class GameScene(
 
                     // update toolCardMultiplier if drawn card is tool card
                     if (target == toolCardsView) {
-                        toolCardsMultiplierLabel.text = "*${toolCardsView.numberOfComponents()}"
+                        initializeToolCardsMultiplier()
                     }
                 }
             }
@@ -888,7 +959,7 @@ class GameScene(
                         componentView = cardStacks[idx].peek(),
                         toComponentViewPosition = cardStacks[idx + 1],
                         scene = this@GameScene,
-                        duration = ANIMATION_TIME,
+                        duration = ANIMATION_TIME * bonsaiGame.currentState.gameSpeed,
                     ).apply {
                         onFinished = {
                             val card = cardStacks[idx].peek()
@@ -902,12 +973,5 @@ class GameScene(
         }
 
         return animations
-    }
-
-    private fun disableElementsAfterCardDrawn(card: ZenCard) {
-        cardStacks.forEach { cardStack -> cardStack.onMouseClicked = {} }
-
-        bonsaiTilesView1.forEach { it.isDraggable = card is HelperCard }
-        bonsaiTilesView2.forEach { it.isDraggable = card is HelperCard }
     }
 }
