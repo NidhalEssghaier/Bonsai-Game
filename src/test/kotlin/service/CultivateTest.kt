@@ -266,6 +266,7 @@ class CultivateTest {
         }
         assertTrue(exceptionOccupied.message!!.contains("Cannot place a tile on top of another tile."))
 
+
         //  Test placing tile inside pot area
         val exceptionPot = assertThrows<IllegalArgumentException> {
             playerActionService.cultivate(woodTiles[4], 1, 0)
