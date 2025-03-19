@@ -13,7 +13,7 @@ class BonsaiApplication :
     private val rootService = RootService()
 
     val mainMenuScene = MainMenuScene(rootService, this)
-    val localGameScene = LocalGameScene(rootService, this)
+    var localGameScene = LocalGameScene(rootService, this)
     val onlineGameScene = OnlineGameScene(rootService, this)
     val joinGameScene = JoinGameScene(rootService, this)
     var chooseTileScene = ChooseTileScene(rootService, this, false, false)

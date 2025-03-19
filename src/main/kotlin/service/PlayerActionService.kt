@@ -749,7 +749,7 @@ class PlayerActionService(
         currentPlayer.bonsai.grid.remove(tile)
 
         onAllRefreshables {
-            refreshAfterRemoveTile()
+            refreshAfterRemoveTile(tile)
         }
     }
 
