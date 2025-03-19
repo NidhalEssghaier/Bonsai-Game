@@ -45,7 +45,7 @@ class PlayerActionService(
             return // break to allow discarding tiles
         }
 
-        game.undoStack.push(game.currentState)
+        game.undoStack.push(game.currentState.copy())
         game.redoStack.clear()
 
         if (game.currentState.drawStack.isEmpty()) {

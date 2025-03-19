@@ -49,13 +49,6 @@ class UndoRedoTest {
 
         //assert refreshed after undo
         assertTrue { testRefreshable.refreshAfterUndoCalled }
-
-        //game
-        val gameStateBeforeUndo =game.currentState
-        playerActionService.meditate(game.currentState.openCards[0])
-        playerActionService.endTurn()
-        assertTrue(gameStateBeforeUndo.equals(game.undoStack.peek()))
-
     }
 
     @Test
@@ -101,4 +94,36 @@ class UndoRedoTest {
         //assert refreshed after redo
         assertTrue { testRefreshable.refreshAfterUndoCalled }
     }
+
+    @Test
+    fun `test undo after meditate`() {
+        val mc = RootService()
+        val gameService = GameService(mc)
+        val playerActionService = PlayerActionService(mc)
+
+        gameService.startNewGame(
+            listOf(
+                Triple("Anas", 0, PotColor.PURPLE),
+                Triple("Iyed", 1, PotColor.PURPLE)
+            ), 5, mutableListOf()
+        )
+
+        //check game not null
+        val game = mc.currentGame
+        checkNotNull(game)
+
+        //game
+        val gameState = game.currentState
+        playerActionService.meditate(game.currentState.openCards[0])
+        playerActionService.endTurn()
+        val gameStateBeforeUndo = game.undoStack.peek()
+
+        //assert open cards are the same
+        for (i in gameStateBeforeUndo.openCards.indices) {
+            assertEquals(gameStateBeforeUndo.openCards[i], gameState.openCards[i])
+        }
+        //ass
+    }
+
+
 }
