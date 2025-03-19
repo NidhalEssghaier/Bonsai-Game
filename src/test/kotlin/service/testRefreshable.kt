@@ -16,6 +16,8 @@ class TestRefreshable : Refreshable {
         private set
 
     var refreshAfterEndGameCalled: Boolean = false
+    var refreshAfterUndoCalled: Boolean = false
+    var refreshAfterRedoCalled: Boolean = false
 
 
 
@@ -26,6 +28,8 @@ class TestRefreshable : Refreshable {
         refreshAfterStartTileRemoved = false
         refreshAfterStartNewGameCalled = false
         refreshAfterEndGameCalled = false
+        refreshAfterUndoCalled = false
+        refreshAfterRedoCalled = false
     }
 
     override fun refreshAfterRemoveTile() {
@@ -34,6 +38,11 @@ class TestRefreshable : Refreshable {
 
     override fun refreshAfterStartNewGame() {
         refreshAfterStartNewGameCalled = true
+    }
+
+    override fun refreshAfterUndoRedo() {
+        refreshAfterUndoCalled=true
+        refreshAfterRedoCalled=true
     }
 
     override fun refreshAfterEndGame(scoreList: Map<Player, MutableList<Int>>) {
