@@ -76,6 +76,12 @@ class GameService(
         speed: Int,
         goalColors: List<GoalColor>,
     ) {
+        require(players.size in 2..4) { "Need 2-4 players to play the game" }
+        require(
+            goalColors.size == 3 &&
+                goalColors.size == goalColors.toSet().size,
+        ) { "Must select 3 different goal colors" }
+
         val drawStack = prepareCards(players.size)
         val openCards = drawStack.popAll(4).toMutableList()
         val playerList = mutableListOf<Player>()
