@@ -42,7 +42,11 @@ class LocalGameScene(
     val mainMenuButton =
         Button(width = 300, height = 80, posX = 1550, posY = 160, text = "Main Menu", font = Font(35)).apply {
             visual = ColorVisual(256, 107, 62)
-            onMouseClicked = { application.showMenuScene(application.mainMenuScene) }
+            onMouseClicked = {
+                application.showMenuScene(application.mainMenuScene)
+                // new local game scene to reset selections
+                application.localGameScene = LocalGameScene(rootService, application)
+            }
         }
     val startGameButton =
         Button(width = 300, height = 80, posX = 1550, posY = 460, text = "StartGame", font = Font(35)).apply {
@@ -62,6 +66,8 @@ class LocalGameScene(
                 if (playerName4Label.text.isNotBlank()) playerList.add(Triple(playerName4Label.text, player4Mode, helpPotColor))
 
                 rootService.gameService.startNewGame(playerList, gameSpeed, listGoalColor)
+                // new local game scene to reset selections
+                application.localGameScene = LocalGameScene(rootService, application)
             }
         }
 

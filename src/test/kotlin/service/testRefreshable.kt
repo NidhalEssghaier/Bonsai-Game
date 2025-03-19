@@ -112,7 +112,7 @@ class TestRefreshable : Refreshable {
         refreshAfterDrawHelperCardCalled = true
     }
 
-    override fun refreshAfterRemoveTile() {
+    override fun refreshAfterRemoveTile(tile: BonsaiTile) {
         refreshAfterRemoveTileCalled = true
     }
 
