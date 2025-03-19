@@ -477,33 +477,34 @@ class CultivateTest {
         //check game not null
         val game = mc.currentGame
         checkNotNull(game)
-        val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
-        val seishiGrowth = ArrayDeque<ZenCard>()
+        var currentPlayer = game.currentState.players[game.currentState.currentPlayer]
 
         //test with no growth cards
-        var allowed = playerActionService.allowedTiles(currentPlayer.treeTileLimit,seishiGrowth)
-        assertEquals(allowed,mutableMapOf(
+        assertEquals(currentPlayer.treeTileLimit,mutableMapOf(
             TileType.GENERIC to 1,
             TileType.WOOD to 1,
             TileType.LEAF to 1))
 
         //test with growth card already in seishi
-        seishiGrowth.push(GrowthCard(TileType.LEAF,22))
-        allowed = playerActionService.allowedTiles(currentPlayer.treeTileLimit,seishiGrowth)
-        assertEquals(allowed,mutableMapOf(
+        val leafGrowth =GrowthCard(TileType.LEAF,22)
+        game.currentState.openCards[0]= leafGrowth
+        playerActionService.meditate(leafGrowth)
+        assertEquals(currentPlayer.treeTileLimit,mutableMapOf(
             TileType.GENERIC to 1,
             TileType.WOOD to 1,
             TileType.LEAF to 2))
 
+        playerActionService.endTurn()
+        currentPlayer = game.currentState.players[game.currentState.currentPlayer]
         //test with growth card not in seishi
-        seishiGrowth.pop()
-        seishiGrowth.push(GrowthCard(TileType.FLOWER,23))
-        allowed = playerActionService.allowedTiles(currentPlayer.treeTileLimit,seishiGrowth)
-        assertEquals(allowed,mutableMapOf(
+        val flowerGrowth = GrowthCard(TileType.FLOWER,21)
+        game.currentState.openCards[1]= flowerGrowth
+        playerActionService.meditate(flowerGrowth)
+        assertEquals(currentPlayer.treeTileLimit,mutableMapOf(
             TileType.GENERIC to 1,
             TileType.WOOD to 1,
             TileType.FLOWER to 1,
-            TileType.LEAF to 2),)
+            TileType.LEAF to 1),)
     }
     @Test
     fun `test cultivate with not allowed by Seishi or Growth Cards`() {
