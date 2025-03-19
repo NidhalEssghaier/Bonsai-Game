@@ -8,7 +8,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class ShiftBoardAndRefillTest {
-
     private lateinit var rootService: RootService
     private lateinit var gameService: GameService
     private lateinit var playerActionService: PlayerActionService
@@ -28,16 +27,15 @@ class ShiftBoardAndRefillTest {
         game = rootService.currentGame ?: throw IllegalStateException("Game should be initialized")
         currentPlayer = game.currentState.players[game.currentState.currentPlayer]
     }
-    fun createTestPlayers(): MutableList<Triple<String, Int, PotColor>> {
-        return mutableListOf(
-            Triple("Alice", 0, PotColor.RED),
-            Triple("Bob", 0, PotColor.PURPLE)
-        )
-    }
 
-    fun createGoalCards() : List<GoalColor> {
-        return  listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE)
-    }
+    private fun createTestPlayers(): MutableList<Triple<String, Int, PotColor>> =
+        mutableListOf(
+            Triple("Alice", 0, PotColor.RED),
+            Triple("Bob", 0, PotColor.PURPLE),
+        )
+
+    private fun createGoalCards(): List<GoalColor> = listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE)
+
     /**
      * Tests shifting board and refilling when a valid index (2) is given.
      * Ensures cards are shifted correctly, a new card is drawn, and the draw stack size decreases.
@@ -64,6 +62,7 @@ class ShiftBoardAndRefillTest {
     @Test
     fun testShiftBoardAndRefillWithEmptyDrawStack() {
         game.currentState.drawStack.clear() // Simulate empty drawStack
+        game.currentState.drawStack.isEmpty()
 
         val initialOpenCards = game.currentState.openCards.toList()
 
@@ -98,10 +97,10 @@ class ShiftBoardAndRefillTest {
     fun testShiftBoardAfterMeditate() {
         val masterCard = MasterCard(tiles = listOf(TileType.WOOD, TileType.LEAF), id = 2)
         val initialDrawStackSize = game.currentState.drawStack.size
-        game.currentState.openCards[0] = masterCard
+        game.currentState.openCards[2] = masterCard
         val initialDrawStackFirstCard = game.currentState.drawStack.first()
-        val initialBoardCardP1 = game.currentState.openCards[1]
-        val initialBoardCardP2 = game.currentState.openCards[2]
+        val initialBoardCardP1 = game.currentState.openCards[0]
+        val initialBoardCardP2 = game.currentState.openCards[1]
         val initialBoardCardP3 = game.currentState.openCards[3]
 
         playerActionService.meditate(masterCard) // Meditate should trigger shift
@@ -113,5 +112,4 @@ class ShiftBoardAndRefillTest {
         assertEquals(initialBoardCardP3, game.currentState.openCards[3])
         assertEquals(game.currentState.drawStack.size, initialDrawStackSize - 1) // Draw stack reduced
     }
-
 }
