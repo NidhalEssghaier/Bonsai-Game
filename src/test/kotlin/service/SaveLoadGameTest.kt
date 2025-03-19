@@ -1,5 +1,6 @@
 package service
 
+import entity.GoalColor
 import entity.PotColor
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
@@ -34,7 +35,7 @@ class SaveLoadGameTest {
         }
         var exception = assertThrows<IllegalStateException> {gameService.loadGame() }
         assertEquals("Save file doesn't exist.",exception.message)
-        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, mutableListOf())
+        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
         val currentGame = mc.currentGame
         checkNotNull(currentGame)
         gameService.saveGame()
@@ -47,7 +48,8 @@ class SaveLoadGameTest {
         val gameService = GameService(mc)
         val playerActionService = PlayerActionService(mc)
 
-        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, mutableListOf())
+        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, listOf(
+            GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
         val currentGame = mc.currentGame
         checkNotNull(currentGame)
 
