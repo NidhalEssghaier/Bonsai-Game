@@ -59,7 +59,7 @@ class PlayerActionService(
         checkNotNull(game) { "No game is currently active." }
 
         val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
-        currentPlayer.hasCultivated=false
+        currentPlayer.hasCultivated = false
 
         // discard tiles first if necessary
         val tilesToDiscard =
@@ -70,12 +70,14 @@ class PlayerActionService(
             }
             return // break to allow discarding tiles
         }
+
         // fix Bug : insure helper cant be used in later rounds
         // Ensure that any (fully)unused HelperCard is moved to usedHelperCards
         val lastHelperCard = currentPlayer.hiddenDeck.lastOrNull { it is HelperCard } as? HelperCard
         if (lastHelperCard != null ) {
             currentPlayer.usedHelperCards.add(lastHelperCard)
         }
+
         // clear used helper card tiles of the current player
         currentPlayer.usedHelperTiles.clear()
 
@@ -84,14 +86,9 @@ class PlayerActionService(
 
         if (game.currentState.drawStack.isEmpty()) {
             game.currentState.endGameCounter++
-            if (game.currentState.endGameCounter > game.currentState.players.size) {
-                rootService.gameService.endGame()
-            } else {
-                switchPlayer(game)
-                onAllRefreshables {
-                    refreshAfterEndTurn()
-                }
-            }
+        }
+        if (game.currentState.endGameCounter > game.currentState.players.size) {
+            rootService.gameService.endGame()
         } else {
             switchPlayer(game)
             onAllRefreshables {
@@ -132,7 +129,9 @@ class PlayerActionService(
                 .supply.size -
                 game.currentState.players[game.currentState.currentPlayer].supplyTileLimit
 
-        require(tilesToDiscard > 0) { "The current supply size is equal to or lower than the supply tile limit." }
+        require(
+            tilesToDiscard > 0
+        ) { "The current supply size is equal to or lower than the supply tile limit." }
 
         game.currentState.players[game.currentState.currentPlayer]
             .supply
@@ -293,6 +292,17 @@ class PlayerActionService(
     ) {
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
         val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
+
+        // Bug fix ensure player cant cultivate after drawing a card
+        val helperCard =
+            currentPlayer.hiddenDeck.find {
+                it is HelperCard && it !in currentPlayer.usedHelperCards
+            } as? HelperCard
+        check(!currentPlayer.hasDrawnCard || (helperCard!=null && helperCard !in currentPlayer.usedHelperCards)){
+            "you cant cultivate after meditating or you have drawn a helper Card and have fully used it "
+        }
+
+        // Mark that the player has placed a Tile
         currentPlayer.hasCultivated= true
 
         val bonsai = currentPlayer.bonsai
