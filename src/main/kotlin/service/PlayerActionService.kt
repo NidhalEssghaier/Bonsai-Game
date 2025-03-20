@@ -1,12 +1,24 @@
 package service
 import entity.*
+import gui.*
 import helper.*
+import kotlin.math.ceil
+import kotlin.math.floor
 import service.bot.BotService
 
 class PlayerActionService(
     private val rootService: RootService,
 ) : AbstractRefreshingService() {
 
+
+    var allowedTiles:MutableMap<TileType,Int> = mutableMapOf(
+        TileType.GENERIC to 1,
+        TileType.WOOD to 1,
+        TileType.LEAF to 1
+    )
+    /**
+     * The companion object contains the [switchPlayer] method, which is used to switch the active player
+     */
     companion object {
         /**
          * The companion object contains the [switchPlayer] method, which is used to switch the active player
@@ -85,6 +97,10 @@ class PlayerActionService(
         // clear used helper card tiles of the current player
         currentPlayer.usedHelperTiles.clear()
 
+        //return tree limit to state beofre playing
+        allowedTiles = game.currentState
+            .players[(game.currentState.currentPlayer + 1) % game.currentState.players.size].treeTileLimit.toMutableMap()
+        //prepare allowed tiles for next player
         game.undoStack.push(game.currentState.copy())
         game.redoStack.clear()
 
@@ -283,18 +299,18 @@ class PlayerActionService(
         }
         // placing a Tile without a helper Card
         else {
-            val seishiAllowedTiles = currentPlayer.treeTileLimit.keys // The 3 permanent Seishi tile types
-            // Tile types granted by Growth Cards
-            val growthAllowedTiles = currentPlayer.seishiGrowth.map { (it as? GrowthCard)?.type }
 
-            val allowedTiles = seishiAllowedTiles + growthAllowedTiles
-            // Fix: Allow placement if Generic is in allowedTiles
-            val isPlacementAllowed = tile.type in allowedTiles || TileType.GENERIC in allowedTiles
+
+            // Allow placement if Generic ;imit bigger or tile type limit bigger then 0
+            val isPlacementAllowed = allowedTiles[TileType.GENERIC]!! > 0
+                    || (allowedTiles.contains(tile.type) && allowedTiles[tile.type]!! > 0)
 
             if (isPlacementAllowed) {
                 placeTile(tile, q, r)
             } else {
-                throw IllegalStateException("Tile placement not allowed based on Seishi StartingTile ans Growth Cards.")
+                throw IllegalStateException(
+                    "Tile placement not allowed based on Seishi StartingTile ans Growth Cards."
+                )
             }
         }
         onAllRefreshables { refreshAfterPlaceTile(tile) }
@@ -322,12 +338,13 @@ class PlayerActionService(
             currentPlayer.hiddenDeck.find {
                 it is HelperCard && it !in currentPlayer.usedHelperCards
             } as? HelperCard
-        check(!currentPlayer.hasDrawnCard || (helperCard!=null && helperCard !in currentPlayer.usedHelperCards)){
-            "you cant cultivate after meditating or you have drawn a helper Card and have fully used it "
+        require(
+            !currentPlayer.hasDrawnCard || (helperCard!=null && helperCard !in currentPlayer.usedHelperCards)
+        ){
+            "you cant cultivate after meditating or you have drawn a helper Card and have fully used it"
         }
 
-        // Mark that the player has placed a Tile
-        currentPlayer.hasCultivated= true
+
 
         val bonsai = currentPlayer.bonsai
         val grid = bonsai.grid
@@ -379,17 +396,26 @@ class PlayerActionService(
         // Remove tile from player's supply
         currentPlayer.supply.remove(tile)
 
-        //  Netzwerk mitteilen, wenn ein Tile aus dem Supply entfernt wird
-        rootService.networkService.messageBuilder.addDiscardedTile(tile.type)
-
         // Place tile in bonsai grid
         grid[q, r] = tile
 
-        //  Netzwerk mitteilen, wenn ein Tile zu dem Bonsai hinzugefügt wird
-        rootService.networkService.messageBuilder.addPlacedTile(tile.type, Pair(q, r))
+        // Mark that the player has placed a Tile
+        currentPlayer.hasCultivated= true
 
         // Update tile count
         bonsai.tileCount[tile.type] = bonsai.tileCount.getOrDefault(tile.type, 0) + 1
+
+
+        //update tree tile limit
+        if(!allowedTiles.containsKey(tile.type)){
+            allowedTiles[TileType.GENERIC] = allowedTiles[TileType.GENERIC]!!-1
+        }
+        else if(allowedTiles[tile.type]!! >0){
+            allowedTiles[tile.type] = allowedTiles[tile.type]!! - 1
+        }else{
+            allowedTiles[TileType.GENERIC] = allowedTiles[TileType.GENERIC]!!-1
+
+        }
 
         // Refresh the game scene
         onAllRefreshables { refreshAfterPlaceTile(tile) }
@@ -422,8 +448,8 @@ class PlayerActionService(
             if (goalCard == null) continue
 
              //fix Bug
-            // prevent checking goals that the player has manually declined or were automatically
-            // forbidden due to claiming another
+            // prevent checking goals that the player has manually declined or were automatically forbidden
+            // due to claiming another
             if (goalCard in currentPlayer.declinedGoals || goalCard in currentPlayer.forbiddenGoals) continue
 
             val isGoalMet = when (goalCard.color) {
@@ -457,7 +483,24 @@ class PlayerActionService(
                     val rightProtrusions = protrudingTiles.count {
                         it.type == TileType.FLOWER && grid.getPotSide(it) == PotSide.RIGHT
                     }
-                    maxOf(leftProtrusions, rightProtrusions) >= when (goalCard.difficulty) {
+
+                    val belowLeftProtrusions = protrudingTiles.count {
+                        it.type == TileType.FLOWER && grid.getPotSide(it) == PotSide.BELOW &&
+                                grid.getCoordinate(it).first <= -2 - ceil(
+                            grid.getCoordinate(it).second.toDouble() / 2
+                                ).toInt()
+                    }
+                    val belowRightProtrusions = protrudingTiles.count {
+                        it.type == TileType.FLOWER && grid.getPotSide(it) == PotSide.BELOW &&
+                                grid.getCoordinate(it).first >= 3 - floor(
+                            grid.getCoordinate(it).second.toDouble() / 2
+                                ).toInt()
+                    }
+
+                    val leftTotal = leftProtrusions + belowLeftProtrusions
+                    val rightTotal = rightProtrusions + belowRightProtrusions
+
+                    maxOf(leftTotal, rightTotal) >= when (goalCard.difficulty) {
                         GoalDifficulty.LOW -> 3
                         GoalDifficulty.INTERMEDIATE -> 4
                         GoalDifficulty.HARD -> 5
@@ -465,23 +508,48 @@ class PlayerActionService(
                 }
 
                 GoalColor.BLUE -> when (goalCard.difficulty) {
+
                     GoalDifficulty.LOW -> protrudingTiles.any { grid.getPotSide(it) == PotSide.RIGHT }
+
                     GoalDifficulty.INTERMEDIATE -> protrudingTiles.any { grid.getPotSide(it) == PotSide.LEFT } &&
                             protrudingTiles.any { grid.getPotSide(it) == PotSide.RIGHT }
-                    GoalDifficulty.HARD -> protrudingTiles.any { grid.getPotSide(it) == PotSide.BELOW } &&
-                            (protrudingTiles.any { grid.getPotSide(it) == PotSide.LEFT } ||
-                                    protrudingTiles.any { grid.getPotSide(it) == PotSide.RIGHT })
+
+                    GoalDifficulty.HARD -> {
+                        var hasLeftTile = false
+                        var hasRightTile = false
+                        var hasBelowTileOnLeft = false
+                        var hasBelowTileOnRight = false
+
+                        for (tile in protrudingTiles) {
+                            when (grid.getPotSide(tile)) {
+                                PotSide.LEFT -> hasLeftTile = true
+                                PotSide.RIGHT -> hasRightTile = true
+                                PotSide.BELOW -> {
+                                    // Check if the below tile is in the left or right side
+                                    val (q, r) = grid.getCoordinate(tile)
+                                    if (q <= -2 - ceil(r.toDouble() / 2).toInt() ) hasBelowTileOnLeft = true
+                                    if (q >= 3 - floor(r.toDouble() / 2).toInt() ) hasBelowTileOnRight = true
+                                }
+                                else -> {}
+                            }
+                        }
+
+                        // The goal is met if:
+                        //  There is at least one tile below
+                        // and That below tile is on the opposite side of a left or right tile
+                        val validLeftAndBelow = hasLeftTile && hasBelowTileOnRight
+                        val validRightAndBelow = hasRightTile && hasBelowTileOnLeft
+
+                         validLeftAndBelow || validRightAndBelow
+                    }
                 }
             }
-
             if (isGoalMet) {
                 metGoals.add(goalCard)
             }
         }
-
         return metGoals
     }
-
 
     /**
      * Finds the largest connected cluster of leaf tiles in the bonsai grid.
@@ -560,8 +628,8 @@ class PlayerActionService(
     }
 
     /**
-     * Executes the "meditate" action, allowing the player to remove tiles and draw a card from
-     * the [BonsaiGame] openCards.
+     * Executes the "meditate" action, allowing the player to remove tiles and draw a card from the
+     * [BonsaiGame] [openCards].
      * Based on the card position, a [Player] receives bonsai tiles from the common supply and keep
      * them in his [Player.supply].
      * Based on the card type, a player can play a tile, recieve tiles or get a bonus
@@ -572,7 +640,7 @@ class PlayerActionService(
      * - the Board must have at least one card
      *
      * Postconditions:
-     * - [HelperCard], [MasterCard] and [ParchmentCard] will be added to [Player] hiddenDeck.
+     * - [HelperCard], [MasterCard] and [ParchmentCard] will be added to [Player] [hiddenDeck].
      * - [ToolCard] will be added to [Player.seishiTool].
      * - [GrowthCard] will be added to [Player.seishiGrowth].
      * - The player's turn will end.
@@ -624,7 +692,17 @@ class PlayerActionService(
 
         // Process the card's effect based on its type
         when (card) {
-            is GrowthCard -> currentPlayer.seishiGrowth.push(card)
+            is GrowthCard -> {
+
+                //add to tree tile limit based on tile type on growth card
+                if(currentPlayer.treeTileLimit.containsKey(card.type)) {
+                    currentPlayer.treeTileLimit[card.type] = currentPlayer.treeTileLimit[card.type]!! + 1
+                }
+                else{
+                    currentPlayer.treeTileLimit[card.type] = 1
+                }
+                currentPlayer.seishiGrowth.push(card)
+            }
             is ToolCard -> {
                 // Tool cards are added to the player's tool stack, increasing their tile limit
                 currentPlayer.seishiTool.push(card)
@@ -714,6 +792,7 @@ class PlayerActionService(
      * @throws IllegalStateException if no active game is found.
      * @throws IllegalArgumentException if the selected tile is invalid.
      */
+
     fun applyTileChoice(
         choice: TileType,
         chooseFromAll: Boolean = false,
