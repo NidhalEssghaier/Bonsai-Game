@@ -1,4 +1,5 @@
 package gui
+
 import entity.GoalColor
 import entity.PotColor
 import gui.utility.*
@@ -12,6 +13,13 @@ import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.Visual
 
+/**
+ * [MenuScene] that gets displayed to configure a new local game including
+ * the goals, players, player order and player colors.
+ *
+ * @param rootService The [RootService] to access the other services
+ * @param application The running application
+ */
 class LocalGameScene(
     rootService: RootService,
     application: BonsaiApplication,
@@ -39,7 +47,7 @@ class LocalGameScene(
             text = "Local Game",
             font = Font(size = 100, fontWeight = Font.FontWeight.BOLD),
         )
-    val mainMenuButton =
+    private val mainMenuButton =
         Button(width = 300, height = 80, posX = 1550, posY = 160, text = "Main Menu", font = Font(35)).apply {
             visual = ColorVisual(256, 107, 62)
             onMouseClicked = {
@@ -48,22 +56,30 @@ class LocalGameScene(
                 application.localGameScene = LocalGameScene(rootService, application)
             }
         }
-    val startGameButton =
+    private val startGameButton =
         Button(width = 300, height = 80, posX = 1550, posY = 460, text = "StartGame", font = Font(35)).apply {
             visual = ColorVisual(256, 107, 62)
             onMouseClicked = {
                 if (countPlayer < 2) throw IllegalStateException("More Players Needet To play Game")
                 if (countGoals != 3) throw IllegalStateException("Choose Goals")
-                var playerList: MutableList<Triple<String, Int, PotColor>> = mutableListOf()
+                val playerList: MutableList<Triple<String, Int, PotColor>> = mutableListOf()
                 var helpPotColor: PotColor = PotColor.RED
                 helpPotColor = potColor1
                 playerList.add(Triple(playerName1Label.text, player1Mode, helpPotColor))
                 helpPotColor = potColor2
                 playerList.add(Triple(playerName2Label.text, player2Mode, helpPotColor))
                 helpPotColor = potColor3
-                if (playerName3Label.text.isNotBlank()) playerList.add(Triple(playerName3Label.text, player3Mode, helpPotColor))
+                if (playerName3Label.text.isNotBlank()) {
+                    playerList.add(
+                        Triple(playerName3Label.text, player3Mode, helpPotColor),
+                    )
+                }
                 helpPotColor = potColor4
-                if (playerName4Label.text.isNotBlank()) playerList.add(Triple(playerName4Label.text, player4Mode, helpPotColor))
+                if (playerName4Label.text.isNotBlank()) {
+                    playerList.add(
+                        Triple(playerName4Label.text, player4Mode, helpPotColor),
+                    )
+                }
 
                 rootService.gameService.startNewGame(playerList, gameSpeed, listGoalColor)
                 // new local game scene to reset selections
@@ -212,7 +228,7 @@ class LocalGameScene(
                 help.isChecked = true
             }
         }
-    var playerName1Label: Label =
+    private var playerName1Label: Label =
         Label(
             width = 500,
             height = 80,
@@ -222,7 +238,7 @@ class LocalGameScene(
             font = Font(30),
             visual = ColorVisual(255, 113, 113),
         )
-    val playerName2Label: Label =
+    private val playerName2Label: Label =
         Label(
             width = 500,
             height = 80,
@@ -232,7 +248,7 @@ class LocalGameScene(
             font = Font(30),
             visual = ColorVisual(255, 113, 113),
         )
-    val playerName3Label: Label =
+    private val playerName3Label: Label =
         Label(
             width = 500,
             height = 80,
@@ -242,7 +258,7 @@ class LocalGameScene(
             font = Font(30),
             visual = ColorVisual(255, 113, 113),
         )
-    val playerName4Label: Label =
+    private val playerName4Label: Label =
         Label(
             width = 500,
             height = 80,
@@ -252,7 +268,7 @@ class LocalGameScene(
             font = Font(30),
             visual = ColorVisual(255, 113, 113),
         )
-    val playerAddField: TextField =
+    private val playerAddField: TextField =
         TextField(
             width = 500,
             height = 80,
@@ -262,8 +278,16 @@ class LocalGameScene(
             font = Font(30),
             visual = ColorVisual(255, 113, 113),
         )
-    val addPlayerButton =
-        Button(width = 150, height = 80, posX = 1360, posY = 925, text = "Add", font = Font(50), visual = ColorVisual(256, 107, 62)).apply {
+    private val addPlayerButton =
+        Button(
+            width = 150,
+            height = 80,
+            posX = 1360,
+            posY = 925,
+            text = "Add",
+            font = Font(50),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
                 when (countPlayer) {
                     0 -> playerName1Label.text = playerAddField.text
@@ -277,8 +301,16 @@ class LocalGameScene(
         }
 
     // Buttons um die Spieler namen hoch und Runter zu schieben
-    val move1DownButton =
-        Button(width = 80, height = 30, posX = 1360, posY = 340, text = "Down", font = Font(15), visual = ColorVisual(256, 107, 62)).apply {
+    private val move1DownButton =
+        Button(
+            width = 80,
+            height = 30,
+            posX = 1360,
+            posY = 340,
+            text = "Down",
+            font = Font(15),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
                 if (playerName2Label.text.isBlank()) throw IllegalStateException("Need Second Player")
                 val helpString: String = playerName1Label.text
@@ -286,8 +318,16 @@ class LocalGameScene(
                 playerName2Label.text = helpString
             }
         }
-    val move2DownButton =
-        Button(width = 80, height = 30, posX = 1360, posY = 490, text = "Down", font = Font(15), visual = ColorVisual(256, 107, 62)).apply {
+    private val move2DownButton =
+        Button(
+            width = 80,
+            height = 30,
+            posX = 1360,
+            posY = 490,
+            text = "Down",
+            font = Font(15),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
                 if (playerName3Label.text.isBlank()) throw IllegalStateException("Need Third Player")
                 val helpString: String = playerName2Label.text
@@ -295,8 +335,16 @@ class LocalGameScene(
                 playerName3Label.text = helpString
             }
         }
-    val move3DownButton =
-        Button(width = 80, height = 30, posX = 1360, posY = 640, text = "Down", font = Font(15), visual = ColorVisual(256, 107, 62)).apply {
+    private val move3DownButton =
+        Button(
+            width = 80,
+            height = 30,
+            posX = 1360,
+            posY = 640,
+            text = "Down",
+            font = Font(15),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
                 if (playerName4Label.text.isBlank()) throw IllegalStateException("Need Fourt Player")
                 val helpString: String = playerName3Label.text
@@ -304,8 +352,16 @@ class LocalGameScene(
                 playerName4Label.text = helpString
             }
         }
-    val move2UpButton =
-        Button(width = 80, height = 30, posX = 1360, posY = 450, text = "Up", font = Font(15), visual = ColorVisual(256, 107, 62)).apply {
+    private val move2UpButton =
+        Button(
+            width = 80,
+            height = 30,
+            posX = 1360,
+            posY = 450,
+            text = "Up",
+            font = Font(15),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
                 if (playerName2Label.text.isBlank()) throw IllegalStateException("Need Second Player")
                 val helpString: String = playerName1Label.text
@@ -313,8 +369,16 @@ class LocalGameScene(
                 playerName2Label.text = helpString
             }
         }
-    val move3UpButton =
-        Button(width = 80, height = 30, posX = 1360, posY = 600, text = "Up", font = Font(15), visual = ColorVisual(256, 107, 62)).apply {
+    private val move3UpButton =
+        Button(
+            width = 80,
+            height = 30,
+            posX = 1360,
+            posY = 600,
+            text = "Up",
+            font = Font(15),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
                 if (playerName3Label.text.isBlank()) throw IllegalStateException("Need Thrid Player")
                 val helpString: String = playerName2Label.text
@@ -322,8 +386,16 @@ class LocalGameScene(
                 playerName3Label.text = helpString
             }
         }
-    val move4UpButton =
-        Button(width = 80, height = 30, posX = 1360, posY = 750, text = "Up", font = Font(15), visual = ColorVisual(256, 107, 62)).apply {
+    private val move4UpButton =
+        Button(
+            width = 80,
+            height = 30,
+            posX = 1360,
+            posY = 750,
+            text = "Up",
+            font = Font(15),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
                 if (playerName4Label.text.isBlank()) throw IllegalStateException("Need Fourth Player")
                 val helpString: String = playerName3Label.text
@@ -331,7 +403,7 @@ class LocalGameScene(
                 playerName4Label.text = helpString
             }
         }
-    val randomiceButton =
+    private val randomiceButton =
         Button(
             width = 80,
             height = 30,
@@ -357,10 +429,10 @@ class LocalGameScene(
         }
 
     // Boxen zum auswählen der BotSärke wenn keine aktiviert, dann local player
-    lateinit var player1HardBox: CheckBox
-    lateinit var player2HardBox: CheckBox
-    lateinit var player3HardBox: CheckBox
-    lateinit var player4HardBox: CheckBox
+    private lateinit var player1HardBox: CheckBox
+    private lateinit var player2HardBox: CheckBox
+    private lateinit var player3HardBox: CheckBox
+    private lateinit var player4HardBox: CheckBox
     private val player1EasyBox =
         CheckBox(posX = 870, posY = 265, text = "Easy Bot").apply {
             onCheckedChanged = {
@@ -441,25 +513,49 @@ class LocalGameScene(
             posX = 590,
             posY = 690,
         )
-    val swap1Button =
-        Button(width = 80, height = 30, posX = 685, posY = 390, text = "Swap", font = Font(15), visual = ColorVisual(256, 107, 62)).apply {
+    private val swap1Button =
+        Button(
+            width = 80,
+            height = 30,
+            posX = 685,
+            posY = 390,
+            text = "Swap",
+            font = Font(15),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
                 swap1()
             }
         }
-    val swap2Button =
-        Button(width = 80, height = 30, posX = 685, posY = 540, text = "Swap", font = Font(15), visual = ColorVisual(256, 107, 62)).apply {
+    private val swap2Button =
+        Button(
+            width = 80,
+            height = 30,
+            posX = 685,
+            posY = 540,
+            text = "Swap",
+            font = Font(15),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
                 swap2()
             }
         }
-    val swap3Button =
-        Button(width = 80, height = 30, posX = 685, posY = 690, text = "Swap", font = Font(15), visual = ColorVisual(256, 107, 62)).apply {
+    private val swap3Button =
+        Button(
+            width = 80,
+            height = 30,
+            posX = 685,
+            posY = 690,
+            text = "Swap",
+            font = Font(15),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
                 swap3()
             }
         }
-    val swapRandomButton =
+    private val swapRandomButton =
         Button(
             width = 80,
             height = 30,
@@ -480,7 +576,7 @@ class LocalGameScene(
                 }
             }
         }
-    val gameSpeedLabel: Label =
+    private val gameSpeedLabel: Label =
         Label(
             width = 300,
             height = 80,
@@ -490,21 +586,36 @@ class LocalGameScene(
             font = Font(30),
             visual = ColorVisual(255, 113, 113),
         )
-    val addGameSpeedButton =
-        Button(width = 80, height = 30, posX = 1560, posY = 700, text = "+", font = Font(30), visual = ColorVisual(256, 107, 62)).apply {
+    private val addGameSpeedButton =
+        Button(
+            width = 80,
+            height = 30,
+            posX = 1560,
+            posY = 700,
+            text = "+",
+            font = Font(30),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
-                if(gameSpeed == 100) throw IllegalStateException("Speed is at allready at 100")
-                gameSpeed ++
-                gameSpeedLabel.text= "Game Speed : $gameSpeed"
-
+                if (gameSpeed == 100) throw IllegalStateException("Speed is at allready at 100")
+                gameSpeed++
+                gameSpeedLabel.text = "Game Speed : $gameSpeed"
             }
         }
-    val subGameSpeedButton =
-        Button(width = 80, height = 30, posX = 1680, posY = 700, text = "-", font = Font(30), visual = ColorVisual(256, 107, 62)).apply {
+    private val subGameSpeedButton =
+        Button(
+            width = 80,
+            height = 30,
+            posX = 1680,
+            posY = 700,
+            text = "-",
+            font = Font(30),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
-            if(gameSpeed == 1) throw IllegalStateException("Speed is at allready at 1")
-            gameSpeed--
-            gameSpeedLabel.text= "Game Speed : $gameSpeed"
+                if (gameSpeed == 1) throw IllegalStateException("Speed is at allready at 1")
+                gameSpeed--
+                gameSpeedLabel.text = "Game Speed : $gameSpeed"
             }
         }
 
@@ -609,7 +720,7 @@ class LocalGameScene(
             player4HardBox,
             gameSpeedLabel,
             addGameSpeedButton,
-            subGameSpeedButton
+            subGameSpeedButton,
         )
     }
 
@@ -639,15 +750,15 @@ class LocalGameScene(
             }
         } else {
             countGoals--
-            var colorofCard: GoalColor
-            when (thisBox) {
-                bunjayBox -> colorofCard = GoalColor.BROWN
-                chookanBox -> colorofCard = GoalColor.ORANGE
-                moyogiBox -> colorofCard = GoalColor.GREEN
-                shakanBox -> colorofCard = GoalColor.RED
-                kenegaiBox -> colorofCard = GoalColor.BLUE
-                else -> colorofCard = GoalColor.BROWN
-            }
+            val colorofCard: GoalColor =
+                when (thisBox) {
+                    bunjayBox -> GoalColor.BROWN
+                    chookanBox -> GoalColor.ORANGE
+                    moyogiBox -> GoalColor.GREEN
+                    shakanBox -> GoalColor.RED
+                    kenegaiBox -> GoalColor.BLUE
+                    else -> GoalColor.BROWN
+                }
             listGoalColor.remove(colorofCard)
             bunjayBox.isDisabled = false
             chookanBox.isDisabled = false

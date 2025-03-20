@@ -1,5 +1,6 @@
 package gui
 
+import entity.GoalCard
 import entity.GoalColor
 import entity.PotColor
 import gui.utility.*
@@ -15,6 +16,13 @@ import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.Visual
 import kotlin.random.Random
 
+/**
+ * [MenuScene] that gets displayed to configure a new online game including
+ * the goals, player order and player colors.
+ *
+ * @param rootService The [RootService] to access the other services
+ * @param application The running application
+ */
 class OnlineGameScene(
     private val rootService: RootService,
     private val application: BonsaiApplication,
@@ -43,7 +51,7 @@ class OnlineGameScene(
             text = "Host Game",
             font = Font(size = 100, fontWeight = Font.FontWeight.BOLD),
         )
-    val lobbyLabel =
+    private val lobbyLabel =
         Label(
             width = 300,
             height = 100,
@@ -52,7 +60,7 @@ class OnlineGameScene(
             text = "Session ID:",
             font = Font(size = 30, fontWeight = Font.FontWeight.BOLD),
         )
-    val sessionNrLabel =
+    private val sessionNrLabel =
         Label(
             width = 300,
             height = 100,
@@ -61,14 +69,14 @@ class OnlineGameScene(
             text = "No number set by now",
             font = Font(size = 30, fontWeight = Font.FontWeight.BOLD),
         )
-    val mainMenuButton =
+    private val mainMenuButton =
         Button(width = 300, height = 80, posX = 1550, posY = 160, text = "Main Menu", font = Font(35))
             .apply {
                 visual = ColorVisual(256, 107, 62)
             }.apply {
                 onMouseClicked = { application.showMenuScene(application.mainMenuScene) }
             }
-    val startGameButton =
+    private val startGameButton =
         Button(width = 300, height = 80, posX = 1550, posY = 460, text = "StartGame", font = Font(35)).apply {
             visual = ColorVisual(256, 107, 62)
             onMouseClicked = {
@@ -256,7 +264,7 @@ class OnlineGameScene(
                 help.isChecked = true
             }
         }
-    var playerName1Label: Label =
+    private var playerName1Label: Label =
         Label(
             width = 500,
             height = 80,
@@ -266,7 +274,7 @@ class OnlineGameScene(
             font = Font(30),
             visual = ColorVisual(255, 113, 113),
         )
-    val playerName2Label: Label =
+    private val playerName2Label: Label =
         Label(
             width = 500,
             height = 80,
@@ -276,7 +284,7 @@ class OnlineGameScene(
             font = Font(30),
             visual = ColorVisual(255, 113, 113),
         )
-    val playerName3Label: Label =
+    private val playerName3Label: Label =
         Label(
             width = 500,
             height = 80,
@@ -286,7 +294,7 @@ class OnlineGameScene(
             font = Font(30),
             visual = ColorVisual(255, 113, 113),
         )
-    val playerName4Label: Label =
+    private val playerName4Label: Label =
         Label(
             width = 500,
             height = 80,
@@ -296,7 +304,7 @@ class OnlineGameScene(
             font = Font(30),
             visual = ColorVisual(255, 113, 113),
         )
-    val playerAddField: TextField =
+    private val playerAddField: TextField =
         TextField(
             width = 500,
             height = 80,
@@ -306,7 +314,7 @@ class OnlineGameScene(
             font = Font(30),
             visual = ColorVisual(255, 113, 113),
         )
-    val addPlayerButton =
+    private val addPlayerButton =
         Button(
             width = 150,
             height = 80,
@@ -331,7 +339,7 @@ class OnlineGameScene(
         }
 
     // Buttons um die Spieler namen hoch und Runter zu schieben
-    val move1DownButton =
+    private val move1DownButton =
         Button(
             width = 80,
             height = 30,
@@ -348,7 +356,7 @@ class OnlineGameScene(
                 playerName2Label.text = helpString
             }
         }
-    val move2DownButton =
+    private val move2DownButton =
         Button(
             width = 80,
             height = 30,
@@ -365,7 +373,7 @@ class OnlineGameScene(
                 playerName3Label.text = helpString
             }
         }
-    val move3DownButton =
+    private val move3DownButton =
         Button(
             width = 80,
             height = 30,
@@ -382,7 +390,7 @@ class OnlineGameScene(
                 playerName4Label.text = helpString
             }
         }
-    val move2UpButton =
+    private val move2UpButton =
         Button(
             width = 80,
             height = 30,
@@ -399,7 +407,7 @@ class OnlineGameScene(
                 playerName2Label.text = helpString
             }
         }
-    val move3UpButton =
+    private val move3UpButton =
         Button(
             width = 80,
             height = 30,
@@ -416,7 +424,7 @@ class OnlineGameScene(
                 playerName3Label.text = helpString
             }
         }
-    val move4UpButton =
+    private val move4UpButton =
         Button(
             width = 80,
             height = 30,
@@ -433,7 +441,7 @@ class OnlineGameScene(
                 playerName4Label.text = helpString
             }
         }
-    val randomiceButton =
+    private val randomiceButton =
         Button(
             width = 80,
             height = 30,
@@ -459,7 +467,7 @@ class OnlineGameScene(
         }
 
     // Boxen zum auswählen der BotSärke wenn keine aktiviert, dann local player
-    lateinit var player1HardBox: CheckBox
+    private lateinit var player1HardBox: CheckBox
 
     private val player1EasyBox =
         CheckBox(posX = 870, posY = 900, text = "Easy Bot").apply {
@@ -505,7 +513,7 @@ class OnlineGameScene(
             posX = 590,
             posY = 690,
         )
-    val swap1Button =
+    private val swap1Button =
         Button(
             width = 80,
             height = 30,
@@ -519,7 +527,7 @@ class OnlineGameScene(
                 swap1()
             }
         }
-    val swap2Button =
+    private val swap2Button =
         Button(
             width = 80,
             height = 30,
@@ -533,7 +541,7 @@ class OnlineGameScene(
                 swap2()
             }
         }
-    val swap3Button =
+    private val swap3Button =
         Button(
             width = 80,
             height = 30,
@@ -547,7 +555,7 @@ class OnlineGameScene(
                 swap3()
             }
         }
-    val swapRandomButton =
+    private val swapRandomButton =
         Button(
             width = 80,
             height = 30,
@@ -568,7 +576,7 @@ class OnlineGameScene(
                 }
             }
         }
-    val gameSpeedLabel: Label =
+    private val gameSpeedLabel: Label =
         Label(
             width = 300,
             height = 80,
@@ -578,21 +586,36 @@ class OnlineGameScene(
             font = Font(30),
             visual = ColorVisual(255, 113, 113),
         )
-    val addGameSpeedButton =
-        Button(width = 80, height = 30, posX = 1560, posY = 700, text = "+", font = Font(30), visual = ColorVisual(256, 107, 62)).apply {
+    private val addGameSpeedButton =
+        Button(
+            width = 80,
+            height = 30,
+            posX = 1560,
+            posY = 700,
+            text = "+",
+            font = Font(30),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
-                if(gameSpeed == 100) throw IllegalStateException("Speed is at allready at 100")
-                gameSpeed ++
-                gameSpeedLabel.text= "Game Speed : $gameSpeed"
-
+                if (gameSpeed == 100) throw IllegalStateException("Speed is at allready at 100")
+                gameSpeed++
+                gameSpeedLabel.text = "Game Speed : $gameSpeed"
             }
         }
-    val subGameSpeedButton =
-        Button(width = 80, height = 30, posX = 1680, posY = 700, text = "-", font = Font(30), visual = ColorVisual(256, 107, 62)).apply {
+    private val subGameSpeedButton =
+        Button(
+            width = 80,
+            height = 30,
+            posX = 1680,
+            posY = 700,
+            text = "-",
+            font = Font(30),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
-                if(gameSpeed == 1) throw IllegalStateException("Speed is at allready at 1")
+                if (gameSpeed == 1) throw IllegalStateException("Speed is at allready at 1")
                 gameSpeed--
-                gameSpeedLabel.text= "Game Speed : $gameSpeed"
+                gameSpeedLabel.text = "Game Speed : $gameSpeed"
             }
         }
 
@@ -658,7 +681,7 @@ class OnlineGameScene(
             player1HardBox,
             addGameSpeedButton,
             subGameSpeedButton,
-            gameSpeedLabel
+            gameSpeedLabel,
         )
     }
 

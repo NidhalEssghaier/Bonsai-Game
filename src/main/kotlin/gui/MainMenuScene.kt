@@ -1,4 +1,5 @@
 package gui
+
 import service.RootService
 import tools.aqua.bgw.components.uicomponents.Button
 import tools.aqua.bgw.components.uicomponents.Label
@@ -6,6 +7,14 @@ import tools.aqua.bgw.core.MenuScene
 import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
 
+/**
+ * [MenuScene] that gets displayed when starting the [BonsaiApplication].
+ * Allows selecting the game mode, loading a save game or exiting the
+ * application.
+ *
+ * @param rootService The [RootService] to access the other services
+ * @param application The running application
+ */
 class MainMenuScene(
     rootService: RootService,
     application: BonsaiApplication,
@@ -20,35 +29,35 @@ class MainMenuScene(
             text = "Bonsai",
             font = Font(size = 100, fontWeight = Font.FontWeight.BOLD),
         )
-    val localGameButton =
+    private val localGameButton =
         Button(width = 300, height = 80, posX = 680, posY = 340, text = "Local Game", font = Font(35))
             .apply {
                 visual = ColorVisual(256, 107, 62)
             }.apply {
                 onMouseClicked = { application.showMenuScene(application.localGameScene) }
             }
-    val hostGameButton =
+    private val hostGameButton =
         Button(width = 300, height = 80, posX = 1030, posY = 340, text = "Host Online Game", font = Font(35))
             .apply {
                 visual = ColorVisual(256, 107, 62)
             }.apply {
                 onMouseClicked = { application.showMenuScene(application.onlineGameScene) }
             }
-    val resumeGameButton =
+    private val resumeGameButton =
         Button(width = 300, height = 80, posX = 850, posY = 470, text = "Resume Game", font = Font(35))
             .apply {
                 visual = ColorVisual(256, 107, 62)
             }.apply {
                 onMouseClicked = { rootService.gameService.loadGame() }
             }
-    val joinGameButton =
+    private val joinGameButton =
         Button(width = 300, height = 80, posX = 850, posY = 600, text = "Join Game", font = Font(35))
             .apply {
                 visual = ColorVisual(256, 107, 62)
             }.apply {
                 onMouseClicked = { application.showMenuScene(application.joinGameScene) }
             }
-    val quitGameButton =
+    private val quitGameButton =
         Button(width = 300, height = 80, posX = 850, posY = 730, text = "Quit Game", font = Font(35))
             .apply {
                 visual = ColorVisual(256, 107, 62)

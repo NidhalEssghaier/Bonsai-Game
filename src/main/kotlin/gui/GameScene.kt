@@ -31,8 +31,8 @@ import tools.aqua.bgw.visual.*
 private const val ANIMATION_TIME = 100
 
 /**
- * This is the main scene for the [BonsaiGame].
- * The scene shows alls game components and allows switching between the different players.
+ * This is the main scene for the [BonsaiGame]. The scene shows alls game
+ * components and allows switching between the different players.
  */
 class GameScene(
     val rootService: RootService,
@@ -288,10 +288,10 @@ class GameScene(
         chooseTilesByBoard: Boolean,
         chooseTilesByCard: Boolean,
     ) {
-        //this.lock()
+        shownPlayer = currentPlayer
+        initializePlayerView(bonsaiGame)
         endTurnButton.isDisabled = true
         playDrawCardAnimation(drawnCard, drawnCardIndex + 1, chooseTilesByBoard, chooseTilesByCard)
-
     }
 
     override fun refreshAfterChooseTile() {
@@ -308,7 +308,6 @@ class GameScene(
 
         initializeGameElements(rootService, bonsaiGame)
         initializePlayerView(bonsaiGame)
-        println("refreshAfterEndTurn (Game Scene): Ich war hier")
     }
 
     override fun refreshAfterUndoRedo() {
@@ -682,6 +681,11 @@ class GameScene(
                     }
                 }
             gameOptionsGridPane[idx, 0] = menuOptionButton
+
+            if (idx < 3 && bonsaiGame.currentState.players.any { it is NetworkPlayer }) {
+                gameOptionsGridPane[idx, 0]?.isDisabled = true
+                gameOptionsGridPane[idx, 0]?.isVisible = false
+            }
         }
     }
 
@@ -911,9 +915,6 @@ class GameScene(
                     } else {
                         initializeSupplyTiles(bonsaiGame.currentState)
                     }
-                    //this@GameScene.unlock()
-                    initializePlayerView(bonsaiGame)
-                    initializeGameElements(rootService,bonsaiGame)
                     endTurnButton.isDisabled = false
                 }
             },

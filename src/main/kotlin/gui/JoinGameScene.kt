@@ -1,4 +1,5 @@
 package gui
+
 import service.RootService
 import tools.aqua.bgw.components.uicomponents.Button
 import tools.aqua.bgw.components.uicomponents.CheckBox
@@ -8,6 +9,13 @@ import tools.aqua.bgw.core.MenuScene
 import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
 
+/**
+ * [MenuScene] that gets displayed when the player wants to join an online
+ * game. To join, a player name and the Session-ID can be entered.
+ *
+ * @property rootService The [RootService] to access the other services
+ * @property application The running application
+ */
 class JoinGameScene(
     rootService: RootService,
     application: BonsaiApplication,
@@ -23,9 +31,11 @@ class JoinGameScene(
             text = "Join Game",
             font = Font(size = 100, fontWeight = Font.FontWeight.BOLD),
         )
-    private val playerNameLabel = Label(width = 300, height = 50, posX = 850, posY = 250, text = "Player Name", font = Font(20))
-    private val sessionIDLabel = Label(width = 300, height = 50, posX = 850, posY = 410, text = "Session ID", font = Font(20))
-    val playerNameInput: TextField =
+    private val playerNameLabel =
+        Label(width = 300, height = 50, posX = 850, posY = 250, text = "Player Name", font = Font(20))
+    private val sessionIDLabel =
+        Label(width = 300, height = 50, posX = 850, posY = 410, text = "Session ID", font = Font(20))
+    private val playerNameInput: TextField =
         TextField(
             width = 300,
             height = 80,
@@ -34,7 +44,7 @@ class JoinGameScene(
             text = "Masahiko Kimura",
             font = Font(30),
         )
-    val sessionIDInput: TextField =
+    private val sessionIDInput: TextField =
         TextField(
             width = 300,
             height = 80,
@@ -42,7 +52,7 @@ class JoinGameScene(
             posY = 455,
             font = Font(30),
         )
-    val joinGameButton =
+    private val joinGameButton =
         Button(width = 300, height = 80, posX = 850, posY = 600, text = "Join Game", font = Font(35)).apply {
             visual = ColorVisual(256, 107, 62)
             onMouseClicked={
@@ -51,14 +61,14 @@ class JoinGameScene(
                 rootService.networkService.joinGame(playerNameInput.text, localplayerMode,10, sessionIDInput.text)
             }
         }
-    val mainMenuButton =
+    private val mainMenuButton =
         Button(width = 300, height = 80, posX = 850, posY = 860, text = "Main Menu", font = Font(35))
             .apply {
                 visual = ColorVisual(256, 107, 62)
             }.apply {
                 onMouseClicked = { application.showMenuScene(application.mainMenuScene) }
             }
-    lateinit var player1HardBox: CheckBox
+    private lateinit var player1HardBox: CheckBox
 
     private val player1EasyBox =
         CheckBox(posX = 1170, posY = 300, text = "Easy Bot").apply {

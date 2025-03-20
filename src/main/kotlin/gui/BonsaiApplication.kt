@@ -18,10 +18,10 @@ class BonsaiApplication :
     val onlineGameScene = OnlineGameScene(rootService, this)
     val joinGameScene = JoinGameScene(rootService, this)
     val lobbyScene = LobbyScene()
-    var chooseTileScene = ChooseTileScene(rootService, this, false, false)
+    var chooseTileScene = ChooseTileScene(rootService, this, chooseByBoard = false, chooseByCard = false)
     private var playerCount = 0
 
-    var gameScene = GameScene(rootService, this)
+    private var gameScene = GameScene(rootService, this)
 
     init {
         // all scenes and the application itself need too

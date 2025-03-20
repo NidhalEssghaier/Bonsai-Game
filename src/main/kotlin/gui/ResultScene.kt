@@ -10,6 +10,13 @@ import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.Visual
 
+/**
+ * [MenuScene] that gets displayed at the end of the game showing the
+ * points each player achieved.
+ *
+ * @param results the points each player received as a list mapped to each
+ *    player based on the bonsai score-pad.
+ */
 class ResultScene(
     private val results: Map<Player, List<Int>>,
 ) : MenuScene(1920, 1080) {
