@@ -9,12 +9,17 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+/**
+ * Class for Unit Tests for [PlayerActionService.removeTile]
+ */
 class RemoveTileTest {
 
     private fun setUpGrid():HexGrid {
         val mc = RootService()
         val gameService = GameService(mc)
-        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
+        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE),
+            Triple("Iyed",1,PotColor.PURPLE)),5,
+            listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
 
         //check game not null
         val game = mc.currentGame
@@ -23,6 +28,9 @@ class RemoveTileTest {
     }
 
 
+    /**
+     * Test remove tile when you can place wood
+     */
     @Test
     fun `test remove tile when you can place wood`() {
         val mc = RootService()
@@ -31,7 +39,9 @@ class RemoveTileTest {
 
         //test with no game
         assertThrows<IllegalStateException> {playerActionService.removeTile(BonsaiTile(TileType.WOOD))  }
-        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
+        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE),
+            Triple("Iyed",1,PotColor.PURPLE)),5,
+            listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
 
 
         //check game not null
@@ -46,12 +56,17 @@ class RemoveTileTest {
         assertEquals("player can play wood",exception.message)
     }
 
+    /**
+     * Test remove tile not in bonsai
+     */
     @Test
     fun `test remove tile not in bonsai`(){
         val mc = RootService()
         val gameService = GameService(mc)
         val playerActionService = PlayerActionService(mc)
-        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
+        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE),
+            Triple("Iyed",1,PotColor.PURPLE)),5,
+            listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
 
         //check game not null
         val game = mc.currentGame
@@ -65,6 +80,9 @@ class RemoveTileTest {
             exception.message)
     }
 
+    /**
+     * Test remove unnecessary tile
+     */
     @Test
     fun `test remove unnecessary tile`(){
 
@@ -75,7 +93,9 @@ class RemoveTileTest {
         playerActionService.addRefreshable(testRefreshable)
 
 
-        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
+        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE),
+            Triple("Iyed",1,PotColor.PURPLE)),5,
+            listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
 
         //check game not null
         val game = mc.currentGame
@@ -147,6 +167,9 @@ class RemoveTileTest {
         assertThrows<NoSuchElementException> { game.currentState.players[0].bonsai.grid[2, -2] }
     }
 
+    /**
+     * Test least group of tiles to be removed with valid flower tile
+     */
     @Test
     fun `test leastGroupOfTilesToBeRemoved with valid flower tile`() {
         val grid =setUpGrid()
@@ -159,6 +182,9 @@ class RemoveTileTest {
         assertTrue(!result.contains(leafTile1), "Flower tiles should be removable")
     }
 
+    /**
+     * Test least group of tiles to be removed
+     */
     @Test
     fun `test leastGroupOfTilesToBeRemoved `() {
         val grid =setUpGrid()
@@ -178,6 +204,10 @@ class RemoveTileTest {
         result = TileUtils.leastGroupOfTilesToBeRemoved(grid.tilesList.invoke(), grid)
         assertFalse(result.contains(unplayableTile))
     }
+
+    /**
+     * Test has adjacent pair
+     */
     @Test
     fun `test hasAdjacentPair`() {
         var grid =setUpGrid()
