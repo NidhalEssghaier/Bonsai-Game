@@ -8,9 +8,8 @@ import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
 
 /**
- * [MenuScene] that gets displayed when starting the [BonsaiApplication].
- * Allows selecting the game mode, loading a save game or exiting the
- * application.
+ * [MenuScene] that gets displayed when starting the [BonsaiApplication]. Allows selecting the game mode, loading a save
+ * game or exiting the application.
  *
  * @param rootService The [RootService] to access the other services
  * @param application The running application

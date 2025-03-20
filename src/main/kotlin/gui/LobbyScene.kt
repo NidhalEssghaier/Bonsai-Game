@@ -7,8 +7,8 @@ import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
 
 /**
- * [MenuScene] that gets displayed when the player joined an online game.
- * Shows the players in the lobby and waits until the host starts the game.
+ * [MenuScene] that gets displayed when the player joined an online game. Shows the players in the lobby and waits until
+ * the host starts the game.
  */
 class LobbyScene :
     MenuScene(1920, 1080),

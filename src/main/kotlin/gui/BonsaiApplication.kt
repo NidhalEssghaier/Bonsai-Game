@@ -6,6 +6,7 @@ import service.ConnectionState
 import service.RootService
 import tools.aqua.bgw.core.BoardGameApplication
 
+/** Implementation of the BGW [BoardGameApplication] for the game "Bonsai" */
 class BonsaiApplication :
     BoardGameApplication("Bonsai"),
     Refreshable {
@@ -17,14 +18,14 @@ class BonsaiApplication :
     var localGameScene = LocalGameScene(rootService, this)
     val onlineGameScene = OnlineGameScene(rootService, this)
     val joinGameScene = JoinGameScene(rootService, this)
-    val lobbyScene = LobbyScene()
+    private val lobbyScene = LobbyScene()
     var chooseTileScene = ChooseTileScene(rootService, this, chooseByBoard = false, chooseByCard = false)
     private var playerCount = 0
 
     private var gameScene = GameScene(rootService, this)
 
     init {
-        // all scenes and the application itself need too
+        // all scenes and the application itself need to
         // react to changes done in the service layer
         rootService.addRefreshables(
             this,

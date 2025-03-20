@@ -14,8 +14,8 @@ import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.Visual
 
 /**
- * [MenuScene] that gets displayed to configure a new local game including
- * the goals, players, player order and player colors.
+ * [MenuScene] that gets displayed to configure a new local game including the goals, players, player order and player
+ * colors.
  *
  * @param rootService The [RootService] to access the other services
  * @param application The running application
@@ -63,8 +63,7 @@ class LocalGameScene(
                 if (countPlayer < 2) throw IllegalStateException("More Players Needet To play Game")
                 if (countGoals != 3) throw IllegalStateException("Choose Goals")
                 val playerList: MutableList<Triple<String, Int, PotColor>> = mutableListOf()
-                var helpPotColor: PotColor = PotColor.RED
-                helpPotColor = potColor1
+                var helpPotColor = potColor1
                 playerList.add(Triple(playerName1Label.text, player1Mode, helpPotColor))
                 helpPotColor = potColor2
                 playerList.add(Triple(playerName2Label.text, player2Mode, helpPotColor))
@@ -219,8 +218,7 @@ class LocalGameScene(
                 list.add(shakanBox)
                 list.add(kenegaiBox)
                 list.shuffle()
-                var help: CheckBox = CheckBox()
-                help = list.removeLast()
+                var help = list.removeLast()
                 help.isChecked = true
                 help = list.removeLast()
                 help.isChecked = true
@@ -414,7 +412,7 @@ class LocalGameScene(
             visual = ColorVisual(256, 107, 62),
         ).apply {
             onMouseClicked = {
-                var randomlist: MutableList<String> = mutableListOf()
+                val randomlist: MutableList<String> = mutableListOf()
                 if (playerName1Label.text.isNotBlank()) randomlist.add(playerName1Label.text)
                 if (playerName2Label.text.isNotBlank()) randomlist.add(playerName2Label.text)
                 if (playerName3Label.text.isNotBlank()) randomlist.add(playerName3Label.text)
@@ -731,7 +729,7 @@ class LocalGameScene(
         if (thisBox.isChecked) {
             println(countGoals)
             countGoals++
-            var colorofCard: GoalColor
+            val colorofCard: GoalColor
             when (thisBox) {
                 bunjayBox -> colorofCard = GoalColor.BROWN
                 chookanBox -> colorofCard = GoalColor.ORANGE
