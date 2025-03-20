@@ -7,7 +7,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
-import service.bot.BotService
 import java.io.IOException
 
 /**
@@ -102,6 +101,20 @@ class GameService(
         val currentGame = rootService.currentGame
         checkNotNull(currentGame) { "Internal error! currentGame is null, it shouldn't happened here." }
 
+        //add start tiles
+        val startTiles = mutableListOf(BonsaiTile(TileType.WOOD))
+        currentGame.currentState.players[0].supply.addAll(startTiles)
+        startTiles.add(BonsaiTile(TileType.LEAF))
+        currentGame.currentState.players[1].supply.addAll(startTiles)
+        if(currentGame.currentState.players.size>2) {
+            startTiles.add(BonsaiTile(TileType.FLOWER))
+            currentGame.currentState.players[2].supply.addAll(startTiles)
+        }
+        if(currentGame.currentState.players.size>3) {
+            startTiles.add(BonsaiTile(TileType.FRUIT))
+            currentGame.currentState.players[3].supply.addAll(startTiles)
+        }
+
         // Push the initial state to the undo stack
         currentGame.undoStack.push(currentGame.currentState.copy())
 
@@ -115,7 +128,6 @@ class GameService(
         checkNotNull(game)
         val player0 = game.currentState.players[game.currentState.currentPlayer]
         if(player0 is RandomBot) {
-            println("start bot: If")
             val botService = rootService.botService
             botService.playRandomMove()
         }
