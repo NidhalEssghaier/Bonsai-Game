@@ -343,6 +343,7 @@ class GameService(
         // a tie situation is already handled via sortedByDescending, because equal values stay in the same order
 
         onAllRefreshables { refreshAfterEndGame(scoreList) }
+        rootService.networkService.disconnect()
 
         return scoreList
     }

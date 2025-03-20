@@ -57,7 +57,13 @@ tasks.clean {
 kover {
     filters {
         classes {
-            excludes += listOf("gui.*", "entity.*", "*MainKt*", "service.bot.*")
+            excludes += listOf(
+                "gui.*",
+                "entity.*",
+                "*MainKt*",
+                "service.bot.*",
+                "messages.*"
+            )
         }
     }
     xmlReport {

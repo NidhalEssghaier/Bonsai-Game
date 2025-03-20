@@ -109,6 +109,8 @@ class PlayerActionService(
         game.undoStack.push(game.currentState.copy())
         game.redoStack.clear()
 
+        rootService.networkService.sendTurn()
+
         if (game.currentState.drawStack.isEmpty()) {
             game.currentState.endGameCounter++
             if (game.currentState.endGameCounter > game.currentState.players.size) {
@@ -180,6 +182,7 @@ class PlayerActionService(
         game.currentState.players[game.currentState.currentPlayer]
             .supply
             .remove(tile)
+        rootService.networkService.messageBuilder.addDiscardedTile(tile.type)
 
         onAllRefreshables { refreshAfterDiscardTile(tilesToDiscard - 1, tile) }
     }
@@ -403,6 +406,10 @@ class PlayerActionService(
 
         // Place tile in bonsai grid
         grid[q, r] = tile
+
+
+        //  Netzwerk mitteilen, wenn ein Tile zu dem Bonsai hinzugefügt wird
+        rootService.networkService.messageBuilder.addPlacedTile(tile.type, Pair(q, r))
 
         // Mark that the player has placed a Tile
         currentPlayer.hasCultivated= true
@@ -737,7 +744,6 @@ class PlayerActionService(
         game.currentState.openCards[cardIndex] = PlaceholderCard
         shiftBoardAndRefill(cardIndex)
 
-        println("refresh at end of meditate")
         // refresh to show draw card animation & choose tiles optionally based on drawn card & chosen stack
         onAllRefreshables { refreshAfterDrawCard(card, cardIndex, chooseTilesByBoard, chooseTilesByCard) }
     }
