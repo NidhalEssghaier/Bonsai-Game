@@ -2,6 +2,7 @@ package gui
 
 import entity.GoalCard
 import entity.Player
+import service.ConnectionState
 import service.RootService
 import tools.aqua.bgw.core.BoardGameApplication
 
@@ -16,7 +17,9 @@ class BonsaiApplication :
     var localGameScene = LocalGameScene(rootService, this)
     val onlineGameScene = OnlineGameScene(rootService, this)
     val joinGameScene = JoinGameScene(rootService, this)
+    val lobbyScene = LobbyScene()
     var chooseTileScene = ChooseTileScene(rootService, this, false, false)
+    private var playerCount = 0
 
     var gameScene = GameScene(rootService, this)
 
@@ -29,6 +32,7 @@ class BonsaiApplication :
             localGameScene,
             onlineGameScene,
             joinGameScene,
+            lobbyScene,
             gameScene,
             chooseTileScene,
         )
@@ -65,5 +69,33 @@ class BonsaiApplication :
             }
         }
         this.showMenuScene(resultScene)
+    }
+
+    override fun refreshConnectionState(
+        newState: ConnectionState,
+        string: String?,
+        list: List<String>?,
+    ) {
+        when (newState) {
+            ConnectionState.WAITING_FOR_INIT -> {
+                lobbyScene.playerName1Label.text = string!!
+                if (!list.isNullOrEmpty()) lobbyScene.playerName2Label.text = list[0]
+                if (list != null && list.size > 1) lobbyScene.playerName3Label.text = list[1]
+                if (list != null && list.size > 2) lobbyScene.playerName4Label.text = list[2]
+                this.showMenuScene(lobbyScene)
+                if (list != null) playerCount = 1 + list.size
+            }
+
+            ConnectionState.WAITING_FOR_GUEST -> {
+                when (playerCount) {
+                    1 -> lobbyScene.playerName2Label.text = string!!
+                    2 -> lobbyScene.playerName3Label.text = string!!
+                    3 -> lobbyScene.playerName4Label.text = string!!
+                }
+                playerCount++
+            }
+
+            else -> {}
+        }
     }
 }

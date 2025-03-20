@@ -2,6 +2,7 @@ package gui
 
 import entity.*
 import service.AbstractRefreshingService
+import service.ConnectionState
 
 /**
  * This interface provides a mechanism for the service layer classes to communicate
@@ -15,6 +16,7 @@ import service.AbstractRefreshingService
  *
  */
 interface Refreshable {
+
     /**
      * perform refreshes that are necessary after a new game started
      */
@@ -41,6 +43,11 @@ interface Refreshable {
      * perform refreshes that are necessary after undo / redo
      */
     fun refreshAfterUndoRedo() {}
+
+    /**
+     * Refresh relevant GUI elements after the network connection status changes.
+     */
+    fun refreshConnectionState(newState: ConnectionState, string: String?, list: List<String>?) {}
 
     /**
      * Refresh affected GUI Elements after a turn has ended.
@@ -75,6 +82,7 @@ interface Refreshable {
      * should be placed , these parameters need to be passed to the cultivate Method and the cultivate method needs to
      * be called
      */
+
     fun refreshAfterDrawHelperCard(helperCard: HelperCard) {}
 
     /**
