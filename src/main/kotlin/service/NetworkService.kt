@@ -3,10 +3,9 @@ package service
 import messages.*
 import entity.*
 import gui.Refreshable
-import helper.peek
-import helper.peekAll
-import helper.pop
 import helper.push
+import java.util.*
+import kotlin.concurrent.timerTask
 
 /**
  * Service layer class that realizes the necessary logic for sending and receiving messages
@@ -46,8 +45,8 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
      * Connects to server and creates a new game session.
      *
      * @param name Player name.
-     * @param botStatus 0 if the player is a local player, 1 if the local player is a random bot
-     *        and 2 if the player is a smart bot
+     * @param botStatus 0 if the player is a local player, 2 if the player is a random bot
+     *                  and 3 if the player is a smart bot
      * @param sessionID identifier of the hosted session (to be used by guest on join)
      *
      * @throws IllegalStateException if already connected to another game or connection attempt fails
@@ -155,8 +154,8 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
      * See [BonsaiNetworkClient.onStartGameMessageReceived].
      *
      * @param playerName name of the local player
-     * @param botStatus 0 if the player is a local player, 1 if the local player is a random bot
-     *        and 2 if the player is a smart bot
+     * @param botStatus 0 if the player is a local player, 2 if the player is a random bot
+     *                  and 3 if the player is a smart bot
      * @param gameSpeed delay of bot and network player game actions
      * @param message received from the server
      *
@@ -236,9 +235,16 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
      * @throws IllegalStateException if it's the opponents turn, or the message is invalid
      */
     fun sendTurn() {
-        check(
-            connectionState == ConnectionState.PLAYING_MY_TURN
-        ) { "not my turn" }
+        val nextPlayer = (rootService.currentGame!!.currentState.currentPlayer + 1) %
+                         rootService.currentGame!!.currentState.players.size
+        if (connectionState != ConnectionState.PLAYING_MY_TURN) {
+            if (rootService.currentGame!!.currentState.players[nextPlayer] is LocalPlayer) {
+                updateConnectionState(ConnectionState.PLAYING_MY_TURN)
+            } else {
+                updateConnectionState(ConnectionState.WAITING_FOR_OPPONENT)
+            }
+            return
+        }
 
         try {
             val build = messageBuilder.build()
@@ -283,34 +289,48 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
 
         try {
             // remove tiles
-            for (i in message.removedTilesAxialCoordinates.indices)
-                rootService.playerActionService.removeTile(
-                    game.currentState.players[game.currentState.currentPlayer].bonsai.grid[
-                        message.removedTilesAxialCoordinates[i].first,
-                        message.removedTilesAxialCoordinates[i].second
-                    ]
-                )
+            if (message.removedTilesAxialCoordinates.isNotEmpty()) {
+                for (i in message.removedTilesAxialCoordinates.indices)
+                    rootService.playerActionService.removeTile(
+                        game.currentState.players[game.currentState.currentPlayer].bonsai.grid[
+                            message.removedTilesAxialCoordinates[i].first,
+                            message.removedTilesAxialCoordinates[i].second
+                        ]
+                    )
+            }
 
             // played tiles
-            for (i in message.playedTiles.indices)
-                rootService.playerActionService.cultivate(
-                    BonsaiTile(converter.toTileType(message.playedTiles[i].first)),
-                    message.playedTiles[i].second.first,
-                    message.playedTiles[i].second.second
-                )
+            if (message.playedTiles.isNotEmpty()) {
+                for (i in message.playedTiles.indices)
+                    rootService.currentGame?.currentState!!.players[
+                        rootService.currentGame?.currentState!!.currentPlayer
+                    ].supply.find { it.type == converter.toTileType(message.playedTiles[i].first) }?.let {
+                        rootService.playerActionService.cultivate(
+                            it,
+                            message.playedTiles[i].second.first,
+                            message.playedTiles[i].second.second
+                        )
+                    }
+            }
 
             // decide goals
-            for (i in message.claimedGoals.indices)
-                rootService.playerActionService.decideGoalClaim(
-                    converter.toGoal(message.claimedGoals[i]), true
-                )
-            for (i in message.renouncedGoals.indices)
-                rootService.playerActionService.decideGoalClaim(
-                    converter.toGoal(message.renouncedGoals[i]), false
-                )
+            if (message.claimedGoals.isNotEmpty()) {
+                for (i in message.claimedGoals.indices)
+                    rootService.playerActionService.decideGoalClaim(
+                        converter.toGoal(message.claimedGoals[i]), true
+                    )
+            }
+            if (message.renouncedGoals.isNotEmpty()) {
+                for (i in message.renouncedGoals.indices)
+                    rootService.playerActionService.decideGoalClaim(
+                        converter.toGoal(message.renouncedGoals[i]), false
+                    )
+            }
 
             // end turn
-            rootService.playerActionService.endTurn()
+            messageBuilder.reset()
+            val timer = Timer()
+            timer.schedule(timerTask { rootService.playerActionService.endTurn() }, 10000)
         } catch (e: IllegalArgumentException) {
             disconnect()
             error("Caught an IllegalArgumentException: ${e.message}")
@@ -345,63 +365,86 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
 
         try {
             // remove tiles
-            for (i in message.removedTilesAxialCoordinates.indices)
-                rootService.playerActionService.removeTile(
-                    game.currentState.players[game.currentState.currentPlayer].bonsai.grid[
-                        message.removedTilesAxialCoordinates[i].first,
-                        message.removedTilesAxialCoordinates[i].second
-                    ]
-                )
+            if (message.removedTilesAxialCoordinates.isNotEmpty()) {
+                for (i in message.removedTilesAxialCoordinates.indices)
+                    rootService.playerActionService.removeTile(
+                        game.currentState.players[game.currentState.currentPlayer].bonsai.grid[
+                            message.removedTilesAxialCoordinates[i].first,
+                            message.removedTilesAxialCoordinates[i].second
+                        ]
+                    )
+            }
 
             // draw card
+            val drawnCard = rootService.currentGame!!.currentState.openCards[message.chosenCardPosition]
             rootService.playerActionService.meditate(
                 game.currentState.openCards[message.chosenCardPosition]
             )
 
             // draw tiles
+            val drawnTiles: MutableList<TileTypeMessage> = message.drawnTiles.toMutableList()
 
             // tiles drawn from open cards
-            val drawnTiles: MutableList<TileTypeMessage> = message.drawnTiles.toMutableList()
-            when (message.chosenCardPosition) {
-                1 -> game.currentState.players[game.currentState.currentPlayer]
-                    .supply.add(BonsaiTile(converter.toTileType(drawnTiles.removeFirst())))
-                2 -> drawnTiles.removeAll(listOf(TileTypeMessage.WOOD, TileTypeMessage.FLOWER))
-                3 -> drawnTiles.removeAll(listOf(TileTypeMessage.LEAF, TileTypeMessage.FRUIT))
-            }
-
-            // tiles drawn from master cards
-            val card = game.currentState.openCards[message.chosenCardPosition]
-            if (card is MasterCard) {
-                when (card.id) {
-                    24, 25, 28 -> repeat(2) { game.currentState.players[game.currentState.currentPlayer]
-                    .supply.add(BonsaiTile(converter.toTileType(drawnTiles.removeFirst()))) }
+            if (drawnTiles.isNotEmpty()) {
+                when (message.chosenCardPosition) {
+                    1 -> rootService.playerActionService.applyTileChoice(
+                            converter.toTileType(drawnTiles.removeFirst()))
+                    2 -> drawnTiles.removeAll(listOf(TileTypeMessage.WOOD, TileTypeMessage.FLOWER))
+                    3 -> drawnTiles.removeAll(listOf(TileTypeMessage.LEAF, TileTypeMessage.FRUIT))
                 }
             }
 
-            // played tiles
-            for (i in message.playedTiles.indices)
-                rootService.playerActionService.cultivate(
-                    BonsaiTile(converter.toTileType(message.playedTiles[i].first)),
-                    message.playedTiles[i].second.first,
-                    message.playedTiles[i].second.second
+            // tiles drawn from master cards
+            if (drawnTiles.isNotEmpty() &&
+                drawnCard is MasterCard &&
+                drawnCard.id in listOf(24, 25, 28)) {
+                rootService.playerActionService.applyTileChoice(
+                    converter.toTileType(drawnTiles.removeFirst()),
+                    true
                 )
+            }
+
+            // played tiles
+            if (message.playedTiles.isNotEmpty()) {
+                for (i in message.playedTiles.indices)
+                    rootService.currentGame?.currentState!!.players[
+                        rootService.currentGame?.currentState!!.currentPlayer
+                    ].supply.find { it.type == converter.toTileType(message.playedTiles[i].first) }?.let {
+                        rootService.playerActionService.cultivate(
+                            it,
+                            message.playedTiles[i].second.first,
+                            message.playedTiles[i].second.second
+                        )
+                    }
+            }
 
             // decide goals
-            for (i in message.claimedGoals.indices)
-                rootService.playerActionService.decideGoalClaim(
-                    converter.toGoal(message.claimedGoals[i]), true
-                )
-            for (i in message.renouncedGoals.indices)
-                rootService.playerActionService.decideGoalClaim(
-                    converter.toGoal(message.renouncedGoals[i]), false
-                )
+            if (message.claimedGoals.isNotEmpty()) {
+                for (i in message.claimedGoals.indices)
+                    rootService.playerActionService.decideGoalClaim(
+                        converter.toGoal(message.claimedGoals[i]), true
+                    )
+            }
+            if (message.renouncedGoals.isNotEmpty()) {
+                for (i in message.renouncedGoals.indices)
+                    rootService.playerActionService.decideGoalClaim(
+                        converter.toGoal(message.renouncedGoals[i]), false
+                    )
+            }
 
-            // discard tiles and end turn
-            for (i in message.discardedTiles.indices)
-                rootService.playerActionService.discardTile(
-                    BonsaiTile(converter.toTileType(message.discardedTiles[i]))
-                )
-            rootService.playerActionService.endTurn()
+            // discard tiles
+            if (message.discardedTiles.isNotEmpty()) {
+                for (i in message.discardedTiles.indices)
+                    game.currentState.players[game.currentState.currentPlayer]
+                        .supply.find { it.type == converter.toTileType(message.discardedTiles[i]) }?.let {
+                            rootService.playerActionService.discardTile(it)
+                        }
+            }
+
+            // end turn
+            messageBuilder.reset()
+            val timer = Timer()
+            timer.schedule(timerTask { rootService.playerActionService.endTurn() }, 10000)
         } catch (e: IllegalArgumentException) {
             disconnect()
             error("Caught an IllegalArgumentException: ${e.message}")
@@ -444,8 +487,8 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
      * Connects to server, sets the [NetworkService.client] if successful and returns `true` on success.
      *
      * @param name Player name. Must not be blank
-     * @param botStatus 0 if the player is a local player, 1 if the local player is a random bot
-     *        and 2 if the player is a smart bot
+     * @param botStatus 0 if the player is a local player, 2 if the player is a random bot
+     *                  and 3 if the player is a smart bot
      * @param gameSpeed delay of bot and network player game actions
      *
      * @throws IllegalArgumentException if name is blank or if botStatus is out of bounds
@@ -455,7 +498,7 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
         check(connectionState == ConnectionState.DISCONNECTED && client == null)
         { "already connected to another game" }
         require(name.isNotBlank()) { "player name must be given" }
-        require(botStatus in (0..2)) { "invalid player type" }
+        require(botStatus in (0..3)) { "invalid player type" }
 
         val newClient =
             BonsaiNetworkClient(

@@ -31,9 +31,9 @@ class MessageBuilder {
     fun addRemovedTile(coordinates: Pair<Int, Int>) {
         if (removedTilesAxialCoordinates == null) {
             removedTilesAxialCoordinates = mutableListOf()
-            removedTilesAxialCoordinates?.add(coordinates)
+            removedTilesAxialCoordinates!!.add(coordinates)
         } else {
-            removedTilesAxialCoordinates?.add(coordinates)
+            removedTilesAxialCoordinates!!.add(coordinates)
         }
     }
 
@@ -46,9 +46,9 @@ class MessageBuilder {
     fun addPlacedTile(tileType: TileType, coordinates: Pair<Int, Int>) {
         if (playedTiles == null) {
             playedTiles = mutableListOf()
-            playedTiles?.add(Pair(converter.fromTileType(tileType), coordinates))
+            playedTiles!!.add(Pair(converter.fromTileType(tileType), coordinates))
         } else {
-            playedTiles?.add(Pair(converter.fromTileType(tileType), coordinates))
+            playedTiles!!.add(Pair(converter.fromTileType(tileType), coordinates))
         }
     }
 
@@ -60,9 +60,9 @@ class MessageBuilder {
     fun addClaimedGoal(goalCard: GoalCard) {
         if (claimedGoals == null) {
             claimedGoals = mutableListOf()
-            claimedGoals?.add(converter.fromGoal(goalCard))
+            claimedGoals!!.add(converter.fromGoal(goalCard))
         } else {
-            claimedGoals?.add(converter.fromGoal(goalCard))
+            claimedGoals!!.add(converter.fromGoal(goalCard))
         }
     }
 
@@ -74,9 +74,9 @@ class MessageBuilder {
     fun addRenouncedGoal(goalCard: GoalCard) {
         if (renouncedGoals == null) {
             renouncedGoals = mutableListOf()
-            renouncedGoals?.add(converter.fromGoal(goalCard))
+            renouncedGoals!!.add(converter.fromGoal(goalCard))
         } else {
-            renouncedGoals?.add(converter.fromGoal(goalCard))
+            renouncedGoals!!.add(converter.fromGoal(goalCard))
         }
     }
 
@@ -97,9 +97,9 @@ class MessageBuilder {
     fun addDrawnTile(tileType: TileType) {
         if (drawnTiles == null) {
             drawnTiles = mutableListOf()
-            drawnTiles?.add(converter.fromTileType(tileType))
+            drawnTiles!!.add(converter.fromTileType(tileType))
         } else {
-            drawnTiles?.add(converter.fromTileType(tileType))
+            drawnTiles!!.add(converter.fromTileType(tileType))
         }
     }
 
@@ -111,9 +111,9 @@ class MessageBuilder {
     fun addDiscardedTile(tileType: TileType) {
         if (discardedTiles == null) {
             discardedTiles = mutableListOf()
-            discardedTiles?.add(converter.fromTileType(tileType))
+            discardedTiles!!.add(converter.fromTileType(tileType))
         } else {
-            discardedTiles?.add(converter.fromTileType(tileType))
+            discardedTiles!!.add(converter.fromTileType(tileType))
         }
     }
 
@@ -145,7 +145,7 @@ class MessageBuilder {
                 claimedGoals!!,
                 renouncedGoals!!
             )
-            nullAllVars()
+            reset()
             return Pair(message, null)
         } else {
             if (drawnTiles == null) {
@@ -168,12 +168,12 @@ class MessageBuilder {
                 renouncedGoals!!,
                 discardedTiles!!
             )
-            nullAllVars()
+            reset()
             return Pair(null, message)
         }
     }
 
-    private fun nullAllVars() {
+    fun reset() {
         removedTilesAxialCoordinates = null
         chosenCardPosition = null
         playedTiles = null
