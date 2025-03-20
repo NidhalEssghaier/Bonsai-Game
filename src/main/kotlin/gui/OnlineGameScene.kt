@@ -1,8 +1,9 @@
 package gui
-import entity.GoalCard
+
 import entity.GoalColor
-import entity.GoalDifficulty
+import entity.PotColor
 import gui.utility.*
+import service.ConnectionState
 import service.RootService
 import tools.aqua.bgw.components.uicomponents.Button
 import tools.aqua.bgw.components.uicomponents.CheckBox
@@ -12,10 +13,11 @@ import tools.aqua.bgw.core.MenuScene
 import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.Visual
+import kotlin.random.Random
 
 class OnlineGameScene(
-    rootService: RootService,
-    application: BonsaiApplication,
+    private val rootService: RootService,
+    private val application: BonsaiApplication,
 ) : MenuScene(1920, 1080),
     Refreshable {
     private val itemImageLoader = ItemImageLoader()
@@ -25,8 +27,13 @@ class OnlineGameScene(
     private var player2Mode = 0
     private var player3Mode = 0
     private var player4Mode = 0
+    private var countPlayer = 0
+    private var potColor1 = PotColor.BLUE
+    private var potColor2 = PotColor.GRAY
+    private var potColor3 = PotColor.PURPLE
+    private var potColor4 = PotColor.RED
     private var localPlayer = ""
-    private val listGoalCard: MutableList<GoalCard> = mutableListOf()
+    private val listGoalColor: MutableList<GoalColor> = mutableListOf()
     private val headlineLabel =
         Label(
             width = 570,
@@ -51,7 +58,7 @@ class OnlineGameScene(
             height = 100,
             posX = 2,
             posY = 50,
-            text = "3847384783",
+            text = "No number set by now",
             font = Font(size = 30, fontWeight = Font.FontWeight.BOLD),
         )
     val mainMenuButton =
@@ -64,6 +71,48 @@ class OnlineGameScene(
     val startGameButton =
         Button(width = 300, height = 80, posX = 1550, posY = 460, text = "StartGame", font = Font(35)).apply {
             visual = ColorVisual(256, 107, 62)
+            onMouseClicked = {
+                if (countPlayer < 2) throw IllegalStateException("More Players Needet")
+                if (countGoals != 3) throw IllegalStateException("Select Goals")
+                var playerList: MutableList<Triple<String, Int, PotColor>> = mutableListOf()
+                var helpPotColor: PotColor = PotColor.RED
+                var helpPlayermode = 1
+                helpPotColor = potColor1
+                if (playerName1Label.text == playerAddField.text) helpPlayermode = localplayerMode
+                playerList.add(Triple(playerName1Label.text, helpPlayermode, helpPotColor))
+                helpPlayermode = 1
+
+                helpPotColor = potColor2
+                if (playerName2Label.text == playerAddField.text) helpPlayermode = localplayerMode
+                playerList.add(Triple(playerName2Label.text, player2Mode, helpPotColor))
+                helpPlayermode = 1
+
+                helpPotColor = potColor3
+                if (playerName3Label.text == playerAddField.text) helpPlayermode = localplayerMode
+                if (playerName3Label.text.isNotBlank()) {
+                    playerList.add(
+                        Triple(
+                            playerName3Label.text,
+                            player3Mode,
+                            helpPotColor,
+                        ),
+                    )
+                }
+                helpPlayermode = 1
+
+                helpPotColor = potColor4
+                if (playerName2Label.text == playerAddField.text) helpPlayermode = localplayerMode
+                if (playerName4Label.text.isNotBlank()) {
+                    playerList.add(
+                        Triple(
+                            playerName4Label.text,
+                            player4Mode,
+                            helpPotColor,
+                        ),
+                    )
+                }
+                rootService.networkService.startNewHostedGame(playerAddField.text, playerList, 10, listGoalColor)
+            }
         }
 
     // GoalTiel Labels und Button um die 3 GoalTiles Farben auszusuchen
@@ -191,7 +240,7 @@ class OnlineGameScene(
                 shakanBox.isDisabled = false
                 kenegaiBox.isDisabled = false
                 countGoals = 0
-                listGoalCard.clear()
+                listGoalColor.clear()
                 list.add(bunjayBox)
                 list.add(chookanBox)
                 list.add(moyogiBox)
@@ -258,7 +307,15 @@ class OnlineGameScene(
             visual = ColorVisual(255, 113, 113),
         )
     val addPlayerButton =
-        Button(width = 150, height = 80, posX = 1360, posY = 925, text = "Add", font = Font(50), visual = ColorVisual(256, 107, 62)).apply {
+        Button(
+            width = 150,
+            height = 80,
+            posX = 1360,
+            posY = 925,
+            text = "Add",
+            font = Font(50),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
                 localPlayer = playerAddField.text
                 playerName1Label.text = localPlayer
@@ -266,12 +323,24 @@ class OnlineGameScene(
                 playerAddField.isVisible = false
                 player1EasyBox.isDisabled = true
                 player1HardBox.isDisabled = true
+                countPlayer = 1
+                val randomNumber = Random.nextInt(100000000, 1000000000)
+                sessionNrLabel.text = randomNumber.toString()
+                rootService.networkService.hostGame(localPlayer, localplayerMode, randomNumber.toString())
             }
         }
 
     // Buttons um die Spieler namen hoch und Runter zu schieben
     val move1DownButton =
-        Button(width = 80, height = 30, posX = 1360, posY = 340, text = "Down", font = Font(15), visual = ColorVisual(256, 107, 62)).apply {
+        Button(
+            width = 80,
+            height = 30,
+            posX = 1360,
+            posY = 340,
+            text = "Down",
+            font = Font(15),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
                 if (playerName2Label.text.isBlank()) throw IllegalStateException("Need Second Player")
                 val helpString: String = playerName1Label.text
@@ -280,7 +349,15 @@ class OnlineGameScene(
             }
         }
     val move2DownButton =
-        Button(width = 80, height = 30, posX = 1360, posY = 490, text = "Down", font = Font(15), visual = ColorVisual(256, 107, 62)).apply {
+        Button(
+            width = 80,
+            height = 30,
+            posX = 1360,
+            posY = 490,
+            text = "Down",
+            font = Font(15),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
                 if (playerName3Label.text.isBlank()) throw IllegalStateException("Need Third Player")
                 val helpString: String = playerName2Label.text
@@ -289,7 +366,15 @@ class OnlineGameScene(
             }
         }
     val move3DownButton =
-        Button(width = 80, height = 30, posX = 1360, posY = 640, text = "Down", font = Font(15), visual = ColorVisual(256, 107, 62)).apply {
+        Button(
+            width = 80,
+            height = 30,
+            posX = 1360,
+            posY = 640,
+            text = "Down",
+            font = Font(15),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
                 if (playerName4Label.text.isBlank()) throw IllegalStateException("Need Fourt Player")
                 val helpString: String = playerName3Label.text
@@ -298,7 +383,15 @@ class OnlineGameScene(
             }
         }
     val move2UpButton =
-        Button(width = 80, height = 30, posX = 1360, posY = 450, text = "Up", font = Font(15), visual = ColorVisual(256, 107, 62)).apply {
+        Button(
+            width = 80,
+            height = 30,
+            posX = 1360,
+            posY = 450,
+            text = "Up",
+            font = Font(15),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
                 if (playerName2Label.text.isBlank()) throw IllegalStateException("Need Second Player")
                 val helpString: String = playerName1Label.text
@@ -307,7 +400,15 @@ class OnlineGameScene(
             }
         }
     val move3UpButton =
-        Button(width = 80, height = 30, posX = 1360, posY = 600, text = "Up", font = Font(15), visual = ColorVisual(256, 107, 62)).apply {
+        Button(
+            width = 80,
+            height = 30,
+            posX = 1360,
+            posY = 600,
+            text = "Up",
+            font = Font(15),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
                 if (playerName3Label.text.isBlank()) throw IllegalStateException("Need Thrid Player")
                 val helpString: String = playerName2Label.text
@@ -316,7 +417,15 @@ class OnlineGameScene(
             }
         }
     val move4UpButton =
-        Button(width = 80, height = 30, posX = 1360, posY = 750, text = "Up", font = Font(15), visual = ColorVisual(256, 107, 62)).apply {
+        Button(
+            width = 80,
+            height = 30,
+            posX = 1360,
+            posY = 750,
+            text = "Up",
+            font = Font(15),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
                 if (playerName4Label.text.isBlank()) throw IllegalStateException("Need Fourth Player")
                 val helpString: String = playerName3Label.text
@@ -397,27 +506,45 @@ class OnlineGameScene(
             posY = 690,
         )
     val swap1Button =
-        Button(width = 80, height = 30, posX = 685, posY = 390, text = "Swap", font = Font(15), visual = ColorVisual(256, 107, 62)).apply {
+        Button(
+            width = 80,
+            height = 30,
+            posX = 685,
+            posY = 390,
+            text = "Swap",
+            font = Font(15),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
-                val helpVisual: Visual = firstPotJpg.visual
-                firstPotJpg.visual = secondPotJpg.visual
-                secondPotJpg.visual = helpVisual
+                swap1()
             }
         }
     val swap2Button =
-        Button(width = 80, height = 30, posX = 685, posY = 540, text = "Swap", font = Font(15), visual = ColorVisual(256, 107, 62)).apply {
+        Button(
+            width = 80,
+            height = 30,
+            posX = 685,
+            posY = 540,
+            text = "Swap",
+            font = Font(15),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
-                val helpVisual: Visual = secondPotJpg.visual
-                secondPotJpg.visual = thirdPotJpg.visual
-                thirdPotJpg.visual = helpVisual
+                swap2()
             }
         }
     val swap3Button =
-        Button(width = 80, height = 30, posX = 685, posY = 690, text = "Swap", font = Font(15), visual = ColorVisual(256, 107, 62)).apply {
+        Button(
+            width = 80,
+            height = 30,
+            posX = 685,
+            posY = 690,
+            text = "Swap",
+            font = Font(15),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
             onMouseClicked = {
-                val helpVisual: Visual = thirdPotJpg.visual
-                thirdPotJpg.visual = fourthPotJpg.visual
-                fourthPotJpg.visual = helpVisual
+                swap3()
             }
         }
     val swapRandomButton =
@@ -431,16 +558,14 @@ class OnlineGameScene(
             visual = ColorVisual(256, 107, 62),
         ).apply {
             onMouseClicked = {
-                val list: MutableList<Visual> = mutableListOf()
-                list.add(firstPotJpg.visual)
-                list.add(secondPotJpg.visual)
-                list.add(thirdPotJpg.visual)
-                list.add(fourthPotJpg.visual)
-                list.shuffle()
-                firstPotJpg.visual = list.removeLast()
-                secondPotJpg.visual = list.removeLast()
-                thirdPotJpg.visual = list.removeLast()
-                fourthPotJpg.visual = list.removeLast()
+                for (i in 1..100) {
+                    val randomNumber = listOf(1, 2, 3).random()
+                    when (randomNumber) {
+                        1 -> swap1()
+                        2 -> swap2()
+                        3 -> swap3()
+                    }
+                }
             }
         }
     val gameSpeedLabel: Label =
@@ -553,7 +678,7 @@ class OnlineGameScene(
                 kenegaiBox -> colorofCard = GoalColor.BLUE
                 else -> colorofCard = GoalColor.BROWN
             }
-            listGoalCard.add(GoalCard(points = 0, difficulty = GoalDifficulty.HARD, color = colorofCard))
+            listGoalColor.add(colorofCard)
             if (countGoals == 3) {
                 if (!bunjayBox.isChecked) bunjayBox.isDisabled = true
                 if (!chookanBox.isChecked) chookanBox.isDisabled = true
@@ -572,12 +697,60 @@ class OnlineGameScene(
                 kenegaiBox -> colorofCard = GoalColor.BLUE
                 else -> colorofCard = GoalColor.BROWN
             }
-            listGoalCard.remove(GoalCard(points = 0, difficulty = GoalDifficulty.HARD, color = colorofCard))
+            listGoalColor.remove(colorofCard)
             bunjayBox.isDisabled = false
             chookanBox.isDisabled = false
             moyogiBox.isDisabled = false
             shakanBox.isDisabled = false
             kenegaiBox.isDisabled = false
+        }
+    }
+
+    private fun swap1() {
+        val helpPotColor: PotColor = potColor1
+        potColor1 = potColor2
+        potColor2 = helpPotColor
+        val helpVisual: Visual = firstPotJpg.visual
+        firstPotJpg.visual = secondPotJpg.visual
+        secondPotJpg.visual = helpVisual
+    }
+
+    private fun swap2() {
+        val helpPotColor: PotColor = potColor2
+        potColor2 = potColor3
+        potColor3 = helpPotColor
+        val helpVisual: Visual = secondPotJpg.visual
+        secondPotJpg.visual = thirdPotJpg.visual
+        thirdPotJpg.visual = helpVisual
+    }
+
+    private fun swap3() {
+        val helpPotColor: PotColor = potColor3
+        potColor3 = potColor4
+        potColor4 = helpPotColor
+        val helpVisual: Visual = thirdPotJpg.visual
+        thirdPotJpg.visual = fourthPotJpg.visual
+        fourthPotJpg.visual = helpVisual
+    }
+
+    override fun refreshConnectionState(
+        newState: ConnectionState,
+        string: String?,
+        list: List<String>?,
+    ) {
+        if (newState == ConnectionState.WAITING_FOR_GUEST && string != null) {
+            newPlayerJoined(string)
+        }
+    }
+
+    private fun newPlayerJoined(newPlayerName: String) {
+        if (countPlayer == 4) throw IllegalStateException("Too many Players")
+        countPlayer++
+        when (countPlayer) {
+            2 -> playerName2Label.text = newPlayerName
+            3 -> playerName3Label.text = newPlayerName
+            4 -> playerName4Label.text = newPlayerName
+            else -> throw IllegalStateException("Error in newPlayerJoined Funktion")
         }
     }
 }

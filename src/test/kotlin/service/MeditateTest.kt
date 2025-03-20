@@ -30,14 +30,14 @@ class MeditateTest {
         game = rootService.currentGame ?: throw IllegalStateException("Game should be initialized")
         currentPlayer = game.currentState.players[game.currentState.currentPlayer]
     }
-    fun createTestPlayers(): MutableList<Triple<String, Int, PotColor>> {
+     private  fun createTestPlayers(): MutableList<Triple<String, Int, PotColor>> {
         return mutableListOf(
             Triple("Alice", 0, PotColor.RED),
             Triple("Bob", 0, PotColor.PURPLE)
         )
     }
 
-    fun createGoalCards() : List<GoalColor> {
+    private fun createGoalCards() : List<GoalColor> {
         return  listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE)
     }
 
@@ -45,14 +45,14 @@ class MeditateTest {
      * Tests meditating with a `HelperCard`.
      * Ensures it is added to the player's hidden deck and triggers the appropriate UI refresh.
      */
-//    @Test
-//    fun testMeditateWithHelperCard() {
-//        val helperCard = HelperCard(listOf(TileType.WOOD, TileType.LEAF), id = 1)
-//        game.currentState.openCards[0] = helperCard
-//        playerActionService.meditate(helperCard)
-//        assertTrue { currentPlayer.hiddenDeck.contains(helperCard) }
-//        assertTrue { testRefreshable.refreshAfterDrawHelperCardCalled }
-//    }
+    @Test
+    fun testMeditateWithHelperCard() {
+        val helperCard = HelperCard(listOf(TileType.WOOD, TileType.LEAF), id = 1)
+        game.currentState.openCards[0] = helperCard
+        playerActionService.meditate(helperCard)
+        assertTrue { currentPlayer.hiddenDeck.contains(helperCard) }
+
+    }
 
     /**
      * Tests meditating with a `ParchmentCard`.
@@ -86,6 +86,16 @@ class MeditateTest {
         assertTrue { testRefreshable.refreshAfterDrawCardCalled }
     }
 
+    @Test
+    fun testMeditateWithMasterCardGENERICTile() {
+        val masterCard = MasterCard(tiles = listOf(TileType.WOOD, TileType.GENERIC), id = 2)
+
+        game.currentState.openCards[0] = masterCard
+        playerActionService.meditate(masterCard)
+
+        assertTrue { currentPlayer.hiddenDeck.contains(masterCard) }
+        assertTrue { testRefreshable.refreshAfterDrawCardCalled }
+    }
     /**
      * Tests meditating with a `GrowthCard`.
      * Ensures it is correctly added to the player's growth stack.
@@ -110,6 +120,19 @@ class MeditateTest {
         playerActionService.meditate(toolCard)
         assertTrue { currentPlayer.seishiTool.contains(toolCard) }
         assertEquals(7, currentPlayer.supplyTileLimit) // 2 for the position 2
+        assertTrue { testRefreshable.refreshAfterDrawCardCalled }
+    }
+
+    /**
+     * Tests meditating with a `ToolCard`.
+     * Ensures it is correctly added to the player's tool stack and increases the player's tile limit.
+     */
+    @Test
+    fun testMeditateWithPlaceholderCard() {
+        game.currentState.openCards[0] = PlaceholderCard
+
+        playerActionService.meditate(PlaceholderCard)
+
         assertTrue { testRefreshable.refreshAfterDrawCardCalled }
     }
 
@@ -212,5 +235,6 @@ class MeditateTest {
         // Ensure the next player's meditation worked
         assertEquals(seishiGrowthBefore + 1, nextPlayer.seishiGrowth.size)
     }
+
 }
 
