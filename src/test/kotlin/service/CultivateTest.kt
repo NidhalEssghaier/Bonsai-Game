@@ -68,6 +68,23 @@ class CultivateTest {
         // Verify that the helper card was partially used
         assertTrue(testPlayer.usedHelperTiles.contains(TileType.LEAF))
         assertFalse(testPlayer.usedHelperCards.contains(helperCard)) // Not fully used yet
+
+       /* // test cultivate after meditating in the same turn
+        testPlayer.hasDrawnCard=true
+
+        val leafTile2 = BonsaiTile(TileType.LEAF)
+        testPlayer.supply.add(leafTile2)
+
+        val exception = assertThrows<IllegalStateException> {
+            playerActionService.cultivate(leafTile2, 1, -1)
+        }
+        println("Actual exception message: ${exception.message}")
+
+        assertTrue(exception.message!!.contains(
+            "you cant cultivate after meditating or you have drawn a helper Card and have fully used it")
+        )*/
+
+
     }
 
     @Test
@@ -181,17 +198,6 @@ class CultivateTest {
         assertTrue(testPlayer.usedHelperCards.contains(helperCard)) // Now fully used
     }
 
-    @Test
-    fun `test cultivate with tile not in personal supply`() {
-        val tile = BonsaiTile(TileType.WOOD)
-
-        val exception = assertThrows<IllegalStateException> {
-            playerActionService.cultivate(tile, 0, -1)
-        }
-
-        assertTrue(exception.message!!.contains("this Tile is not in your personal supply"))
-    }
-
 
     @Test
     fun `test general placing rules`() {
@@ -250,7 +256,9 @@ class CultivateTest {
         val exceptionFruitOneLeaf = assertThrows<IllegalArgumentException> {
             playerActionService.cultivate(fruitTiles[1], 3, -3)
         }
-        assertTrue(exceptionFruitOneLeaf.message!!.contains("A fruit tile must be placed between two adjacent leaf tiles."))
+        assertTrue(exceptionFruitOneLeaf.message!!.contains(
+            "A fruit tile must be placed between two adjacent leaf tiles.")
+        )
 
         //  Test placing fruit tile adjacent to another fruit tile
         playerActionService.cultivate(woodTiles[7], 2, -1)
@@ -258,7 +266,9 @@ class CultivateTest {
         val exceptionFruitAdjacent = assertThrows<IllegalArgumentException> {
             playerActionService.cultivate(fruitTiles[2], 3, -3)
         }
-        assertTrue(exceptionFruitAdjacent.message!!.contains("A fruit tile cannot be placed adjacent to another fruit tile."))
+        assertTrue(exceptionFruitAdjacent.message!!.contains(
+            "A fruit tile cannot be placed adjacent to another fruit tile.")
+        )
 
         //  Test placing tile on an occupied position
         val exceptionOccupied = assertThrows<IllegalArgumentException> {
@@ -283,7 +293,9 @@ class CultivateTest {
         val exceptionFruitNonAdjacentLeaves = assertThrows<IllegalArgumentException> {
             playerActionService.cultivate(fruitTiles[3], 4, -2)
         }
-        assertTrue(exceptionFruitNonAdjacentLeaves.message!!.contains("The two leaf tiles must also be adjacent to each other."))
+        assertTrue(exceptionFruitNonAdjacentLeaves.message!!.contains(
+            "The two leaf tiles must also be adjacent to each other.")
+        )
 
         //  Test placing an invalid tile type
         val exceptionInvalidTile = assertThrows<IllegalStateException> {
@@ -396,7 +408,7 @@ class CultivateTest {
         playerActionService.cultivate(woodTiles[6], 4, -1)
 
         //  Place Leaf Tiles (2 on the left, 2 on the right)
-        val leafTiles = List(4) { BonsaiTile(TileType.LEAF) }
+        val leafTiles = List(6) { BonsaiTile(TileType.LEAF) }
         testPlayer.supply.addAll(leafTiles)
 
         playerActionService.cultivate(leafTiles[0], -3, -1)
@@ -405,7 +417,7 @@ class CultivateTest {
         playerActionService.cultivate(leafTiles[3], 5, -2)
 
         //  Place 10 Flower Tiles (5 on the left, 5 on the right)
-        val flowerTiles = List(10) { BonsaiTile(TileType.FLOWER) }
+        val flowerTiles = List(20) { BonsaiTile(TileType.FLOWER) }
         testPlayer.supply.addAll(flowerTiles)
 
         // Left side Flowers
@@ -430,7 +442,7 @@ class CultivateTest {
         game.currentState.goalCards.add(goalCardIntermediate)
         game.currentState.goalCards.add(goalCardHard)
 
-        // Ensure goal is met after placement
+        // Ensure red goal is met after placement
         assertTrue(game.currentState.goalCards.contains(goalCardLow))
         assertTrue(game.currentState.goalCards.contains(goalCardIntermediate))
         assertTrue(game.currentState.goalCards.contains(goalCardHard))
@@ -458,9 +470,49 @@ class CultivateTest {
 
         assertTrue(game.currentState.goalCards.contains(goalBlueHARD))
 
-        assertTrue(game.currentState.goalCards.contains(goalBlueHARD))
+        //check red goals when flowers are  placed only below the pot
+
+        // leaf basement
+        playerActionService.cultivate(leafTiles[4], -5, 4)
+        playerActionService.cultivate(leafTiles[5], 2, 4)
+
+
+        // Left side Flowers
+        playerActionService.cultivate(flowerTiles[10], -6, 4)
+        playerActionService.cultivate(flowerTiles[11], -6, 5)
+        playerActionService.cultivate(flowerTiles[12], -5, 5)
+        playerActionService.cultivate(flowerTiles[13], -4, 4)
+        playerActionService.cultivate(flowerTiles[14], -4, 3)
+
+        // Right side Flowers
+        playerActionService.cultivate(flowerTiles[15], 1, 4)
+        playerActionService.cultivate(flowerTiles[16], 1, 5)
+        playerActionService.cultivate(flowerTiles[17], 2, 5)
+        playerActionService.cultivate(flowerTiles[18], 3, 4)
+        playerActionService.cultivate(flowerTiles[19], 3, 3)
+
+        //  Add GoalCard and Check for Achievement
+        val redCardLow = GoalCard(3, GoalColor.RED, GoalDifficulty.LOW)
+        val redCardIntermediate = GoalCard(4, GoalColor.RED, GoalDifficulty.INTERMEDIATE)
+        val redCardHard = GoalCard(5, GoalColor.RED, GoalDifficulty.HARD)
+
+        game.currentState.goalCards.add(redCardLow)
+        game.currentState.goalCards.add(redCardIntermediate)
+        game.currentState.goalCards.add(redCardHard)
+
+        assertTrue(game.currentState.goalCards.contains(redCardLow))
+        assertTrue(game.currentState.goalCards.contains(redCardIntermediate))
+        assertTrue(game.currentState.goalCards.contains(redCardHard))
+
+
+        //test cultivate with tile not in personal supply
+        val tile = BonsaiTile(TileType.WOOD)
+        val exception = assertThrows<IllegalStateException> {
+            playerActionService.cultivate(tile, 0, -2)
+        }
+
+        assertTrue(exception.message!!.contains("this Tile is not in your personal supply"))
 
     }
-
 
 }

@@ -2,6 +2,8 @@ package service
 import entity.*
 import gui.*
 import helper.*
+import kotlin.math.ceil
+import kotlin.math.floor
 
 class PlayerActionService(
     private val rootService: RootService,
@@ -209,7 +211,8 @@ class PlayerActionService(
      * @param q The column coordinate for tile placement.
      *
      * @throws IllegalStateException if there is no active game or if the tile is not in the player's supply.
-     * @throws IllegalStateException if a helper card is available but the tile does not follow its placement rules of the card
+     * @throws IllegalStateException if a helper card is available but the tile does not follow its placement
+     * rules of the card
      * @throws IllegalStateException if no helper card is used and the tile is not allowed based on Seishi
      * or GrowthCard rules.
      */
@@ -270,7 +273,9 @@ class PlayerActionService(
             if (isPlacementAllowed) {
                 placeTile(tile, q, r)
             } else {
-                throw IllegalStateException("Tile placement not allowed based on Seishi StartingTile ans Growth Cards.")
+                throw IllegalStateException(
+                    "Tile placement not allowed based on Seishi StartingTile ans Growth Cards."
+                )
             }
         }
         onAllRefreshables { refreshAfterPlaceTile(tile) }
@@ -298,8 +303,10 @@ class PlayerActionService(
             currentPlayer.hiddenDeck.find {
                 it is HelperCard && it !in currentPlayer.usedHelperCards
             } as? HelperCard
-        check(!currentPlayer.hasDrawnCard || (helperCard!=null && helperCard !in currentPlayer.usedHelperCards)){
-            "you cant cultivate after meditating or you have drawn a helper Card and have fully used it "
+        require(
+            !currentPlayer.hasDrawnCard || (helperCard!=null && helperCard !in currentPlayer.usedHelperCards)
+        ){
+            "you cant cultivate after meditating or you have drawn a helper Card and have fully used it"
         }
 
         // Mark that the player has placed a Tile
@@ -392,7 +399,8 @@ class PlayerActionService(
             if (goalCard == null) continue
 
              //fix Bug
-            // prevent checking goals that the player has manually declined or were automatically forbidden due to claiming another
+            // prevent checking goals that the player has manually declined or were automatically forbidden
+            // due to claiming another
             if (goalCard in currentPlayer.declinedGoals || goalCard in currentPlayer.forbiddenGoals) continue
 
             val isGoalMet = when (goalCard.color) {
@@ -426,7 +434,24 @@ class PlayerActionService(
                     val rightProtrusions = protrudingTiles.count {
                         it.type == TileType.FLOWER && grid.getPotSide(it) == PotSide.RIGHT
                     }
-                    maxOf(leftProtrusions, rightProtrusions) >= when (goalCard.difficulty) {
+
+                    val belowLeftProtrusions = protrudingTiles.count {
+                        it.type == TileType.FLOWER && grid.getPotSide(it) == PotSide.BELOW &&
+                                grid.getCoordinate(it).first <= -2 - ceil(
+                            grid.getCoordinate(it).second.toDouble() / 2
+                                ).toInt()
+                    }
+                    val belowRightProtrusions = protrudingTiles.count {
+                        it.type == TileType.FLOWER && grid.getPotSide(it) == PotSide.BELOW &&
+                                grid.getCoordinate(it).first >= 3 - floor(
+                            grid.getCoordinate(it).second.toDouble() / 2
+                                ).toInt()
+                    }
+
+                    val leftTotal = leftProtrusions + belowLeftProtrusions
+                    val rightTotal = rightProtrusions + belowRightProtrusions
+
+                    maxOf(leftTotal, rightTotal) >= when (goalCard.difficulty) {
                         GoalDifficulty.LOW -> 3
                         GoalDifficulty.INTERMEDIATE -> 4
                         GoalDifficulty.HARD -> 5
@@ -434,23 +459,48 @@ class PlayerActionService(
                 }
 
                 GoalColor.BLUE -> when (goalCard.difficulty) {
+
                     GoalDifficulty.LOW -> protrudingTiles.any { grid.getPotSide(it) == PotSide.RIGHT }
+
                     GoalDifficulty.INTERMEDIATE -> protrudingTiles.any { grid.getPotSide(it) == PotSide.LEFT } &&
                             protrudingTiles.any { grid.getPotSide(it) == PotSide.RIGHT }
-                    GoalDifficulty.HARD -> protrudingTiles.any { grid.getPotSide(it) == PotSide.BELOW } &&
-                            (protrudingTiles.any { grid.getPotSide(it) == PotSide.LEFT } ||
-                                    protrudingTiles.any { grid.getPotSide(it) == PotSide.RIGHT })
+
+                    GoalDifficulty.HARD -> {
+                        var hasLeftTile = false
+                        var hasRightTile = false
+                        var hasBelowTileOnLeft = false
+                        var hasBelowTileOnRight = false
+
+                        for (tile in protrudingTiles) {
+                            when (grid.getPotSide(tile)) {
+                                PotSide.LEFT -> hasLeftTile = true
+                                PotSide.RIGHT -> hasRightTile = true
+                                PotSide.BELOW -> {
+                                    // Check if the below tile is in the left or right side
+                                    val (q, r) = grid.getCoordinate(tile)
+                                    if (q <= -2 - ceil(r.toDouble() / 2).toInt() ) hasBelowTileOnLeft = true
+                                    if (q >= 3 - floor(r.toDouble() / 2).toInt() ) hasBelowTileOnRight = true
+                                }
+                                else -> {}
+                            }
+                        }
+
+                        // The goal is met if:
+                        //  There is at least one tile below
+                        // and That below tile is on the opposite side of a left or right tile
+                        val validLeftAndBelow = hasLeftTile && hasBelowTileOnRight
+                        val validRightAndBelow = hasRightTile && hasBelowTileOnLeft
+
+                         validLeftAndBelow || validRightAndBelow
+                    }
                 }
             }
-
             if (isGoalMet) {
                 metGoals.add(goalCard)
             }
         }
-
         return metGoals
     }
-
 
     /**
      * Finds the largest connected cluster of leaf tiles in the bonsai grid.
@@ -523,7 +573,8 @@ class PlayerActionService(
     }
 
     /**
-     * Executes the "meditate" action, allowing the player to remove tiles and draw a card from the [BonsaiGame] [openCards].
+     * Executes the "meditate" action, allowing the player to remove tiles and draw a card from the
+     * [BonsaiGame] [openCards].
      * Based on the card position, a [Player] receives bonsai tiles from the common supply and keep
      * them in his [Player.supply].
      * Based on the card type, a player can play a tile, recieve tiles or get a bonus
@@ -675,7 +726,8 @@ class PlayerActionService(
             require(choice == TileType.WOOD || choice == TileType.LEAF) { "Invalid choice" }
         } else {
             require(
-                choice == TileType.WOOD || choice == TileType.LEAF || choice == TileType.FLOWER || choice == TileType.FRUIT,
+                choice == TileType.WOOD || choice == TileType.LEAF || choice == TileType.FLOWER
+                        || choice == TileType.FRUIT,
             ) { "Invalid choice" }
         }
         // Add the chosen tile to the current player's supply
