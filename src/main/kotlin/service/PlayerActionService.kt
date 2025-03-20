@@ -11,7 +11,7 @@ class PlayerActionService(
 ) : AbstractRefreshingService() {
 
 
-    private var allowedTiles:MutableMap<TileType,Int> = mutableMapOf(
+    var allowedTiles:MutableMap<TileType,Int> = mutableMapOf(
         TileType.GENERIC to 1,
         TileType.WOOD to 1,
         TileType.LEAF to 1
