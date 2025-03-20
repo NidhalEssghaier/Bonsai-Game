@@ -45,6 +45,11 @@ class JoinGameScene(
     val joinGameButton =
         Button(width = 300, height = 80, posX = 850, posY = 600, text = "Join Game", font = Font(35)).apply {
             visual = ColorVisual(256, 107, 62)
+            onMouseClicked={
+                if(playerNameInput.text.isBlank()) throw IllegalStateException("Gib einen Namen ein")
+                if (sessionIDInput.text.isBlank()) throw IllegalStateException("Gib eine gültige Session Id an")
+                rootService.networkService.joinGame(playerNameInput.text, localplayerMode,10, sessionIDInput.text)
+            }
         }
     val mainMenuButton =
         Button(width = 300, height = 80, posX = 850, posY = 860, text = "Main Menu", font = Font(35))

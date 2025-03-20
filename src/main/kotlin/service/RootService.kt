@@ -2,6 +2,7 @@ package service
 
 import gui.Refreshable
 import entity.BonsaiGame
+import service.bot.BotService
 
 /**
  * Main class of the service layer for the War card game. Provides access
@@ -12,6 +13,8 @@ class RootService {
 
     val gameService = GameService(this)
     val playerActionService = PlayerActionService(this)
+    val networkService = NetworkService(this)
+    val botService = BotService(this)
 
     /**
      * The currently active game. Can be `null`, if no game has started yet.
@@ -25,6 +28,7 @@ class RootService {
     fun addRefreshable(newRefreshable: Refreshable) {
         gameService.addRefreshable(newRefreshable)
         playerActionService.addRefreshable(newRefreshable)
+        networkService.addRefreshable(newRefreshable)
     }
 
     /**
