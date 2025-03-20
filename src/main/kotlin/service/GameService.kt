@@ -206,27 +206,32 @@ class GameService(
             when (goalColor) {
                 GoalColor.BROWN -> {
                     goals.add(GoalCard(5, goalColor, GoalDifficulty.LOW))
-                    if (playerCount > 2) goals.add(GoalCard(10, goalColor, GoalDifficulty.INTERMEDIATE)) else goals.add(null)
+                    if (playerCount > 2) goals.add(GoalCard(10, goalColor, GoalDifficulty.INTERMEDIATE))
+                    else goals.add(null)
                     goals.add(GoalCard(15, goalColor, GoalDifficulty.HARD))
                 }
                 GoalColor.ORANGE -> {
                     goals.add(GoalCard(9, goalColor, GoalDifficulty.LOW))
-                    if (playerCount > 2) goals.add(GoalCard(11, goalColor, GoalDifficulty.INTERMEDIATE)) else goals.add(null)
+                    if (playerCount > 2) goals.add(GoalCard(11, goalColor, GoalDifficulty.INTERMEDIATE))
+                    else goals.add(null)
                     goals.add(GoalCard(13, goalColor, GoalDifficulty.HARD))
                 }
                 GoalColor.GREEN -> {
                     goals.add(GoalCard(6, goalColor, GoalDifficulty.LOW))
-                    if (playerCount > 2) goals.add(GoalCard(9, goalColor, GoalDifficulty.INTERMEDIATE)) else goals.add(null)
+                    if (playerCount > 2) goals.add(GoalCard(9, goalColor, GoalDifficulty.INTERMEDIATE))
+                    else goals.add(null)
                     goals.add(GoalCard(12, goalColor, GoalDifficulty.HARD))
                 }
                 GoalColor.RED -> {
                     goals.add(GoalCard(8, goalColor, GoalDifficulty.LOW))
-                    if (playerCount > 2) goals.add(GoalCard(12, goalColor, GoalDifficulty.INTERMEDIATE)) else goals.add(null)
+                    if (playerCount > 2) goals.add(GoalCard(12, goalColor, GoalDifficulty.INTERMEDIATE))
+                    else goals.add(null)
                     goals.add(GoalCard(16, goalColor, GoalDifficulty.HARD))
                 }
                 GoalColor.BLUE -> {
                     goals.add(GoalCard(7, goalColor, GoalDifficulty.LOW))
-                    if (playerCount > 2) goals.add(GoalCard(10, goalColor, GoalDifficulty.INTERMEDIATE)) else goals.add(null)
+                    if (playerCount > 2) goals.add(GoalCard(10, goalColor, GoalDifficulty.INTERMEDIATE))
+                    else goals.add(null)
                     goals.add(GoalCard(14, goalColor, GoalDifficulty.HARD))
                 }
             }
@@ -319,7 +324,8 @@ class GameService(
 
             val sumOfPoints = leafPoints + sumOfFlowerPoints + fruitPoints + sumCardPoints + goalPoints
 
-            pointsPerPlayer[player] = mutableListOf(leafPoints,sumOfFlowerPoints,fruitPoints,sumCardPoints,goalPoints,sumOfPoints)
+            pointsPerPlayer[player] =
+                mutableListOf(leafPoints,sumOfFlowerPoints,fruitPoints,sumCardPoints,goalPoints,sumOfPoints)
         }
         val scoreList = pointsPerPlayer.toList().sortedByDescending { pair -> pair.second.last() }.toMap()
         // a tie situation is already handled via sortedByDescending, because equal values stay in the same order
