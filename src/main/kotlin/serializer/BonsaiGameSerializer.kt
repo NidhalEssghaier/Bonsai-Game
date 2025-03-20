@@ -7,6 +7,12 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.*
 import service.PlayerActionService
 
+/**
+ * Serializer for [BonsaiGame]
+ * @property descriptor The descriptor of the serializer
+ * @property stackSerializer The serializer for the undo and redo stack
+ * @constructor Creates a new [BonsaiGameSerializer]
+ */
 class BonsaiGameSerializer: KSerializer<BonsaiGame> {
     private val stackSerializer = ArrayDequeGameStateSerializer()
 
@@ -15,6 +21,11 @@ class BonsaiGameSerializer: KSerializer<BonsaiGame> {
         element("redoStack", stackSerializer.descriptor)
     }
 
+    /**
+     * Serializes the [BonsaiGame]
+     * @param encoder The encoder to use
+     * @param value The [BonsaiGame] object to serialize
+     */
     override fun serialize(encoder: Encoder, value: BonsaiGame) {
         encoder.encodeStructure(descriptor) {
             encodeSerializableElement(descriptor, 0, stackSerializer, value.undoStack)
@@ -22,6 +33,11 @@ class BonsaiGameSerializer: KSerializer<BonsaiGame> {
         }
     }
 
+    /**
+     * Deserializes the [BonsaiGame]
+     * @param decoder The decoder to use
+     * @return The deserialized [BonsaiGame]
+     */
     override fun deserialize(decoder: Decoder): BonsaiGame {
         return decoder.decodeStructure(descriptor) {
             var undoStack = ArrayDeque<GameState>()
