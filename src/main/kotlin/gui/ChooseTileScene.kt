@@ -20,18 +20,25 @@ private const val BUTTON_HEIGHT = 150
 private const val HORIZONTAL_SPACING = 75
 
 /**
- * [MenuScene] that gets displayed when the player needs to choose one or two tiles after drawing a card.
- * Choices are presented based on if the scene was triggered by drawing a [MasterCard] with [TileType.GENERIC] and / or
- * the position from where the card was taken from gives either a [TileType.WOOD] or [TileType.LEAF]
+ * [MenuScene] that gets displayed when the player needs to choose one or
+ * two tiles after drawing a card. Choices are presented based on if the
+ * scene was triggered by drawing a [MasterCard] with [TileType.GENERIC]
+ * and / or the position from where the card was taken from gives either a
+ * [TileType.WOOD] or [TileType.LEAF]
  *
- * @property chooseByBoard Determines if the scene was triggered by drawing a card from the position where they can choose between a [TileType.WOOD] or [TileType.LEAF]
- * @property chooseByCard Determines if the scene was triggered by drawing a [MasterCard] with [TileType.GENERIC]
+ * @property rootService The [RootService] to access the other services
+ * @property application The running application
+ * @property chooseByBoard Determines if the scene was triggered by drawing
+ *    a card from the position where they can choose between a
+ *    [TileType.WOOD] or [TileType.LEAF]
+ * @property chooseByCard Determines if the scene was triggered by drawing
+ *    a [MasterCard] with [TileType.GENERIC]
  */
 class ChooseTileScene(
-    val rootService: RootService,
-    val application: BonsaiApplication,
-    val chooseByBoard: Boolean,
-    val chooseByCard: Boolean,
+    private val rootService: RootService,
+    private val application: BonsaiApplication,
+    private val chooseByBoard: Boolean,
+    private val chooseByCard: Boolean,
 ) : MenuScene(1920, 1080),
     Refreshable {
     private val itemImageLoader = ItemImageLoader()
