@@ -180,6 +180,7 @@ class HexGrid private constructor(
         return PotSide.OTHER
     }
 
+
     /**
      * Get the position of the given [BonsaiTile] relative to the Pot
      * @param tile [BonsaiTile]

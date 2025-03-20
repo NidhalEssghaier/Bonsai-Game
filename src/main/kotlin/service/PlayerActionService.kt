@@ -1,5 +1,6 @@
 package service
 import entity.*
+import gui.*
 import helper.*
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -9,6 +10,12 @@ class PlayerActionService(
     private val rootService: RootService,
 ) : AbstractRefreshingService() {
 
+
+    private var allowedTiles:MutableMap<TileType,Int> = mutableMapOf(
+        TileType.GENERIC to 1,
+        TileType.WOOD to 1,
+        TileType.LEAF to 1
+    )
     /**
      * The companion object contains the [switchPlayer] method, which is used to switch the active player
      */
@@ -88,6 +95,10 @@ class PlayerActionService(
         // clear used helper card tiles of the current player
         currentPlayer.usedHelperTiles.clear()
 
+        //return tree limit to state beofre playing
+        allowedTiles = game.currentState
+            .players[(game.currentState.currentPlayer + 1) % game.currentState.players.size].treeTileLimit.toMutableMap()
+        //prepare allowed tiles for next player
         game.undoStack.push(game.currentState.copy())
         game.redoStack.clear()
 
@@ -286,13 +297,11 @@ class PlayerActionService(
         }
         // placing a Tile without a helper Card
         else {
-            val seishiAllowedTiles = currentPlayer.treeTileLimit.keys // The 3 permanent Seishi tile types
-            // Tile types granted by Growth Cards
-            val growthAllowedTiles = currentPlayer.seishiGrowth.map { (it as? GrowthCard)?.type }
 
-            val allowedTiles = seishiAllowedTiles + growthAllowedTiles
-            // Fix: Allow placement if Generic is in allowedTiles
-            val isPlacementAllowed = tile.type in allowedTiles || TileType.GENERIC in allowedTiles
+
+            // Allow placement if Generic ;imit bigger or tile type limit bigger then 0
+            val isPlacementAllowed = allowedTiles[TileType.GENERIC]!! > 0
+                    || (allowedTiles.contains(tile.type) && allowedTiles[tile.type]!! > 0)
 
             if (isPlacementAllowed) {
                 placeTile(tile, q, r)
@@ -333,8 +342,7 @@ class PlayerActionService(
             "you cant cultivate after meditating or you have drawn a helper Card and have fully used it"
         }
 
-        // Mark that the player has placed a Tile
-        currentPlayer.hasCultivated= true
+
 
         val bonsai = currentPlayer.bonsai
         val grid = bonsai.grid
@@ -386,17 +394,26 @@ class PlayerActionService(
         // Remove tile from player's supply
         currentPlayer.supply.remove(tile)
 
-        //  Netzwerk mitteilen, wenn ein Tile aus dem Supply entfernt wird
-        rootService.networkService.messageBuilder.addDiscardedTile(tile.type)
-
         // Place tile in bonsai grid
         grid[q, r] = tile
 
-        //  Netzwerk mitteilen, wenn ein Tile zu dem Bonsai hinzugefügt wird
-        rootService.networkService.messageBuilder.addPlacedTile(tile.type, Pair(q, r))
+        // Mark that the player has placed a Tile
+        currentPlayer.hasCultivated= true
 
         // Update tile count
         bonsai.tileCount[tile.type] = bonsai.tileCount.getOrDefault(tile.type, 0) + 1
+
+
+        //update tree tile limit
+        if(!allowedTiles.containsKey(tile.type)){
+            allowedTiles[TileType.GENERIC] = allowedTiles[TileType.GENERIC]!!-1
+        }
+        else if(allowedTiles[tile.type]!! >0){
+            allowedTiles[tile.type] = allowedTiles[tile.type]!! - 1
+        }else{
+            allowedTiles[TileType.GENERIC] = allowedTiles[TileType.GENERIC]!!-1
+
+        }
 
         // Refresh the game scene
         onAllRefreshables { refreshAfterPlaceTile(tile) }
@@ -673,7 +690,17 @@ class PlayerActionService(
 
         // Process the card's effect based on its type
         when (card) {
-            is GrowthCard -> currentPlayer.seishiGrowth.push(card)
+            is GrowthCard -> {
+
+                //add to tree tile limit based on tile type on growth card
+                if(currentPlayer.treeTileLimit.containsKey(card.type)) {
+                    currentPlayer.treeTileLimit[card.type] = currentPlayer.treeTileLimit[card.type]!! + 1
+                }
+                else{
+                    currentPlayer.treeTileLimit[card.type] = 1
+                }
+                currentPlayer.seishiGrowth.push(card)
+            }
             is ToolCard -> {
                 // Tool cards are added to the player's tool stack, increasing their tile limit
                 currentPlayer.seishiTool.push(card)

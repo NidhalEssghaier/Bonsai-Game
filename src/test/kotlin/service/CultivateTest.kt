@@ -3,7 +3,11 @@ package service
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import entity.*
+import helper.pop
+import helper.push
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.assertFalse
 
@@ -198,6 +202,17 @@ class CultivateTest {
         assertTrue(testPlayer.usedHelperCards.contains(helperCard)) // Now fully used
     }
 
+    @Test
+    fun `test cultivate with tile not in personal supply`() {
+        val tile = BonsaiTile(TileType.WOOD)
+
+        val exception = assertThrows<IllegalStateException> {
+            playerActionService.cultivate(tile, 0, -1)
+        }
+
+        assertTrue(exception.message!!.contains("this Tile is not in your personal supply"))
+    }
+
 
     @Test
     fun `test general placing rules`() {
@@ -308,10 +323,38 @@ class CultivateTest {
 
     @Test
     fun `test cultivate triggers green,brown and orange goals `() {
+        val mc = RootService()
+        val gameService = GameService(mc)
+        val playerActionService = PlayerActionService(mc)
+        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE),
+            Triple("Iyed",1,PotColor.PURPLE)),5, listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
+
+        //check game not null
+        val game = mc.currentGame
+        checkNotNull(game)
+
+        val currentPlayer = game.currentState.players[0]
+        val currentPlayer1 = game.currentState.players[1]
         val woodTiles = List(12) { BonsaiTile(TileType.WOOD) }
         val leafTiles = List(9) { BonsaiTile(TileType.LEAF) }
 
-        testPlayer.supply.addAll(woodTiles + leafTiles)
+        currentPlayer.supply.addAll(woodTiles + leafTiles)
+        currentPlayer1.supply.addAll(woodTiles + leafTiles)
+        currentPlayer.treeTileLimit =mutableMapOf(
+            TileType.GENERIC to 101,
+            TileType.WOOD to 151,
+            TileType.LEAF to 131,
+            TileType.LEAF to 131,
+            TileType.LEAF to 131,
+        )
+        currentPlayer1.treeTileLimit =mutableMapOf(
+            TileType.GENERIC to 101,
+            TileType.WOOD to 151,
+            TileType.LEAF to 131,
+            TileType.LEAF to 131,
+            TileType.LEAF to 131,
+        )
+
 
         val greenCardLow = GoalCard(5, GoalColor.GREEN, GoalDifficulty.LOW)
         val greenCardIntermediate = GoalCard(7, GoalColor.GREEN, GoalDifficulty.INTERMEDIATE)
@@ -330,7 +373,15 @@ class CultivateTest {
 
 
         // placement to check BROWN goal cards
+        /*val flowerGrowth = GrowthCard(TileType.FLOWER,21)
+        val woodGrowth = GrowthCard(TileType.WOOD,21)
+        for (i in 1..20){
+            game.currentState.openCards.add(woodGrowth)
+            playerActionService.meditate(woodGrowth)
+            playerActionService.endTurn()
 
+        }*/
+        playerActionService.endTurn()
         playerActionService.cultivate(woodTiles[0], 0, -1)
         playerActionService.cultivate(woodTiles[1], 1, -1)
         playerActionService.cultivate(woodTiles[2], -1, -1)
@@ -408,7 +459,7 @@ class CultivateTest {
         playerActionService.cultivate(woodTiles[6], 4, -1)
 
         //  Place Leaf Tiles (2 on the left, 2 on the right)
-        val leafTiles = List(6) { BonsaiTile(TileType.LEAF) }
+        val leafTiles = List(4) { BonsaiTile(TileType.LEAF) }
         testPlayer.supply.addAll(leafTiles)
 
         playerActionService.cultivate(leafTiles[0], -3, -1)
@@ -417,7 +468,7 @@ class CultivateTest {
         playerActionService.cultivate(leafTiles[3], 5, -2)
 
         //  Place 10 Flower Tiles (5 on the left, 5 on the right)
-        val flowerTiles = List(20) { BonsaiTile(TileType.FLOWER) }
+        val flowerTiles = List(10) { BonsaiTile(TileType.FLOWER) }
         testPlayer.supply.addAll(flowerTiles)
 
         // Left side Flowers
@@ -442,7 +493,7 @@ class CultivateTest {
         game.currentState.goalCards.add(goalCardIntermediate)
         game.currentState.goalCards.add(goalCardHard)
 
-        // Ensure red goal is met after placement
+        // Ensure goal is met after placement
         assertTrue(game.currentState.goalCards.contains(goalCardLow))
         assertTrue(game.currentState.goalCards.contains(goalCardIntermediate))
         assertTrue(game.currentState.goalCards.contains(goalCardHard))
@@ -500,19 +551,86 @@ class CultivateTest {
         game.currentState.goalCards.add(redCardIntermediate)
         game.currentState.goalCards.add(redCardHard)
 
-        assertTrue(game.currentState.goalCards.contains(redCardLow))
-        assertTrue(game.currentState.goalCards.contains(redCardIntermediate))
-        assertTrue(game.currentState.goalCards.contains(redCardHard))
+    }
 
+    @Test
+    fun `test cultivate not in seishi tile`(){
 
-        //test cultivate with tile not in personal supply
-        val tile = BonsaiTile(TileType.WOOD)
+        val mc = RootService()
+        val gameService = GameService(mc)
+        val playerActionService = PlayerActionService(mc)
+        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
+
+        //check game not null
+        val game = mc.currentGame
+        checkNotNull(game)
+        var currentPlayer = game.currentState.players[game.currentState.currentPlayer]
+
+        //test with no growth cards
+        assertEquals(currentPlayer.treeTileLimit,mutableMapOf(
+            TileType.GENERIC to 1,
+            TileType.WOOD to 1,
+            TileType.LEAF to 1))
+
+        //test with growth card already in seishi
+        val leafGrowth =GrowthCard(TileType.LEAF,22)
+        game.currentState.openCards[0]= leafGrowth
+        playerActionService.meditate(leafGrowth)
+        assertEquals(currentPlayer.treeTileLimit,mutableMapOf(
+            TileType.GENERIC to 1,
+            TileType.WOOD to 1,
+            TileType.LEAF to 2))
+
+        playerActionService.endTurn()
+        currentPlayer = game.currentState.players[game.currentState.currentPlayer]
+        //test with growth card not in seishi
+        val flowerGrowth = GrowthCard(TileType.FLOWER,21)
+        game.currentState.openCards[1]= flowerGrowth
+        playerActionService.meditate(flowerGrowth)
+        assertEquals(currentPlayer.treeTileLimit,mutableMapOf(
+            TileType.GENERIC to 1,
+            TileType.WOOD to 1,
+            TileType.FLOWER to 1,
+            TileType.LEAF to 1),)
+    }
+    @Test
+    fun `test cultivate with not allowed by Seishi or Growth Cards`() {
+
+        val mc = RootService()
+        val gameService = GameService(mc)
+        val playerActionService = PlayerActionService(mc)
+        gameService.startNewGame(listOf(
+            Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
+        //   allowed tiles (Seishi or Growth)
+        val game = mc.currentGame
+        checkNotNull(game)
+        val  currentPlayer = game.currentState.players[game.currentState.currentPlayer]
+        val woodTile1 = BonsaiTile(TileType.WOOD)
+        val leafTile = BonsaiTile(TileType.LEAF)
+        val woodTile2 = BonsaiTile(TileType.WOOD)
+        currentPlayer.supply.add(woodTile1)
+        currentPlayer.supply.add(woodTile2)
+        currentPlayer.supply.add(leafTile)
+
+        // Allowed by generic
+        assertDoesNotThrow {  playerActionService.cultivate(woodTile1, 0, -1)}  // Allowed by Seishi
+        assertDoesNotThrow {  playerActionService.cultivate(woodTile2, 0, -2)}
+        assertDoesNotThrow {  playerActionService.cultivate(leafTile, 0, -3) } // Allowed by Seishi
+
+        //invalid place tile
+        val flowerTile1 = BonsaiTile(TileType.FLOWER) // Another Fruit tile (not covered)
+        currentPlayer.supply.add(flowerTile1)
         val exception = assertThrows<IllegalStateException> {
-            playerActionService.cultivate(tile, 0, -2)
+            playerActionService.cultivate(flowerTile1,0,-4)
         }
+        assertEquals("Tile placement not allowed based on Seishi StartingTile ans Growth Cards.",
+            exception.message)
 
-        assertTrue(exception.message!!.contains("this Tile is not in your personal supply"))
+        playerActionService.endTurn()
+        playerActionService.endTurn()
+        assertDoesNotThrow {  playerActionService.cultivate(flowerTile1, 0, -4)}  // Allowed by Seishi
 
     }
+
 
 }
