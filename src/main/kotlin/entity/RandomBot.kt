@@ -22,30 +22,29 @@ import serializer.ArrayDequeZenCardSerializer
 class RandomBot private constructor(
     override val name: String,
     override var potColor: PotColor,
-
     override var bonsai: Bonsai,
-    override var supplyTileLimit: Int = 5,
+    override val forbiddenGoals: MutableList<GoalCard> = mutableListOf()
+): Player
+{
+    override var supplyTileLimit: Int = 5
     override var treeTileLimit: MutableMap<TileType, Int> = mutableMapOf(
         TileType.GENERIC to 1,
         TileType.WOOD to 1,
         TileType.LEAF to 1
-    ),
-    override var declinedGoals: MutableList<GoalCard> = mutableListOf(),
-    override var acceptedGoals: MutableList<GoalCard> = mutableListOf(),
-    override val forbiddenGoals: MutableList<GoalCard> = mutableListOf(),
+    )
+    override var declinedGoals: MutableList<GoalCard> = mutableListOf()
+    override var acceptedGoals: MutableList<GoalCard> = mutableListOf()
     @Serializable(with = ArrayDequeZenCardSerializer::class)
-    override var seishiTool: ArrayDeque<ZenCard> = ArrayDeque(),
+    override var seishiTool: ArrayDeque<ZenCard> = ArrayDeque()
     @Serializable(with = ArrayDequeZenCardSerializer::class)
-    override var seishiGrowth: ArrayDeque<ZenCard> = ArrayDeque(),
-    override var hiddenDeck: MutableList<@Polymorphic ZenCard> = mutableListOf(),
-    override var supply: MutableList<BonsaiTile> = mutableListOf(),
-    override var usedHelperTiles: MutableList<TileType> = mutableListOf(),
-    override var usedHelperCards: MutableList<HelperCard> = mutableListOf() ,
-    override var hasDrawnCard: Boolean = false,
-    override var hasCultivated: Boolean = false ,
+    override var seishiGrowth: ArrayDeque<ZenCard> = ArrayDeque()
+    override var hiddenDeck: MutableList<@Polymorphic ZenCard> = mutableListOf()
+    override var supply: MutableList<BonsaiTile> = mutableListOf()
+    override var usedHelperTiles: MutableList<TileType> = mutableListOf()
+    override var usedHelperCards: MutableList<HelperCard> = mutableListOf()
+    override var hasDrawnCard: Boolean = false
+    override var hasCultivated: Boolean = false
 
-): Player
-{
     /**
      * Secondary public constructor to create a player instance
      */
@@ -60,20 +59,20 @@ class RandomBot private constructor(
             name,
             potColor,
             bonsai.copy(),
-            supplyTileLimit,
-            treeTileLimit.toMutableMap(),
-            declinedGoals.toMutableList(),
-            acceptedGoals.toMutableList(),
-            forbiddenGoals.toMutableList(),
-            ArrayDeque(seishiTool),
-            ArrayDeque(seishiGrowth),
-            hiddenDeck.toMutableList(),
-            supply.toMutableList(),
-            usedHelperTiles.toMutableList(),
-            usedHelperCards.toMutableList(),
-            hasDrawnCard,
-            hasCultivated ,
-
-        )
+            forbiddenGoals.toMutableList()
+        ).apply {
+            this.supplyTileLimit = this@RandomBot.supplyTileLimit
+            this.treeTileLimit = this@RandomBot.treeTileLimit.toMutableMap()
+            this.declinedGoals = this@RandomBot.declinedGoals.toMutableList()
+            this.acceptedGoals = this@RandomBot.acceptedGoals.toMutableList()
+            this.seishiTool = ArrayDeque(this@RandomBot.seishiTool)
+            this.seishiGrowth = ArrayDeque(this@RandomBot.seishiGrowth)
+            this.hiddenDeck = this@RandomBot.hiddenDeck.toMutableList()
+            this.supply = this@RandomBot.supply.toMutableList()
+            this.usedHelperTiles = this@RandomBot.usedHelperTiles.toMutableList()
+            this.usedHelperCards = this@RandomBot.usedHelperCards.toMutableList()
+            this.hasDrawnCard = this@RandomBot.hasDrawnCard
+            this.hasCultivated = this@RandomBot.hasCultivated
+        }
     }
 }
