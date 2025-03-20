@@ -312,8 +312,7 @@ class PlayerActionService(
             "you cant cultivate after meditating or you have drawn a helper Card and have fully used it "
         }
 
-        // Mark that the player has placed a Tile
-        currentPlayer.hasCultivated= true
+
 
         val bonsai = currentPlayer.bonsai
         val grid = bonsai.grid
@@ -367,6 +366,9 @@ class PlayerActionService(
 
         // Place tile in bonsai grid
         grid[q, r] = tile
+
+        // Mark that the player has placed a Tile
+        currentPlayer.hasCultivated= true
 
         // Update tile count
         bonsai.tileCount[tile.type] = bonsai.tileCount.getOrDefault(tile.type, 0) + 1
