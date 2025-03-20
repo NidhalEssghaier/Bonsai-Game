@@ -51,6 +51,7 @@ tasks.test {
 
 tasks.clean {
     delete.add("public")
+    delete.add("data")
 }
 
 kover {

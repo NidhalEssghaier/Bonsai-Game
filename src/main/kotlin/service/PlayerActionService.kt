@@ -1,9 +1,9 @@
 package service
 import entity.*
-import gui.*
 import helper.*
 import kotlin.math.ceil
 import kotlin.math.floor
+import service.bot.BotService
 
 class PlayerActionService(
     private val rootService: RootService,
@@ -67,6 +67,11 @@ class PlayerActionService(
         val tilesToDiscard =
             currentPlayer.supply.size - currentPlayer.supplyTileLimit
         if (tilesToDiscard > 0) {
+            val player = game.currentState.players[game.currentState.currentPlayer]
+            if(player is RandomBot) {
+                val botService = rootService.botService
+                botService.discardTileLogic(tilesToDiscard)
+            }
             onAllRefreshables {
                 refreshAfterDiscardTile(tilesToDiscard, null)
             }
@@ -88,14 +93,33 @@ class PlayerActionService(
 
         if (game.currentState.drawStack.isEmpty()) {
             game.currentState.endGameCounter++
-        }
-        if (game.currentState.endGameCounter > game.currentState.players.size) {
-            rootService.gameService.endGame()
+            if (game.currentState.endGameCounter > game.currentState.players.size) {
+                rootService.gameService.endGame()
+            } else {
+                switchPlayer(game)
+                onAllRefreshables {
+                    refreshAfterEndTurn()
+                }
+                println("end: If,else")
+                endTurnBot(game)
+            }
         } else {
             switchPlayer(game)
             onAllRefreshables {
                 refreshAfterEndTurn()
             }
+            println("end: Else")
+            println("nach refreshable end turn")
+            endTurnBot(game)
+        }
+    }
+
+    private fun endTurnBot(game: BonsaiGame) {
+
+        val player = game.currentState.players[game.currentState.currentPlayer]
+        if(player is RandomBot) {
+            val botService = rootService.botService
+            botService.playRandomMove()
         }
     }
 
@@ -362,8 +386,14 @@ class PlayerActionService(
         // Remove tile from player's supply
         currentPlayer.supply.remove(tile)
 
+        //  Netzwerk mitteilen, wenn ein Tile aus dem Supply entfernt wird
+        rootService.networkService.messageBuilder.addDiscardedTile(tile.type)
+
         // Place tile in bonsai grid
         grid[q, r] = tile
+
+        //  Netzwerk mitteilen, wenn ein Tile zu dem Bonsai hinzugefügt wird
+        rootService.networkService.messageBuilder.addPlacedTile(tile.type, Pair(q, r))
 
         // Update tile count
         bonsai.tileCount[tile.type] = bonsai.tileCount.getOrDefault(tile.type, 0) + 1
@@ -555,6 +585,9 @@ class PlayerActionService(
             // Add the claimed goal to acceptedGoals
             (currentPlayer.acceptedGoals).add(goalCard)
 
+            //  Netzwerk mitteilen, wenn ein Goal akzeptiert wird
+            rootService.networkService.messageBuilder.addClaimedGoal(goalCard)
+
             // remove goal from game
             game.currentState.goalCards[game.currentState.goalCards.indexOf(goalCard)] = null
 
@@ -567,6 +600,9 @@ class PlayerActionService(
             // Only forbid this specific goal card
             if (goalCard !in currentPlayer.declinedGoals) {
                 currentPlayer.declinedGoals.add(goalCard)
+
+                //  Netzwerk mitteilen, wenn ein Goal abgelehnt wird
+                rootService.networkService.messageBuilder.addRenouncedGoal(goalCard)
             }
         }
         onAllRefreshables { refreshAfterDecideGoal() }
@@ -594,7 +630,7 @@ class PlayerActionService(
      *
      * @throws IllegalStateException If there is no active game.
      * @throws IllegalStateException If the Game's stacks are empty.
-     * @throws IllegalArgumentException If the selected [card] is not in [openCards].
+     * @throws IllegalArgumentException If the selected [card] is not in openCards.
      *
      */
     fun meditate(card: ZenCard) {
@@ -629,6 +665,9 @@ class PlayerActionService(
             // choose tile later
             chooseTilesByBoard = true
         } else {
+            receivedTiles.forEach { bonsaiTile ->
+                rootService.networkService.messageBuilder.addDrawnTile(bonsaiTile.type)
+            }
             currentPlayer.supply += receivedTiles
         }
 
@@ -646,6 +685,9 @@ class PlayerActionService(
                     chooseTilesByCard = true
                 } else {
                     currentPlayer.supply += card.tiles.map { BonsaiTile(it) } // Add tiles to supply
+                    card.tiles.forEach { tile ->
+                        rootService.networkService.messageBuilder.addDrawnTile(tile)
+                    }
                 }
                 // Store the card in the hidden deck; tile limit checks will be enforced at the end of the turn
                 currentPlayer.hiddenDeck += card
@@ -661,6 +703,7 @@ class PlayerActionService(
         game.currentState.openCards[cardIndex] = PlaceholderCard
         shiftBoardAndRefill(cardIndex)
 
+        println("refresh at end of meditate")
         // refresh to show draw card animation & choose tiles optionally based on drawn card & chosen stack
         onAllRefreshables { refreshAfterDrawCard(card, cardIndex, chooseTilesByBoard, chooseTilesByCard) }
     }
@@ -687,6 +730,8 @@ class PlayerActionService(
 
         if (game.currentState.openCards.isEmpty()) throw IllegalStateException("No available cards to draw")
 
+        rootService.networkService.messageBuilder.setDrawnCard(cardStack)
+
         // Determine which tiles to assign based on the card's position in openCards
         val acquiredTiles =
             when (cardStack) {
@@ -700,19 +745,22 @@ class PlayerActionService(
     }
 
     /**
-     * Applies the player's tile choice for cardStack 1 after the GUI prompts them.
-     * This is called by the GUI after the player selects WOOD or LEAF.
+     * Applies the player's tile choice after they are prompted by the GUI.
+     *
+     * This method is called once the player selects a tile type.
      *
      * Preconditions:
      * - A game must be active.
-     * - The choice must be either WOOD or LEAF.
+     * - The chosen tile must be valid.
      *
      * Postconditions:
-     * - The chosen tile is added to the player's supply.
+     * - The selected tile is added to the player's supply.
      * - The UI is refreshed to reflect the change.
      *
-     * @param cardStack The position in openCards (should be 1 for this case).
-     * @param choice The tile type chosen by the player (WOOD or LEAF).
+     * @param chooseFromAll Indicates whether the player can choose from all tile types (true) or only WOOD/LEAF (false).
+     * @param choice The tile type chosen by the player.
+     * @throws IllegalStateException if no active game is found.
+     * @throws IllegalArgumentException if the selected tile is invalid.
      */
 
     fun applyTileChoice(
@@ -726,10 +774,12 @@ class PlayerActionService(
             require(choice == TileType.WOOD || choice == TileType.LEAF) { "Invalid choice" }
         } else {
             require(
-                choice == TileType.WOOD || choice == TileType.LEAF || choice == TileType.FLOWER
-                        || choice == TileType.FRUIT,
+                choice == TileType.WOOD || choice == TileType.LEAF
+                        || choice == TileType.FLOWER || choice == TileType.FRUIT,
             ) { "Invalid choice" }
         }
+
+        rootService.networkService.messageBuilder.addDrawnTile(choice)
         // Add the chosen tile to the current player's supply
         val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
         currentPlayer.supply += listOf(BonsaiTile(choice))
@@ -740,6 +790,7 @@ class PlayerActionService(
 
     /**
      * Shifts all face-up cards to the right and fills the empty position with a new card.
+     * @param cardStack The index of the card stack from which shifting starts.
      */
     fun shiftBoardAndRefill(cardStack: Int) {
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
@@ -755,6 +806,26 @@ class PlayerActionService(
             game.currentState.openCards[0] = PlaceholderCard // Ensures a valid state
         }
     }
+    /**
+     * Removes a specified tile from the current player's bonsai tree.
+     *
+     * Preconditions:
+     * - A game must be active.
+     * - The tile must exist in the current player's bonsai tree.
+     * - The player must not have an available WOOD tile placement.
+     * - The tile must be part of the minimal set required to be removed
+     *   in order to allow the placement of a WOOD tile.
+     *
+     * Postconditions:
+     * - The specified tile is removed from the bonsai grid.
+     * - The UI is updated to reflect the removal.
+     *
+     * @param tile The tile to be removed from the player's bonsai tree.
+     * @throws IllegalStateException if no active game exists.
+     * @throws IllegalArgumentException if the tile is not in the player's bonsai tree.
+     * @throws IllegalStateException if the player can already place a WOOD tile.
+     * @throws IllegalArgumentException if the tile is not required for enabling WOOD placement.
+     */
 
     /**
     In the improbable case that, at the beginning of a turn, it is not
@@ -798,6 +869,7 @@ class PlayerActionService(
         }
 
         // remove tile from bonsai tree
+        rootService.networkService.messageBuilder.addRemovedTile(grid.getCoordinate(tile))
         currentPlayer.bonsai.grid.remove(tile)
 
         onAllRefreshables {
