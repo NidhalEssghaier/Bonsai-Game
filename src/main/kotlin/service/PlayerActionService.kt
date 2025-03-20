@@ -6,6 +6,11 @@ import kotlin.math.ceil
 import kotlin.math.floor
 import service.bot.BotService
 
+/**
+ * The [PlayerActionService] class is responsible for handling player actions in the game.
+ * @property rootService The [RootService] instance
+ * @property allowedTiles a temporary map to store the allowed tiles to be placed for the current player
+ */
 class PlayerActionService(
     private val rootService: RootService,
 ) : AbstractRefreshingService() {
@@ -301,7 +306,7 @@ class PlayerActionService(
         else {
 
 
-            // Allow placement if Generic ;imit bigger or tile type limit bigger then 0
+            // Allow placement if Generic limit bigger or tile type limit bigger then 0
             val isPlacementAllowed = allowedTiles[TileType.GENERIC]!! > 0
                     || (allowedTiles.contains(tile.type) && allowedTiles[tile.type]!! > 0)
 
