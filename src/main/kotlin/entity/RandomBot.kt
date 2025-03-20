@@ -42,7 +42,8 @@ class RandomBot private constructor(
     override var usedHelperTiles: MutableList<TileType> = mutableListOf(),
     override var usedHelperCards: MutableList<HelperCard> = mutableListOf() ,
     override var hasDrawnCard: Boolean = false,
-    override var hasCultivated: Boolean = false
+    override var hasCultivated: Boolean = false ,
+
 ): Player
 {
     /**
@@ -71,7 +72,8 @@ class RandomBot private constructor(
             usedHelperTiles.toMutableList(),
             usedHelperCards.toMutableList(),
             hasDrawnCard,
-            hasCultivated
+            hasCultivated ,
+
         )
     }
 }
