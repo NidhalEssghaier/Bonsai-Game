@@ -12,6 +12,15 @@ import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.Visual
 
+/**
+ * [MenuScene] that gets displayed when the player's bonsai meets goals
+ * after placing a new tile. Allows to deny or claim the belonging goal
+ * card.
+ *
+ * @property rootService The [RootService] to access the other services
+ * @property application The running application
+ * @property reachedGoals The goals that the player's bonsai fulfills
+ */
 class ClaimGoalScene(
     private val rootService: RootService,
     private val application: BonsaiApplication,
@@ -48,7 +57,7 @@ class ClaimGoalScene(
 
     private var goal = Label()
 
-    val deny =
+    private val deny =
         Button(
             710,
             900,
@@ -90,7 +99,6 @@ class ClaimGoalScene(
         )
     }
 
-    // TODO show for each element in rechaedGoals -> show next on deny/claim if current < reachedGoals.size - 1, else exit scene
     private fun initializeComponents() {
         goal =
             Label(

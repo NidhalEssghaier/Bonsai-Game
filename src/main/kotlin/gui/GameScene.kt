@@ -31,8 +31,8 @@ import tools.aqua.bgw.visual.*
 private const val ANIMATION_TIME = 100
 
 /**
- * This is the main scene for the [BonsaiGame].
- * The scene shows alls game components and allows switching between the different players.
+ * This is the main scene for the [BonsaiGame]. The scene shows alls game
+ * components and allows switching between the different players.
  */
 class GameScene(
     val rootService: RootService,
@@ -143,7 +143,8 @@ class GameScene(
         ).apply { panMouseButton = MouseButtonType.RIGHT_BUTTON }
 
     private val playerNamesGridPane =
-        GridPane<Pane<LabeledUIComponent>>(830, 1007, 3, 1, 50, layoutFromCenter = false)
+        GridPane<Pane<LabeledUIComponent>>(830, 1007, 3, 1,
+            50, layoutFromCenter = false)
 
     private val endTurnButton =
         Button(1712, 970, 178, 80, text = "End Turn").apply {
@@ -159,12 +160,14 @@ class GameScene(
     // elements of the players
     // bonsai tiles views
     private val bonsaiTilesView1 =
-        LinearLayout<HexagonView>(30, 658, 530, 60, visual = ColorVisual(255, 255, 255, 100), spacing = 10).apply {
+        LinearLayout<HexagonView>(30, 658, 530, 60, visual =
+            ColorVisual(255, 255, 255, 100), spacing = 10).apply {
             alignment =
                 Alignment.CENTER
         }
     private val bonsaiTilesView2 =
-        LinearLayout<HexagonView>(30, 718, 530, 60, visual = ColorVisual(255, 255, 255, 100), spacing = 10).apply {
+        LinearLayout<HexagonView>(30, 718, 530, 60, visual =
+            ColorVisual(255, 255, 255, 100), spacing = 10).apply {
             alignment =
                 Alignment.CENTER
         }
@@ -174,7 +177,8 @@ class GameScene(
 
     // tool cards multiplier
     private val toolCardsMultiplierLabel =
-        Label(136, 888, 37, 30, visual = Visual.EMPTY, font = Font(size = 20, fontWeight = Font.FontWeight.BOLD))
+        Label(136, 888, 37, 30, visual = Visual.EMPTY, font = Font(size = 20, fontWeight =
+            Font.FontWeight.BOLD))
 
     // seishi tiles, visual is set later based on shownPlayer
     private val seishiTile = Label(154, 808, 160, 242)
@@ -288,10 +292,10 @@ class GameScene(
         chooseTilesByBoard: Boolean,
         chooseTilesByCard: Boolean,
     ) {
-        //this.lock()
+        shownPlayer = currentPlayer
+        initializePlayerView(bonsaiGame)
         endTurnButton.isDisabled = true
         playDrawCardAnimation(drawnCard, drawnCardIndex + 1, chooseTilesByBoard, chooseTilesByCard)
-
     }
 
     override fun refreshAfterChooseTile() {
@@ -308,7 +312,6 @@ class GameScene(
 
         initializeGameElements(rootService, bonsaiGame)
         initializePlayerView(bonsaiGame)
-        println("refreshAfterEndTurn (Game Scene): Ich war hier")
     }
 
     override fun refreshAfterUndoRedo() {
@@ -564,14 +567,20 @@ class GameScene(
         playerActionService: PlayerActionService,
         game: BonsaiGame,
     ) {
-        // remove existing stackViews to avoid stacking of stackView-objects due to new initialization after refreshOnEndTurn
+        // remove existing stackViews to avoid stacking of stackView-objects due to new initialization
+        // after refreshOnEndTurn
         cardStacks.forEach { it.removeFromParent() }
 
-        val drawStackView = createDrawStackView(32, 33, game.currentState.drawStack, 0, false)
-        val cardStackView1 = createOpenCardView(playerActionService, 216, 33, game.currentState.openCards[0], 1, true)
-        val cardStackView2 = createOpenCardView(playerActionService, 371, 33, game.currentState.openCards[1], 2, true)
-        val cardStackView3 = createOpenCardView(playerActionService, 525, 33, game.currentState.openCards[2], 3, true)
-        val cardStackView4 = createOpenCardView(playerActionService, 679, 33, game.currentState.openCards[3], 4, true)
+        val drawStackView = createDrawStackView(32, 33, game.currentState.drawStack, 0,
+            false)
+        val cardStackView1 = createOpenCardView(playerActionService, 216, 33, game.currentState.openCards[0],
+            1, true)
+        val cardStackView2 = createOpenCardView(playerActionService, 371, 33, game.currentState.openCards[1],
+            2, true)
+        val cardStackView3 = createOpenCardView(playerActionService, 525, 33, game.currentState.openCards[2],
+            3, true)
+        val cardStackView4 = createOpenCardView(playerActionService, 679, 33, game.currentState.openCards[3],
+            4, true)
 
         cardStacks = listOf(drawStackView, cardStackView1, cardStackView2, cardStackView3, cardStackView4)
 
@@ -682,6 +691,11 @@ class GameScene(
                     }
                 }
             gameOptionsGridPane[idx, 0] = menuOptionButton
+
+            if (idx < 3 && bonsaiGame.currentState.players.any { it is NetworkPlayer }) {
+                gameOptionsGridPane[idx, 0]?.isDisabled = true
+                gameOptionsGridPane[idx, 0]?.isVisible = false
+            }
         }
     }
 
@@ -731,10 +745,14 @@ class GameScene(
 
     private fun initializeSeishiTile(state: GameState) {
         when (state.players[shownPlayer].potColor) {
-            PotColor.GRAY -> seishiTile.visual = itemImageLoader.imageFor("seishis/seishi_grey.png", 160, 242)
-            PotColor.RED -> seishiTile.visual = itemImageLoader.imageFor("seishis/seishi_red.png", 160, 242)
-            PotColor.BLUE -> seishiTile.visual = itemImageLoader.imageFor("seishis/seishi_blue.png", 160, 242)
-            PotColor.PURPLE -> seishiTile.visual = itemImageLoader.imageFor("seishis/seishi_purple.png", 160, 242)
+            PotColor.GRAY -> seishiTile.visual = itemImageLoader.imageFor("seishis/seishi_grey.png",
+                160, 242)
+            PotColor.RED -> seishiTile.visual = itemImageLoader.imageFor("seishis/seishi_red.png",
+                160, 242)
+            PotColor.BLUE -> seishiTile.visual = itemImageLoader.imageFor("seishis/seishi_blue.png",
+                160, 242)
+            PotColor.PURPLE -> seishiTile.visual = itemImageLoader.imageFor("seishis/seishi_purple.png",
+                160, 242)
         }
     }
 
@@ -777,7 +795,8 @@ class GameScene(
                 }
             }
         val leftArrow =
-            Label(0, 0, 40, 40, visual = itemImageLoader.imageFor("icons/arrow_back.png", 96, 96))
+            Label(0, 0, 40, 40, visual = itemImageLoader.imageFor(
+                "icons/arrow_back.png", 96, 96))
         prevPlayerPane.addAll(prevPlayerButton, leftArrow)
 
         val currentPlayerPane = Pane<LabeledUIComponent>(0, 0, 400, 40)
@@ -820,7 +839,8 @@ class GameScene(
                 }
             }
         val rightArrow =
-            Label(110, 0, 40, 40, visual = itemImageLoader.imageFor("icons/arrow_forward.png", 96, 96))
+            Label(110, 0, 40, 40, visual = itemImageLoader.imageFor(
+                "icons/arrow_forward.png", 96, 96))
 
         nextPlayerPane.addAll(nextPlayerButton, rightArrow)
 
@@ -911,9 +931,6 @@ class GameScene(
                     } else {
                         initializeSupplyTiles(bonsaiGame.currentState)
                     }
-                    //this@GameScene.unlock()
-                    initializePlayerView(bonsaiGame)
-                    initializeGameElements(rootService,bonsaiGame)
                     endTurnButton.isDisabled = false
                 }
             },

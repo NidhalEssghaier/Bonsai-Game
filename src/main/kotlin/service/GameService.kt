@@ -7,7 +7,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
-import service.bot.BotService
 import java.io.IOException
 
 /**
@@ -102,6 +101,20 @@ class GameService(
         val currentGame = rootService.currentGame
         checkNotNull(currentGame) { "Internal error! currentGame is null, it shouldn't happened here." }
 
+        //add start tiles
+        val startTiles = mutableListOf(BonsaiTile(TileType.WOOD))
+        currentGame.currentState.players[0].supply.addAll(startTiles)
+        startTiles.add(BonsaiTile(TileType.LEAF))
+        currentGame.currentState.players[1].supply.addAll(startTiles)
+        if(currentGame.currentState.players.size>2) {
+            startTiles.add(BonsaiTile(TileType.FLOWER))
+            currentGame.currentState.players[2].supply.addAll(startTiles)
+        }
+        if(currentGame.currentState.players.size>3) {
+            startTiles.add(BonsaiTile(TileType.FRUIT))
+            currentGame.currentState.players[3].supply.addAll(startTiles)
+        }
+
         // Push the initial state to the undo stack
         currentGame.undoStack.push(currentGame.currentState.copy())
 
@@ -115,7 +128,6 @@ class GameService(
         checkNotNull(game)
         val player0 = game.currentState.players[game.currentState.currentPlayer]
         if(player0 is RandomBot) {
-            println("start bot: If")
             val botService = rootService.botService
             botService.playRandomMove()
         }
@@ -206,27 +218,32 @@ class GameService(
             when (goalColor) {
                 GoalColor.BROWN -> {
                     goals.add(GoalCard(5, goalColor, GoalDifficulty.LOW))
-                    if (playerCount > 2) goals.add(GoalCard(10, goalColor, GoalDifficulty.INTERMEDIATE)) else goals.add(null)
+                    if (playerCount > 2) goals.add(GoalCard(10, goalColor, GoalDifficulty.INTERMEDIATE))
+                    else goals.add(null)
                     goals.add(GoalCard(15, goalColor, GoalDifficulty.HARD))
                 }
                 GoalColor.ORANGE -> {
                     goals.add(GoalCard(9, goalColor, GoalDifficulty.LOW))
-                    if (playerCount > 2) goals.add(GoalCard(11, goalColor, GoalDifficulty.INTERMEDIATE)) else goals.add(null)
+                    if (playerCount > 2) goals.add(GoalCard(11, goalColor, GoalDifficulty.INTERMEDIATE))
+                    else goals.add(null)
                     goals.add(GoalCard(13, goalColor, GoalDifficulty.HARD))
                 }
                 GoalColor.GREEN -> {
                     goals.add(GoalCard(6, goalColor, GoalDifficulty.LOW))
-                    if (playerCount > 2) goals.add(GoalCard(9, goalColor, GoalDifficulty.INTERMEDIATE)) else goals.add(null)
+                    if (playerCount > 2) goals.add(GoalCard(9, goalColor, GoalDifficulty.INTERMEDIATE))
+                    else goals.add(null)
                     goals.add(GoalCard(12, goalColor, GoalDifficulty.HARD))
                 }
                 GoalColor.RED -> {
                     goals.add(GoalCard(8, goalColor, GoalDifficulty.LOW))
-                    if (playerCount > 2) goals.add(GoalCard(12, goalColor, GoalDifficulty.INTERMEDIATE)) else goals.add(null)
+                    if (playerCount > 2) goals.add(GoalCard(12, goalColor, GoalDifficulty.INTERMEDIATE))
+                    else goals.add(null)
                     goals.add(GoalCard(16, goalColor, GoalDifficulty.HARD))
                 }
                 GoalColor.BLUE -> {
                     goals.add(GoalCard(7, goalColor, GoalDifficulty.LOW))
-                    if (playerCount > 2) goals.add(GoalCard(10, goalColor, GoalDifficulty.INTERMEDIATE)) else goals.add(null)
+                    if (playerCount > 2) goals.add(GoalCard(10, goalColor, GoalDifficulty.INTERMEDIATE))
+                    else goals.add(null)
                     goals.add(GoalCard(14, goalColor, GoalDifficulty.HARD))
                 }
             }
@@ -319,7 +336,8 @@ class GameService(
 
             val sumOfPoints = leafPoints + sumOfFlowerPoints + fruitPoints + sumCardPoints + goalPoints
 
-            pointsPerPlayer[player] = mutableListOf(leafPoints,sumOfFlowerPoints,fruitPoints,sumCardPoints,goalPoints,sumOfPoints)
+            pointsPerPlayer[player] =
+                mutableListOf(leafPoints,sumOfFlowerPoints,fruitPoints,sumCardPoints,goalPoints,sumOfPoints)
         }
         val scoreList = pointsPerPlayer.toList().sortedByDescending { pair -> pair.second.last() }.toMap()
         // a tie situation is already handled via sortedByDescending, because equal values stay in the same order

@@ -21,6 +21,8 @@ class PlayerActionService(
      */
     companion object {
         /**
+         * The companion object contains the [switchPlayer] method, which is used to switch the active player
+         *
          * Switches the active player to the next player in the game.
          * This method is called in endTurn() and BonsaiGameSerializer.
          * @param game the [BonsaiGame] object representing the game
@@ -784,7 +786,8 @@ class PlayerActionService(
      * - The selected tile is added to the player's supply.
      * - The UI is refreshed to reflect the change.
      *
-     * @param chooseFromAll Indicates whether the player can choose from all tile types (true) or only WOOD/LEAF (false).
+     * @param chooseFromAll Indicates whether the player can choose from all tile types (true) or
+     * only WOOD/LEAF (false).
      * @param choice The tile type chosen by the player.
      * @throws IllegalStateException if no active game is found.
      * @throws IllegalArgumentException if the selected tile is invalid.
@@ -833,6 +836,7 @@ class PlayerActionService(
             game.currentState.openCards[0] = PlaceholderCard // Ensures a valid state
         }
     }
+
     /**
      * Removes a specified tile from the current player's bonsai tree.
      *
@@ -852,22 +856,6 @@ class PlayerActionService(
      * @throws IllegalArgumentException if the tile is not in the player's bonsai tree.
      * @throws IllegalStateException if the player can already place a WOOD tile.
      * @throws IllegalArgumentException if the tile is not required for enabling WOOD placement.
-     */
-
-    /**
-    In the improbable case that, at the beginning of a turn, it is not
-    possible to add a wood tile to the [Player.bonsai], player may remove the least number of
-    tiles from it (put them in the common supply) needed to make it possible again.
-     * Preconditions:
-     * - A game must be active.
-     * - The choice must be from players bonsai.
-     * - it should not be possible to play a wood
-     * - removed tile should be a part of leat number of tiles to be removed
-     *
-     * **Postconditions:**
-     * - tile is removed from player bonsai.
-     *
-     * @throws IllegalStateException If there is no active game, invalid tile.
      */
     fun removeTile(tile: BonsaiTile) {
         // check if game is running
