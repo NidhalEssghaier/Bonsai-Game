@@ -174,11 +174,12 @@ class HexGrid private constructor(
     fun getPotSide(q: Int, r: Int): PotSide {
         if ( !(q in axialRange && r in axialRange) ) throw outOfBounds
         if ( isPot(q, r) ) return PotSide.OTHER
-        if (q >= 2) return PotSide.BELOW
+        if (r >= 2) return PotSide.BELOW
         if (q <= -2 - ceil(r.toDouble() / 2).toInt() ) return PotSide.LEFT
         if (q >= 3 - floor(r.toDouble() / 2).toInt() ) return PotSide.RIGHT
         return PotSide.OTHER
     }
+
 
     /**
      * Get the position of the given [BonsaiTile] relative to the Pot
