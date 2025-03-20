@@ -10,8 +10,17 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+
+
+/**
+ * Class for Unit Tests for [PlayerActionService.undo] and [PlayerActionService.redo]
+*/
 class UndoRedoTest {
 
+    /**
+     * Test undo
+     *
+     */
     @Test
     fun `test undo`(){
         val mc = RootService()
@@ -52,6 +61,9 @@ class UndoRedoTest {
         assertTrue { testRefreshable.refreshAfterUndoRedoCalled }
     }
 
+    /**
+     * Test redo
+     */
     @Test
     fun `test redo`(){
         val mc = RootService()
@@ -96,6 +108,9 @@ class UndoRedoTest {
         assertTrue { testRefreshable.refreshAfterUndoRedoCalled }
     }
 
+    /**
+     * Test undo after meditate
+     */
     @Test
     fun `test undo after meditate`() {
         val mc = RootService()
