@@ -1,6 +1,5 @@
 package gui
 
-import entity.GoalCard
 import entity.GoalColor
 import entity.PotColor
 import gui.utility.*
@@ -17,8 +16,7 @@ import tools.aqua.bgw.visual.Visual
 import kotlin.random.Random
 
 /**
- * [MenuScene] that gets displayed to configure a new online game including
- * the goals, player order and player colors.
+ * [MenuScene] that gets displayed to configure a new online game including the goals, player order and player colors.
  *
  * @param rootService The [RootService] to access the other services
  * @param application The running application
@@ -82,10 +80,9 @@ class OnlineGameScene(
             onMouseClicked = {
                 if (countPlayer < 2) throw IllegalStateException("More Players Needet")
                 if (countGoals != 3) throw IllegalStateException("Select Goals")
-                var playerList: MutableList<Triple<String, Int, PotColor>> = mutableListOf()
-                var helpPotColor: PotColor = PotColor.RED
+                val playerList: MutableList<Triple<String, Int, PotColor>> = mutableListOf()
+                var helpPotColor = potColor1
                 var helpPlayermode = 1
-                helpPotColor = potColor1
                 if (playerName1Label.text == playerAddField.text) helpPlayermode = localplayerMode
                 playerList.add(Triple(playerName1Label.text, helpPlayermode, helpPotColor))
                 helpPlayermode = 1
@@ -255,8 +252,7 @@ class OnlineGameScene(
                 list.add(shakanBox)
                 list.add(kenegaiBox)
                 list.shuffle()
-                var help: CheckBox = CheckBox()
-                help = list.removeLast()
+                var help = list.removeLast()
                 help.isChecked = true
                 help = list.removeLast()
                 help.isChecked = true
@@ -452,7 +448,7 @@ class OnlineGameScene(
             visual = ColorVisual(256, 107, 62),
         ).apply {
             onMouseClicked = {
-                var randomlist: MutableList<String> = mutableListOf()
+                val randomlist: MutableList<String> = mutableListOf()
                 if (playerName1Label.text.isNotBlank()) randomlist.add(playerName1Label.text)
                 if (playerName2Label.text.isNotBlank()) randomlist.add(playerName2Label.text)
                 if (playerName3Label.text.isNotBlank()) randomlist.add(playerName3Label.text)
@@ -692,7 +688,7 @@ class OnlineGameScene(
         if (thisBox.isChecked) {
             println(countGoals)
             countGoals++
-            var colorofCard: GoalColor
+            val colorofCard: GoalColor
             when (thisBox) {
                 bunjayBox -> colorofCard = GoalColor.BROWN
                 chookanBox -> colorofCard = GoalColor.ORANGE
@@ -711,7 +707,7 @@ class OnlineGameScene(
             }
         } else {
             countGoals--
-            var colorofCard: GoalColor
+            val colorofCard: GoalColor
             when (thisBox) {
                 bunjayBox -> colorofCard = GoalColor.BROWN
                 chookanBox -> colorofCard = GoalColor.ORANGE
