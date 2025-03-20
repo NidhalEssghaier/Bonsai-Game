@@ -7,6 +7,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
+import service.bot.BotService
 import java.io.IOException
 
 /**
@@ -105,6 +106,19 @@ class GameService(
         currentGame.undoStack.push(currentGame.currentState.copy())
 
         onAllRefreshables { refreshAfterStartNewGame() }
+        startNewGameBot()
+    }
+
+    private fun startNewGameBot() {
+        println("start new game bot")
+        val game = rootService.currentGame
+        checkNotNull(game)
+        val player0 = game.currentState.players[game.currentState.currentPlayer]
+        if(player0 is RandomBot) {
+            println("start bot: If")
+            val botService = rootService.botService
+            botService.playRandomMove()
+        }
     }
 
     @OptIn(kotlin.uuid.ExperimentalUuidApi::class)

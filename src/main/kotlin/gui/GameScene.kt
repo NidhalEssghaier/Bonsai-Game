@@ -288,8 +288,10 @@ class GameScene(
         chooseTilesByBoard: Boolean,
         chooseTilesByCard: Boolean,
     ) {
+        //this.lock()
         endTurnButton.isDisabled = true
         playDrawCardAnimation(drawnCard, drawnCardIndex + 1, chooseTilesByBoard, chooseTilesByCard)
+
     }
 
     override fun refreshAfterChooseTile() {
@@ -306,6 +308,7 @@ class GameScene(
 
         initializeGameElements(rootService, bonsaiGame)
         initializePlayerView(bonsaiGame)
+        println("refreshAfterEndTurn (Game Scene): Ich war hier")
     }
 
     override fun refreshAfterUndoRedo() {
@@ -894,10 +897,23 @@ class GameScene(
                     if (chooseTilesByBoard || chooseTilesByCard) {
                         application.chooseTileScene =
                             ChooseTileScene(rootService, application, chooseTilesByBoard, chooseTilesByCard)
-                        application.showMenuScene(application.chooseTileScene)
+                        val game = rootService.currentGame
+                        checkNotNull(game)
+                        val player = game.currentState.players[game.currentState.currentPlayer]
+                        if(player is RandomBot) {
+                            val botService = rootService.botService
+                            botService.chooseCardLogic(chooseTilesByBoard, chooseTilesByCard)
+                            println("choseTile")
+                        } else {
+                            application.showMenuScene(application.chooseTileScene)
+                        }
+
                     } else {
                         initializeSupplyTiles(bonsaiGame.currentState)
                     }
+                    //this@GameScene.unlock()
+                    initializePlayerView(bonsaiGame)
+                    initializeGameElements(rootService,bonsaiGame)
                     endTurnButton.isDisabled = false
                 }
             },

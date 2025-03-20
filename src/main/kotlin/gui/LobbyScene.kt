@@ -1,11 +1,14 @@
 package gui
+
 import tools.aqua.bgw.components.uicomponents.Button
 import tools.aqua.bgw.components.uicomponents.Label
 import tools.aqua.bgw.core.MenuScene
 import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
 
-class LobbyScene : MenuScene(1920, 1080) {
+class LobbyScene :
+    MenuScene(1920, 1080),
+    Refreshable {
     private val headlineLabel =
         Label(
             width = 570,
