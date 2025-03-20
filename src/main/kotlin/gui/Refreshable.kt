@@ -80,7 +80,7 @@ interface Refreshable {
     /**
      * perform refreshes that are necessary after undo / redo
      */
-    fun refreshAfterRemoveTile() {}
+    fun refreshAfterRemoveTile(tile: BonsaiTile) {}
 
     fun refreshAfterEndGame(scoreList: Map<Player, MutableList<Int>>) {}
 

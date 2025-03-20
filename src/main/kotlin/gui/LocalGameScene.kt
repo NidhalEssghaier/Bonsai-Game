@@ -20,6 +20,7 @@ class LocalGameScene(
     private val itemImageLoader = ItemImageLoader()
     private var countGoals = 0
     private var countPlayer = 0
+    private var gameSpeed = 10
     private var player1Mode = 0
     private var player2Mode = 0
     private var player3Mode = 0
@@ -41,7 +42,11 @@ class LocalGameScene(
     val mainMenuButton =
         Button(width = 300, height = 80, posX = 1550, posY = 160, text = "Main Menu", font = Font(35)).apply {
             visual = ColorVisual(256, 107, 62)
-            onMouseClicked = { application.showMenuScene(application.mainMenuScene) }
+            onMouseClicked = {
+                application.showMenuScene(application.mainMenuScene)
+                // new local game scene to reset selections
+                application.localGameScene = LocalGameScene(rootService, application)
+            }
         }
     val startGameButton =
         Button(width = 300, height = 80, posX = 1550, posY = 460, text = "StartGame", font = Font(35)).apply {
@@ -60,7 +65,9 @@ class LocalGameScene(
                 helpPotColor = potColor4
                 if (playerName4Label.text.isNotBlank()) playerList.add(Triple(playerName4Label.text, player4Mode, helpPotColor))
 
-                rootService.gameService.startNewGame(playerList, 10, listGoalColor)
+                rootService.gameService.startNewGame(playerList, gameSpeed, listGoalColor)
+                // new local game scene to reset selections
+                application.localGameScene = LocalGameScene(rootService, application)
             }
         }
 
@@ -473,6 +480,33 @@ class LocalGameScene(
                 }
             }
         }
+    val gameSpeedLabel: Label =
+        Label(
+            width = 300,
+            height = 80,
+            posX = 1550,
+            posY = 595,
+            text = "Game Speed :$gameSpeed",
+            font = Font(30),
+            visual = ColorVisual(255, 113, 113),
+        )
+    val addGameSpeedButton =
+        Button(width = 80, height = 30, posX = 1560, posY = 700, text = "+", font = Font(30), visual = ColorVisual(256, 107, 62)).apply {
+            onMouseClicked = {
+                if(gameSpeed == 100) throw IllegalStateException("Speed is at allready at 100")
+                gameSpeed ++
+                gameSpeedLabel.text= "Game Speed : $gameSpeed"
+
+            }
+        }
+    val subGameSpeedButton =
+        Button(width = 80, height = 30, posX = 1680, posY = 700, text = "-", font = Font(30), visual = ColorVisual(256, 107, 62)).apply {
+            onMouseClicked = {
+            if(gameSpeed == 1) throw IllegalStateException("Speed is at allready at 1")
+            gameSpeed--
+            gameSpeedLabel.text= "Game Speed : $gameSpeed"
+            }
+        }
 
     init {
         player1HardBox =
@@ -573,6 +607,9 @@ class LocalGameScene(
             player3HardBox,
             player4EasyBox,
             player4HardBox,
+            gameSpeedLabel,
+            addGameSpeedButton,
+            subGameSpeedButton
         )
     }
 

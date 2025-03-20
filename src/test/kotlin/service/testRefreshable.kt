@@ -21,7 +21,7 @@ class TestRefreshable : Refreshable {
     var refreshAfterDrawCardCalled: Boolean = false
         private set
 
-    var refreshAfterClaimGoalCalled: Boolean = false
+     var refreshAfterClaimGoalCalled: Boolean = false
         private set
 
     var refreshAfterUndoRedoCalled: Boolean = false
@@ -47,7 +47,8 @@ class TestRefreshable : Refreshable {
 
     var refreshAfterReachGoalsCalled: Boolean = false
         private set
-
+    var refreshAfterChooseTileCalled: Boolean = false
+        private set
 
 
     /**
@@ -67,6 +68,7 @@ class TestRefreshable : Refreshable {
         refreshAfterRemoveTileCalled = false
         refreshAfterPlaceTileCalled = false
         refreshAfterReachGoalsCalled = false
+        refreshAfterChooseTileCalled=false
     }
 
     override fun refreshAfterStartNewGame() {
@@ -82,9 +84,9 @@ class TestRefreshable : Refreshable {
         refreshAfterDrawCardCalled = true
     }
 
-//    override fun  refreshAfterReachGoals (reachedGoals: List<GoalCard>) {
-//        refreshAfterClaimGoalCalled = true
-//    }
+    override fun  refreshAfterChooseTile () {
+        refreshAfterChooseTileCalled = true
+    }
 
     override fun refreshAfterUndoRedo() {
         refreshAfterUndoRedoCalled = true
@@ -112,7 +114,7 @@ class TestRefreshable : Refreshable {
         refreshAfterDrawHelperCardCalled = true
     }
 
-    override fun refreshAfterRemoveTile() {
+    override fun refreshAfterRemoveTile(tile: BonsaiTile) {
         refreshAfterRemoveTileCalled = true
     }
 
