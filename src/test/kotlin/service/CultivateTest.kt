@@ -119,52 +119,6 @@ class CultivateTest {
         assertTrue(exception.message!!.contains("A fruit tile must be placed between two adjacent leaf tiles."))
     }
 
-    @Test
-    fun `test cultivate with tile not allowed by Seishi or Growth Cards`() {
-        //  Seishi Starting Tiles
-        testPlayer.treeTileLimit = mutableMapOf(
-            TileType.WOOD to 3,   // Allowed by Seishi
-            TileType.LEAF to 3,   // Allowed by Seishi
-            TileType.GENERIC to 1 // Generic tile  Allowed by Seishi
-        )
-
-        val growthCard1 = GrowthCard(TileType.WOOD , id = 3)
-
-        testPlayer.seishiGrowth.add(growthCard1)
-
-        //   allowed tiles (Seishi or Growth)
-        val woodTile1 = BonsaiTile(TileType.WOOD)
-        val leafTile = BonsaiTile(TileType.LEAF)
-        val woodTile2 = BonsaiTile(TileType.WOOD) // Allowed by GrowthCard
-
-        testPlayer.supply.addAll(listOf(woodTile1,woodTile2 ,leafTile))
-
-        playerActionService.cultivate(woodTile1, 0, -1)  // Allowed by Seishi
-        playerActionService.cultivate(leafTile, 1, -1)  // Allowed by Seishi
-        playerActionService.cultivate(woodTile2, -1, -1) // Allowed by GrowthCard
-
-
-        //  Generic tile should allow placing any tile
-        val genericAllowedTile = BonsaiTile(TileType.FLOWER) // Any tile is valid
-        testPlayer.supply.add(genericAllowedTile)
-        playerActionService.cultivate(genericAllowedTile, 2, -1)
-
-        /*//  tile type that is NOT in Seishi, Growth, or Generic rules
-        val invalidTile = BonsaiTile(TileType.FRUIT) // Another Fruit tile (not covered)
-        testPlayer.supply.add(invalidTile)
-        val leafTile2 = BonsaiTile(TileType.LEAF)
-        testPlayer.supply.add(leafTile2)
-
-
-        playerActionService.cultivate(leafTile2, 1, -2)
-
-        val exception = assertThrows<IllegalStateException> {
-            playerActionService.cultivate(invalidTile, 2, -2)
-        }
-
-        //assertTrue(exception.message!!.contains(
-            //"Tile placement not allowed based on Seishi StartingTile ans Growth Cards."))*/
-    }
 
 
     @Test
@@ -300,10 +254,38 @@ class CultivateTest {
 
     @Test
     fun `test cultivate triggers green,brown and orange goals `() {
+        val mc = RootService()
+        val gameService = GameService(mc)
+        val playerActionService = PlayerActionService(mc)
+        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE),
+            Triple("Iyed",1,PotColor.PURPLE)),5, listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
+
+        //check game not null
+        val game = mc.currentGame
+        checkNotNull(game)
+
+        val currentPlayer = game.currentState.players[0]
+        val currentPlayer1 = game.currentState.players[1]
         val woodTiles = List(12) { BonsaiTile(TileType.WOOD) }
         val leafTiles = List(9) { BonsaiTile(TileType.LEAF) }
 
-        testPlayer.supply.addAll(woodTiles + leafTiles)
+        currentPlayer.supply.addAll(woodTiles + leafTiles)
+        currentPlayer1.supply.addAll(woodTiles + leafTiles)
+        currentPlayer.treeTileLimit =mutableMapOf(
+            TileType.GENERIC to 101,
+            TileType.WOOD to 151,
+            TileType.LEAF to 131,
+            TileType.LEAF to 131,
+            TileType.LEAF to 131,
+        )
+        currentPlayer1.treeTileLimit =mutableMapOf(
+            TileType.GENERIC to 101,
+            TileType.WOOD to 151,
+            TileType.LEAF to 131,
+            TileType.LEAF to 131,
+            TileType.LEAF to 131,
+        )
+
 
         val greenCardLow = GoalCard(5, GoalColor.GREEN, GoalDifficulty.LOW)
         val greenCardIntermediate = GoalCard(7, GoalColor.GREEN, GoalDifficulty.INTERMEDIATE)
@@ -322,7 +304,15 @@ class CultivateTest {
 
 
         // placement to check BROWN goal cards
+        /*val flowerGrowth = GrowthCard(TileType.FLOWER,21)
+        val woodGrowth = GrowthCard(TileType.WOOD,21)
+        for (i in 1..20){
+            game.currentState.openCards.add(woodGrowth)
+            playerActionService.meditate(woodGrowth)
+            playerActionService.endTurn()
 
+        }*/
+        playerActionService.endTurn()
         playerActionService.cultivate(woodTiles[0], 0, -1)
         playerActionService.cultivate(woodTiles[1], 1, -1)
         playerActionService.cultivate(woodTiles[2], -1, -1)

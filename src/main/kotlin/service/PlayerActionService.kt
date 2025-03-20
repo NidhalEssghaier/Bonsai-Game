@@ -88,7 +88,8 @@ class PlayerActionService(
         currentPlayer.usedHelperTiles.clear()
 
         //return tree limit to state beofre playing
-        allowedTiles = currentPlayer.treeTileLimit.toMutableMap()
+        allowedTiles = game.currentState
+            .players[(game.currentState.currentPlayer + 1) % game.currentState.players.size].treeTileLimit.toMutableMap()
         //prepare allowed tiles for next player
         game.undoStack.push(game.currentState.copy())
         game.redoStack.clear()
@@ -101,6 +102,7 @@ class PlayerActionService(
         } else {
             switchPlayer(game)
             onAllRefreshables {
+
                 refreshAfterEndTurn()
             }
         }
