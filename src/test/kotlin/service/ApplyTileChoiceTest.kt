@@ -7,10 +7,6 @@ import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Unit tests for the [PlayerActionService] `ApplyTileChoice` function.
- */
-
 class ApplyTileChoiceTest {
 
     private lateinit var rootService: RootService
