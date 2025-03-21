@@ -90,7 +90,7 @@ class BotService(
         for (supplyTile in player.supply) {
             // completed = false
             possibleMoves = mutableListOf()
-            // removeTileLogic(supplyTile, player)
+            removeTileLogic(supplyTile, player)
             for (bonsaiTile in bonsaiGrid.getInternalMap().keys) {
                 val emptySpaces = bonsaiGrid.getEmptySpace(bonsaiTile)
                 if (emptySpaces.isNotEmpty()) {
