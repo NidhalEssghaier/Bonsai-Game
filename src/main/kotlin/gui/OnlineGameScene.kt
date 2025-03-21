@@ -72,7 +72,10 @@ class OnlineGameScene(
             .apply {
                 visual = ColorVisual(256, 107, 62)
             }.apply {
-                onMouseClicked = { application.showMenuScene(application.mainMenuScene) }
+                onMouseClicked = {
+                    rootService.networkService.disconnect()
+                    application.showMenuScene(application.mainMenuScene)
+                }
             }
     private val startGameButton =
         Button(width = 300, height = 80, posX = 1550, posY = 460, text = "StartGame", font = Font(35)).apply {
@@ -116,7 +119,7 @@ class OnlineGameScene(
                         ),
                     )
                 }
-                rootService.networkService.startNewHostedGame(playerAddField.text, playerList, 10, listGoalColor)
+                rootService.networkService.startNewHostedGame(playerAddField.text, playerList, gameSpeed, listGoalColor)
             }
         }
 
@@ -729,6 +732,9 @@ class OnlineGameScene(
         val helpPotColor: PotColor = potColor1
         potColor1 = potColor2
         potColor2 = helpPotColor
+        val helpPlayerMode: Int = localplayerMode
+        localplayerMode = player2Mode
+        player2Mode = helpPlayerMode
         val helpVisual: Visual = firstPotJpg.visual
         firstPotJpg.visual = secondPotJpg.visual
         secondPotJpg.visual = helpVisual
@@ -738,6 +744,9 @@ class OnlineGameScene(
         val helpPotColor: PotColor = potColor2
         potColor2 = potColor3
         potColor3 = helpPotColor
+        val helpPlayerMode: Int = player2Mode
+        player2Mode = player3Mode
+        player3Mode = helpPlayerMode
         val helpVisual: Visual = secondPotJpg.visual
         secondPotJpg.visual = thirdPotJpg.visual
         thirdPotJpg.visual = helpVisual
@@ -747,6 +756,9 @@ class OnlineGameScene(
         val helpPotColor: PotColor = potColor3
         potColor3 = potColor4
         potColor4 = helpPotColor
+        val helpPlayerMode: Int = player3Mode
+        player3Mode = player4Mode
+        player4Mode = helpPlayerMode
         val helpVisual: Visual = thirdPotJpg.visual
         thirdPotJpg.visual = fourthPotJpg.visual
         fourthPotJpg.visual = helpVisual
@@ -766,9 +778,21 @@ class OnlineGameScene(
         if (countPlayer == 4) throw IllegalStateException("Too many Players")
         countPlayer++
         when (countPlayer) {
-            2 -> playerName2Label.text = newPlayerName
-            3 -> playerName3Label.text = newPlayerName
-            4 -> playerName4Label.text = newPlayerName
+            2 -> {
+                playerName2Label.text = newPlayerName
+                player2Mode = 1
+            }
+
+            3 -> {
+                playerName3Label.text = newPlayerName
+                player3Mode = 1
+            }
+
+            4 -> {
+                playerName4Label.text = newPlayerName
+                player4Mode = 1
+            }
+
             else -> throw IllegalStateException("Error in newPlayerJoined Funktion")
         }
     }

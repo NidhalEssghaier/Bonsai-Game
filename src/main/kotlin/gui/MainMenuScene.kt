@@ -40,7 +40,9 @@ class MainMenuScene(
             .apply {
                 visual = ColorVisual(256, 107, 62)
             }.apply {
-                onMouseClicked = { application.showMenuScene(application.onlineGameScene) }
+                onMouseClicked = {
+                    application.showMenuScene(application.onlineGameScene)
+                }
             }
     private val resumeGameButton =
         Button(width = 300, height = 80, posX = 850, posY = 470, text = "Resume Game", font = Font(35))
