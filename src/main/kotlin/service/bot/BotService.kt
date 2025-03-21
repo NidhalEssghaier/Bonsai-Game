@@ -74,7 +74,8 @@ class BotService(private val rootService:RootService) : AbstractRefreshingServic
                 try {
                     val grid = player.bonsai.grid
                     val currentPlayerBonsaiTiles = player.bonsai.tiles()
-                    val leastGroupOfTilesToBeRemoved = TileUtils.leastGroupOfTilesToBeRemoved(currentPlayerBonsaiTiles,grid)
+                    val leastGroupOfTilesToBeRemoved =
+                                TileUtils.leastGroupOfTilesToBeRemoved(currentPlayerBonsaiTiles,grid)
                     if(leastGroupOfTilesToBeRemoved.isNotEmpty()) {
                         playerActionService.removeTile(leastGroupOfTilesToBeRemoved.random())
                     }

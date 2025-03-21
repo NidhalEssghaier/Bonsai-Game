@@ -90,7 +90,7 @@ class GameService(
                 1 -> playerList.add(NetworkPlayer(triple.first, triple.third))
                 2 -> playerList.add(RandomBot(triple.first, triple.third))
                 3 -> playerList.add(SmartBot(triple.first, triple.third))
-                else -> throw IllegalArgumentException()
+                else -> throw IllegalArgumentException("Invalid player type")
             }
         }
 

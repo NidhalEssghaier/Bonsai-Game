@@ -9,7 +9,9 @@ class Node(
     var winRatio: Pair<Int,Int> = Pair(0,0),
     val gameState: BonsaiGame
 ) {
-    fun printVisit(list: MutableList<Pair<PlayerAction?,Pair<Int,Int>>>) : MutableList<Pair<PlayerAction?,Pair<Int,Int>>> {
+    fun printVisit(
+        list: MutableList<Pair<PlayerAction?,Pair<Int,Int>>>
+    ) : MutableList<Pair<PlayerAction?,Pair<Int,Int>>> {
         list.add(Pair(move,winRatio))
         for(child in children) {
             child?.printVisit(list)

@@ -6,5 +6,4 @@ import kotlinx.serialization.Serializable
  * Entity to represent a placeholder card
  */
 @Serializable
-data object PlaceholderCard : ZenCard {
-}
+data object PlaceholderCard : ZenCard
