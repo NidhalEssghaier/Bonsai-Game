@@ -66,8 +66,19 @@ class ChooseTileScene(
         ).apply {
             isDisabled = true
             onMouseClicked = {
-                if (chooseByBoard) rootService.playerActionService.applyTileChoice(selectedTileByBoard!!.type, false)
-                if (chooseByCard) rootService.playerActionService.applyTileChoice(selectedTileByCard!!.type, true)
+                var tileType = TileType.UNPLAYABLE
+                val checkedSelectedTileByBoard = selectedTileByBoard
+                if(checkedSelectedTileByBoard != null) {
+                    tileType = checkedSelectedTileByBoard.type
+                }
+                if (chooseByBoard) rootService.playerActionService.applyTileChoice(
+                    tileType,
+                    false
+                )
+                if (chooseByCard) rootService.playerActionService.applyTileChoice(
+                    tileType,
+                    true
+                )
             }
         }
 

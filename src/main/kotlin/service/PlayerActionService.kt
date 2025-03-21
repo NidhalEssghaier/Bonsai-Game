@@ -15,38 +15,13 @@ class PlayerActionService(
     private val rootService: RootService,
 ) : AbstractRefreshingService() {
 
+    private val errorMsg = "It shouldn't be null"
 
     var allowedTiles:MutableMap<TileType,Int> = mutableMapOf(
         TileType.GENERIC to 1,
         TileType.WOOD to 1,
         TileType.LEAF to 1
     )
-    /**
-     * The companion object contains the [switchPlayer] method, which is used to switch the active player
-     */
-    companion object {
-        /**
-         * The companion object contains the [switchPlayer] method, which is used to switch the active player
-         *
-         * Switches the active player to the next player in the game.
-         * This method is called in endTurn() and BonsaiGameSerializer.
-         * @param game the [BonsaiGame] object representing the game
-         *
-         * Preconditions:
-         * - A game was started and is running.
-         *
-         * Postconditions:
-         * - The current player is switched to the next player in the game.
-         * - The used helper tiles of the current player are cleared.
-         */
-        fun switchPlayer(game: BonsaiGame) {
-            game.currentState.currentPlayer =
-                (game.currentState.currentPlayer + 1) % game.currentState.players.size
-            // Reset hasDrawnCard for the new player
-            game.currentState.players[game.currentState.currentPlayer].hasDrawnCard = false
-        }
-    }
-
     /**
      * Ends the active players turn and advances the game to the next player.
      *
@@ -104,7 +79,8 @@ class PlayerActionService(
 
         //return tree limit to state beofre playing
         allowedTiles = game.currentState
-            .players[(game.currentState.currentPlayer + 1) % game.currentState.players.size].treeTileLimit.toMutableMap()
+            .players[(game.currentState.currentPlayer + 1) % game.currentState.players.size]
+            .treeTileLimit.toMutableMap()
         //prepare allowed tiles for next player
         game.undoStack.push(game.currentState.copy())
         game.redoStack.clear()
@@ -310,8 +286,10 @@ class PlayerActionService(
 
 
             // Allow placement if Generic limit bigger or tile type limit bigger then 0
-            val isPlacementAllowed = allowedTiles[TileType.GENERIC]!! > 0
-                    || (allowedTiles.contains(tile.type) && allowedTiles[tile.type]!! > 0)
+            val allowedTilesGeneric = allowedTiles[TileType.GENERIC]
+            checkNotNull(allowedTilesGeneric) {errorMsg}
+            val isPlacementAllowed = allowedTilesGeneric > 0
+                    || (allowedTiles.contains(tile.type) && (allowedTiles[tile.type] ?: 0) > 0)
 
             if (isPlacementAllowed) {
                 placeTile(tile, q, r)
@@ -419,13 +397,16 @@ class PlayerActionService(
 
 
         //update tree tile limit
+        val allowedTilesGeneric = allowedTiles[TileType.GENERIC]
+        val allowedTilesSpecifc = allowedTiles[tile.type] ?: 0
+        checkNotNull(allowedTilesGeneric) {errorMsg}
         if(!allowedTiles.containsKey(tile.type)){
-            allowedTiles[TileType.GENERIC] = allowedTiles[TileType.GENERIC]!!-1
+            allowedTiles[TileType.GENERIC] = allowedTilesGeneric-1
         }
-        else if(allowedTiles[tile.type]!! >0){
-            allowedTiles[tile.type] = allowedTiles[tile.type]!! - 1
+        else if(allowedTilesSpecifc >0){
+            allowedTiles[tile.type] = allowedTilesSpecifc - 1
         }else{
-            allowedTiles[TileType.GENERIC] = allowedTiles[TileType.GENERIC]!!-1
+            allowedTiles[TileType.GENERIC] = allowedTilesGeneric-1
 
         }
 
@@ -457,12 +438,14 @@ class PlayerActionService(
         val protrudingTiles = tiles.filter { grid.isProtruding(it) }
 
         for (goalCard in goalCards) {
-            if (goalCard == null) continue
-
-             //fix Bug
+            //fix Bug
             // prevent checking goals that the player has manually declined or were automatically forbidden
             // due to claiming another
-            if (goalCard in currentPlayer.declinedGoals || goalCard in currentPlayer.forbiddenGoals) continue
+            if (
+                goalCard == null ||
+                goalCard in currentPlayer.declinedGoals ||
+                goalCard in currentPlayer.forbiddenGoals
+            ) continue
 
             val isGoalMet = when (goalCard.color) {
                 GoalColor.BROWN ->
@@ -708,7 +691,7 @@ class PlayerActionService(
 
                 //add to tree tile limit based on tile type on growth card
                 if(currentPlayer.treeTileLimit.containsKey(card.type)) {
-                    currentPlayer.treeTileLimit[card.type] = currentPlayer.treeTileLimit[card.type]!! + 1
+                    currentPlayer.treeTileLimit[card.type] = (currentPlayer.treeTileLimit[card.type] ?: 0) + 1
                 }
                 else{
                     currentPlayer.treeTileLimit[card.type] = 1
@@ -900,6 +883,32 @@ class PlayerActionService(
 
         onAllRefreshables {
             refreshAfterRemoveTile(tile)
+        }
+    }
+
+    /**
+     * The companion object contains the [switchPlayer] method, which is used to switch the active player
+     */
+    companion object {
+        /**
+         * The companion object contains the [switchPlayer] method, which is used to switch the active player
+         *
+         * Switches the active player to the next player in the game.
+         * This method is called in endTurn() and BonsaiGameSerializer.
+         * @param game the [BonsaiGame] object representing the game
+         *
+         * Preconditions:
+         * - A game was started and is running.
+         *
+         * Postconditions:
+         * - The current player is switched to the next player in the game.
+         * - The used helper tiles of the current player are cleared.
+         */
+        fun switchPlayer(game: BonsaiGame) {
+            game.currentState.currentPlayer =
+                (game.currentState.currentPlayer + 1) % game.currentState.players.size
+            // Reset hasDrawnCard for the new player
+            game.currentState.players[game.currentState.currentPlayer].hasDrawnCard = false
         }
     }
 

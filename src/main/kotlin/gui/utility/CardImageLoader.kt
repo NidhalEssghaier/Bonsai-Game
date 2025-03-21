@@ -16,19 +16,6 @@ private const val IMG_WIDTH = 186
  * [ImageVisual] objects of [frontImageFor] and [backImage] are 372x520 pixels.
  */
 class CardImageLoader {
-    /**
-     * Get [ImageVisual] based on [ZenCard]
-     * @param card The [ZenCard] for which the [ImageVisual] is to be returned.
-     *
-     * @return [ImageVisual] with the correct visual for the given [card].
-     *
-     * @throws IllegalArgumentException If the card is unknown.
-     */
-    fun frontImageFor(card: ZenCard) =
-        when (card) {
-            PlaceholderCard -> Visual.EMPTY
-            else -> getImageByCoordinates(getImageCoordinates(card))
-        }
 
     /** Provides the backside image of the [ZenCard]s */
     val backImage: ImageVisual get() = getImageByCoordinates(Pair(0, 0))
@@ -53,6 +40,20 @@ class CardImageLoader {
             listOf(TileType.GENERIC, TileType.WOOD),
             listOf(TileType.GENERIC, TileType.LEAF),
         )
+
+    /**
+     * Get [ImageVisual] based on [ZenCard]
+     * @param card The [ZenCard] for which the [ImageVisual] is to be returned.
+     *
+     * @return [ImageVisual] with the correct visual for the given [card].
+     *
+     * @throws IllegalArgumentException If the card is unknown.
+     */
+    fun frontImageFor(card: ZenCard) =
+        when (card) {
+            PlaceholderCard -> Visual.EMPTY
+            else -> getImageByCoordinates(getImageCoordinates(card))
+        }
 
     private fun getImageByCoordinates(coordinates: Pair<Int, Int>) =
         ImageVisual(
