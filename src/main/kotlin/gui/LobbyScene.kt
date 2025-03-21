@@ -22,7 +22,7 @@ class LobbyScene :
             text = "Lobby",
             font = Font(size = 100, fontWeight = Font.FontWeight.BOLD),
         )
-    private val mainMenuButton =
+    val mainMenuButton =
         Button(width = 300, height = 80, posX = 1550, posY = 160, text = "Main Menu", font = Font(35)).apply {
             visual = ColorVisual(256, 107, 62)
         }

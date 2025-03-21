@@ -730,7 +730,11 @@ class GameScene(
                             0 -> rootService.playerActionService.undo()
                             1 -> rootService.playerActionService.redo()
                             2 -> rootService.gameService.saveGame()
-                            3 -> application.showMenuScene(application.mainMenuScene)
+                            3 -> {
+                                application.showMenuScene(application.mainMenuScene)
+                                rootService.networkService.disconnect()
+                                rootService.currentGame = null
+                            }
                         }
                     }
                 }
@@ -1002,17 +1006,17 @@ class GameScene(
             ).apply {
                 onFinished = {
                     if (chooseTilesByBoard || chooseTilesByCard) {
-                        application.chooseTileScene =
-                            ChooseTileScene(rootService, application, chooseTilesByBoard, chooseTilesByCard)
                         val game = rootService.currentGame
                         checkNotNull(game)
                         val player = game.currentState.players[game.currentState.currentPlayer]
-                        if (player is RandomBot) {
+                        if (player !is LocalPlayer) {
                             val botService = rootService.botService
                             botService.chooseCardLogic(chooseTilesByBoard, chooseTilesByCard)
-                            println("choseTile")
                         } else {
-                            application.showMenuScene(application.chooseTileScene)
+                            val chooseTileScene =
+                                ChooseTileScene(rootService, application, chooseTilesByBoard, chooseTilesByCard)
+                            application.chooseTileScene = chooseTileScene
+                            application.showMenuScene(chooseTileScene)
                         }
                     } else {
                         initializeSupplyTiles(bonsaiGame.currentState)

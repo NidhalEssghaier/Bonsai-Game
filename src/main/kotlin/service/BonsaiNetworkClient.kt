@@ -97,7 +97,20 @@ class BonsaiNetworkClient(
 
         check(otherPlayerNames.size < 4) { "too many players." }
         otherPlayerNames.add(notification.sender)
-        networkService.updateConnectionState(ConnectionState.WAITING_FOR_GUEST, notification.sender)
+
+        when (networkService.connectionState) {
+            ConnectionState.WAITING_FOR_GUEST ->
+                networkService.updateConnectionState(
+                    ConnectionState.WAITING_FOR_GUEST,
+                    notification.sender
+                )
+            ConnectionState.WAITING_FOR_INIT ->
+                networkService.updateConnectionState(
+                    ConnectionState.WAITING_FOR_INIT,
+                    notification.sender
+                )
+            else -> error("not awaiting any guests.")
+        }
     }
 
     /**

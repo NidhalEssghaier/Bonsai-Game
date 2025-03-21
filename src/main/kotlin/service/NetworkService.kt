@@ -1,9 +1,9 @@
 package service
 
-import messages.*
 import entity.*
 import gui.Refreshable
 import helper.push
+import messages.*
 import java.util.*
 import kotlin.concurrent.timerTask
 
@@ -11,8 +11,9 @@ import kotlin.concurrent.timerTask
  * Service layer class that realizes the necessary logic for sending and receiving messages
  * in multiplayer network games. Bridges between the [BonsaiNetworkClient] and the other services.
  */
-class NetworkService(private val rootService: RootService): AbstractRefreshingService() {
-
+class NetworkService(
+    private val rootService: RootService,
+) : AbstractRefreshingService() {
     companion object {
         /** URL of the BGW net server hosted for SoPra participants */
         const val SERVER_ADDRESS = "sopra.cs.tu-dortmund.de:80/bgw-net/connect"
@@ -51,7 +52,11 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
      *
      * @throws IllegalStateException if already connected to another game or connection attempt fails
      */
-    fun hostGame(name: String, botStatus: Int, sessionID: String?) {
+    fun hostGame(
+        name: String,
+        botStatus: Int,
+        sessionID: String?,
+    ) {
         if (!connect(name, botStatus)) {
             error("Connection failed")
         }
@@ -76,7 +81,12 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
      *
      * @throws IllegalStateException if already connected to another game or connection attempt fails
      */
-    fun joinGame(name: String, botStatus: Int, gameSpeed: Int, sessionID: String) {
+    fun joinGame(
+        name: String,
+        botStatus: Int,
+        gameSpeed: Int,
+        sessionID: String,
+    ) {
         if (!connect(name, botStatus, gameSpeed)) {
             error("Connection failed")
         }
@@ -102,10 +112,10 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
         hostName: String,
         players: List<Triple<String, Int, PotColor>>,
         speed: Int,
-        goalCards: List<GoalColor>
+        goalCards: List<GoalColor>,
     ) {
         check(
-            connectionState == ConnectionState.WAITING_FOR_GUEST
+            connectionState == ConnectionState.WAITING_FOR_GUEST,
         ) { "unexpected game start attempt" }
 
         rootService.gameService.startNewGame(players, speed, goalCards)
@@ -114,10 +124,12 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
 
         val netPlayers: MutableList<Pair<String, ColorTypeMessage>> = mutableListOf()
         for (i in game.currentState.players.indices) {
-            netPlayers.add(Pair(
-                game.currentState.players[i].name,
-                converter.fromPotColor(game.currentState.players[i].potColor)
-            ))
+            netPlayers.add(
+                Pair(
+                    game.currentState.players[i].name,
+                    converter.fromPotColor(game.currentState.players[i].potColor),
+                ),
+            )
         }
 
         val netGoals = converter.fromGoalList(game.currentState.goalCards)
@@ -130,13 +142,17 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
             netCards.add(converter.fromCard(i))
         }
 
-        val message = StartGameMessage(
-            netPlayers,
-            netGoals,
-            netCards
-        )
+        val message =
+            StartGameMessage(
+                netPlayers,
+                netGoals,
+                netCards,
+            )
 
-        if (rootService.currentGame!!.currentState.players[0].name == hostName) {
+        if (rootService.currentGame!!
+                .currentState.players[0]
+                .name == hostName
+        ) {
             updateConnectionState(ConnectionState.PLAYING_MY_TURN)
         } else {
             updateConnectionState(ConnectionState.WAITING_FOR_OPPONENT)
@@ -165,25 +181,28 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
         playerName: String,
         botStatus: Int,
         gameSpeed: Int,
-        message: StartGameMessage
+        message: StartGameMessage,
     ) {
-        check(connectionState == ConnectionState.WAITING_FOR_INIT)
-        { "not waiting for game init message. " }
+        check(connectionState == ConnectionState.WAITING_FOR_INIT) { "not waiting for game init message. " }
 
         val players: MutableList<Triple<String, Int, PotColor>> = mutableListOf()
         for (i in message.orderedPlayerNames.indices) {
             if (message.orderedPlayerNames[i].first == playerName) {
-                players.add(Triple(
-                    message.orderedPlayerNames[i].first,
-                    botStatus,
-                    converter.toPotColor(message.orderedPlayerNames[i].second)
-                ))
+                players.add(
+                    Triple(
+                        message.orderedPlayerNames[i].first,
+                        botStatus,
+                        converter.toPotColor(message.orderedPlayerNames[i].second),
+                    ),
+                )
             } else {
-                players.add(Triple(
-                    message.orderedPlayerNames[i].first,
-                    1,
-                    converter.toPotColor(message.orderedPlayerNames[i].second)
-                ))
+                players.add(
+                    Triple(
+                        message.orderedPlayerNames[i].first,
+                        1,
+                        converter.toPotColor(message.orderedPlayerNames[i].second),
+                    ),
+                )
             }
         }
 
@@ -196,18 +215,18 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
             rootService.gameService.startNewGame(
                 players,
                 gameSpeed,
-                goalCards
+                goalCards,
             )
             val game = rootService.currentGame
             checkNotNull(game) { "game should not be null right after starting it." }
 
             game.currentState.drawStack.clear()
-            for (i in (0..message.orderedCards.size-5)) {
+            for (i in (0..message.orderedCards.size - 5)) {
                 game.currentState.drawStack.push(converter.toCard(message.orderedCards[i]))
             }
 
             game.currentState.openCards.clear()
-            for (i in (message.orderedCards.size-4..<message.orderedCards.size)) {
+            for (i in (message.orderedCards.size - 4..<message.orderedCards.size)) {
                 game.currentState.openCards.add(converter.toCard(message.orderedCards[i]))
             }
 
@@ -222,7 +241,10 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
             error("Caught an IllegalStateException: ${e.message}")
         }
 
-        if (rootService.currentGame!!.currentState.players[0].name == playerName) {
+        if (rootService.currentGame!!
+                .currentState.players[0]
+                .name == playerName
+        ) {
             updateConnectionState(ConnectionState.PLAYING_MY_TURN)
         } else {
             updateConnectionState(ConnectionState.WAITING_FOR_OPPONENT)
@@ -235,10 +257,12 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
      * @throws IllegalStateException if it's the opponents turn, or the message is invalid
      */
     fun sendTurn() {
-        val nextPlayer = (rootService.currentGame!!.currentState.currentPlayer + 1) %
-                         rootService.currentGame!!.currentState.players.size
+        val nextPlayer =
+            (rootService.currentGame!!.currentState.currentPlayer + 1) %
+                rootService.currentGame!!
+                    .currentState.players.size
         if (connectionState != ConnectionState.PLAYING_MY_TURN) {
-            if (rootService.currentGame!!.currentState.players[nextPlayer] is LocalPlayer) {
+            if (rootService.currentGame!!.currentState.players[nextPlayer] !is NetworkPlayer) {
                 updateConnectionState(ConnectionState.PLAYING_MY_TURN)
             } else {
                 updateConnectionState(ConnectionState.WAITING_FOR_OPPONENT)
@@ -248,11 +272,12 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
 
         try {
             val build = messageBuilder.build()
-            val message = when {
-                build.first == null && build.second != null -> build.second
-                build.second == null && build.first != null -> build.first
-                else -> null
-            }
+            val message =
+                when {
+                    build.first == null && build.second != null -> build.second
+                    build.second == null && build.first != null -> build.first
+                    else -> null
+                }
 
             checkNotNull(message) { "no message created" }
 
@@ -275,56 +300,86 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
      * @throws IllegalStateException if currently not waiting for a game action message
      *                               or if it's not the senders turn
      */
-    fun receiveCultivateMessage(message: CultivateMessage, sender: String) {
+    fun receiveCultivateMessage(
+        message: CultivateMessage,
+        sender: String,
+    ) {
         check(
-            connectionState == ConnectionState.WAITING_FOR_OPPONENT
+            connectionState == ConnectionState.WAITING_FOR_OPPONENT,
         ) { "unexpected game action message" }
 
         val game = rootService.currentGame
         checkNotNull(game) { "no active game" }
 
         check(
-            game.currentState.players[game.currentState.currentPlayer].name == sender
+            game.currentState.players[game.currentState.currentPlayer].name == sender,
         ) { "not $sender's turn" }
 
         try {
             // remove tiles
             if (message.removedTilesAxialCoordinates.isNotEmpty()) {
-                for (i in message.removedTilesAxialCoordinates.indices)
+                for (i in message.removedTilesAxialCoordinates.indices) {
                     rootService.playerActionService.removeTile(
-                        game.currentState.players[game.currentState.currentPlayer].bonsai.grid[
+                        game.currentState.players[game.currentState.currentPlayer]
+                            .bonsai.grid[
                             message.removedTilesAxialCoordinates[i].first,
-                            message.removedTilesAxialCoordinates[i].second
-                        ]
+                            message.removedTilesAxialCoordinates[i].second,
+                        ],
                     )
+                }
             }
 
             // played tiles
             if (message.playedTiles.isNotEmpty()) {
-                for (i in message.playedTiles.indices)
+                for (i in message.playedTiles.indices) {
                     rootService.currentGame?.currentState!!.players[
-                        rootService.currentGame?.currentState!!.currentPlayer
+                        rootService.currentGame?.currentState!!.currentPlayer,
                     ].supply.find { it.type == converter.toTileType(message.playedTiles[i].first) }?.let {
                         rootService.playerActionService.cultivate(
                             it,
                             message.playedTiles[i].second.first,
-                            message.playedTiles[i].second.second
+                            message.playedTiles[i].second.second,
                         )
                     }
+                }
             }
 
             // decide goals
             if (message.claimedGoals.isNotEmpty()) {
-                for (i in message.claimedGoals.indices)
-                    rootService.playerActionService.decideGoalClaim(
-                        converter.toGoal(message.claimedGoals[i]), true
-                    )
+                for (i in message.claimedGoals.indices) {
+                    rootService.currentGame
+                        ?.currentState!!
+                        .goalCards
+                        .find {
+                            it?.color ==
+                                converter.toGoal(message.claimedGoals[i]).color &&
+                                it.difficulty ==
+                                converter.toGoal(message.claimedGoals[i]).difficulty
+                        }?.let {
+                            rootService.playerActionService.decideGoalClaim(
+                                it,
+                                true,
+                            )
+                        }
+                }
             }
             if (message.renouncedGoals.isNotEmpty()) {
-                for (i in message.renouncedGoals.indices)
-                    rootService.playerActionService.decideGoalClaim(
-                        converter.toGoal(message.renouncedGoals[i]), false
-                    )
+                for (i in message.renouncedGoals.indices) {
+                    rootService.currentGame
+                        ?.currentState!!
+                        .goalCards
+                        .find {
+                            it?.color ==
+                                converter.toGoal(message.renouncedGoals[i]).color &&
+                                it.difficulty ==
+                                converter.toGoal(message.renouncedGoals[i]).difficulty
+                        }?.let {
+                            rootService.playerActionService.decideGoalClaim(
+                                it,
+                                false,
+                            )
+                        }
+                }
             }
 
             // end turn
@@ -351,34 +406,39 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
      * @throws IllegalStateException if currently not waiting for a game action message
      *                               or if it's not the senders turn
      */
-    fun receiveMeditateMessage(message: MeditateMessage, sender: String) {
+    fun receiveMeditateMessage(
+        message: MeditateMessage,
+        sender: String,
+    ) {
         check(
-            connectionState == ConnectionState.WAITING_FOR_OPPONENT
+            connectionState == ConnectionState.WAITING_FOR_OPPONENT,
         ) { "unexpected game action message" }
 
         val game = rootService.currentGame
         checkNotNull(game) { "no active game" }
 
         check(
-            game.currentState.players[game.currentState.currentPlayer].name == sender
+            game.currentState.players[game.currentState.currentPlayer].name == sender,
         ) { "not $sender's turn" }
 
         try {
             // remove tiles
             if (message.removedTilesAxialCoordinates.isNotEmpty()) {
-                for (i in message.removedTilesAxialCoordinates.indices)
+                for (i in message.removedTilesAxialCoordinates.indices) {
                     rootService.playerActionService.removeTile(
-                        game.currentState.players[game.currentState.currentPlayer].bonsai.grid[
+                        game.currentState.players[game.currentState.currentPlayer]
+                            .bonsai.grid[
                             message.removedTilesAxialCoordinates[i].first,
-                            message.removedTilesAxialCoordinates[i].second
-                        ]
+                            message.removedTilesAxialCoordinates[i].second,
+                        ],
                     )
+                }
             }
 
             // draw card
             val drawnCard = rootService.currentGame!!.currentState.openCards[message.chosenCardPosition]
             rootService.playerActionService.meditate(
-                game.currentState.openCards[message.chosenCardPosition]
+                game.currentState.openCards[message.chosenCardPosition],
             )
 
             // draw tiles
@@ -387,8 +447,11 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
             // tiles drawn from open cards
             if (drawnTiles.isNotEmpty()) {
                 when (message.chosenCardPosition) {
-                    1 -> rootService.playerActionService.applyTileChoice(
-                            converter.toTileType(drawnTiles.removeFirst()))
+                    1 ->
+                        rootService.playerActionService.applyTileChoice(
+                            converter.toTileType(drawnTiles.removeFirst()),
+                        )
+
                     2 -> drawnTiles.removeAll(listOf(TileTypeMessage.WOOD, TileTypeMessage.FLOWER))
                     3 -> drawnTiles.removeAll(listOf(TileTypeMessage.LEAF, TileTypeMessage.FRUIT))
                 }
@@ -397,48 +460,77 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
             // tiles drawn from master cards
             if (drawnTiles.isNotEmpty() &&
                 drawnCard is MasterCard &&
-                drawnCard.id in listOf(24, 25, 28)) {
+                drawnCard.id in listOf(24, 25, 28)
+            ) {
                 rootService.playerActionService.applyTileChoice(
                     converter.toTileType(drawnTiles.removeFirst()),
-                    true
+                    true,
                 )
             }
 
             // played tiles
             if (message.playedTiles.isNotEmpty()) {
-                for (i in message.playedTiles.indices)
+                for (i in message.playedTiles.indices) {
                     rootService.currentGame?.currentState!!.players[
-                        rootService.currentGame?.currentState!!.currentPlayer
+                        rootService.currentGame?.currentState!!.currentPlayer,
                     ].supply.find { it.type == converter.toTileType(message.playedTiles[i].first) }?.let {
                         rootService.playerActionService.cultivate(
                             it,
                             message.playedTiles[i].second.first,
-                            message.playedTiles[i].second.second
+                            message.playedTiles[i].second.second,
                         )
                     }
+                }
             }
 
             // decide goals
             if (message.claimedGoals.isNotEmpty()) {
-                for (i in message.claimedGoals.indices)
-                    rootService.playerActionService.decideGoalClaim(
-                        converter.toGoal(message.claimedGoals[i]), true
-                    )
+                for (i in message.claimedGoals.indices) {
+                    rootService.currentGame
+                        ?.currentState!!
+                        .goalCards
+                        .find {
+                            it?.color ==
+                                converter.toGoal(message.claimedGoals[i]).color &&
+                                it.difficulty ==
+                                converter.toGoal(message.claimedGoals[i]).difficulty
+                        }?.let {
+                            rootService.playerActionService.decideGoalClaim(
+                                it,
+                                true,
+                            )
+                        }
+                }
             }
             if (message.renouncedGoals.isNotEmpty()) {
-                for (i in message.renouncedGoals.indices)
-                    rootService.playerActionService.decideGoalClaim(
-                        converter.toGoal(message.renouncedGoals[i]), false
-                    )
+                for (i in message.renouncedGoals.indices) {
+                    rootService.currentGame
+                        ?.currentState!!
+                        .goalCards
+                        .find {
+                            it?.color ==
+                                converter.toGoal(message.renouncedGoals[i]).color &&
+                                it.difficulty ==
+                                converter.toGoal(message.renouncedGoals[i]).difficulty
+                        }?.let {
+                            rootService.playerActionService.decideGoalClaim(
+                                it,
+                                false,
+                            )
+                        }
+                }
             }
 
             // discard tiles
             if (message.discardedTiles.isNotEmpty()) {
-                for (i in message.discardedTiles.indices)
+                for (i in message.discardedTiles.indices) {
                     game.currentState.players[game.currentState.currentPlayer]
-                        .supply.find { it.type == converter.toTileType(message.discardedTiles[i]) }?.let {
+                        .supply
+                        .find { it.type == converter.toTileType(message.discardedTiles[i]) }
+                        ?.let {
                             rootService.playerActionService.discardTile(it)
                         }
+                }
             }
 
             // end turn
@@ -461,7 +553,7 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
     fun updateConnectionState(
         newState: ConnectionState,
         string: String? = null,
-        list: List<String>? = null
+        list: List<String>? = null,
     ) {
         this.connectionState = newState
         onAllRefreshables {
@@ -494,9 +586,12 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
      * @throws IllegalArgumentException if name is blank or if botStatus is out of bounds
      * @throws IllegalStateException if already connected to another game
      */
-    private fun connect(name: String, botStatus: Int, gameSpeed: Int? = null): Boolean {
-        check(connectionState == ConnectionState.DISCONNECTED && client == null)
-        { "already connected to another game" }
+    private fun connect(
+        name: String,
+        botStatus: Int,
+        gameSpeed: Int? = null,
+    ): Boolean {
+        check(connectionState == ConnectionState.DISCONNECTED && client == null) { "already connected to another game" }
         require(name.isNotBlank()) { "player name must be given" }
         require(botStatus in (0..3)) { "invalid player type" }
 
@@ -507,7 +602,7 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
                 gameSpeed = gameSpeed,
                 host = SERVER_ADDRESS,
                 secret = SERVER_SECRET,
-                networkService = this
+                networkService = this,
             )
 
         return if (newClient.connect()) {
@@ -517,5 +612,4 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
             false
         }
     }
-
 }

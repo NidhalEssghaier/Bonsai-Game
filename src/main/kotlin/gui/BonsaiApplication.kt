@@ -25,6 +25,15 @@ class BonsaiApplication :
     private var gameScene = GameScene(rootService, this)
 
     init {
+        // bind disconnect & return to main menu function
+        lobbyScene.mainMenuButton
+            .apply {
+                onMouseClicked =
+                    {
+                        rootService.networkService.disconnect()
+                        this@BonsaiApplication.showMenuScene(mainMenuScene)
+                    }
+            }
         // all scenes and the application itself need to
         // react to changes done in the service layer
         rootService.addRefreshables(
@@ -46,14 +55,6 @@ class BonsaiApplication :
     override fun refreshAfterStartNewGame() {
         this.hideMenuScene()
         this.showGameScene(gameScene)
-    }
-
-    override fun refreshToPromptTileChoice(
-        chooseByBoard: Boolean,
-        chooseByCard: Boolean,
-    ) {
-        chooseTileScene = ChooseTileScene(rootService, this, chooseByBoard, chooseByCard)
-        this.showMenuScene(chooseTileScene)
     }
 
     override fun refreshAfterReachGoals(reachedGoals: List<GoalCard>) {
