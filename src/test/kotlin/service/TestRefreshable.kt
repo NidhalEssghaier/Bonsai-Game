@@ -33,8 +33,6 @@ class TestRefreshable : Refreshable {
     var refreshAfterDiscardTileCalled: Boolean = false
         private set
 
-    var refreshToPromptTileChoiceCalled: Boolean = false
-        private set
 
     var refreshAfterDrawHelperCardCalled: Boolean = false
         private set
@@ -63,7 +61,6 @@ class TestRefreshable : Refreshable {
         refreshAfterUndoRedoCalled = false
         refreshAfterEndTurnCalled = false
         refreshAfterDiscardTileCalled = false
-        refreshToPromptTileChoiceCalled = false
         refreshAfterDrawHelperCardCalled = false
         refreshAfterRemoveTileCalled = false
         refreshAfterPlaceTileCalled = false
@@ -101,13 +98,6 @@ class TestRefreshable : Refreshable {
         removedTile: BonsaiTile?,
     ) {
         refreshAfterDiscardTileCalled = true
-    }
-
-    override fun  refreshToPromptTileChoice(
-        chooseByBoard: Boolean,
-        chooseByCard: Boolean,
-    ) {
-        refreshToPromptTileChoiceCalled = true
     }
 
     override fun refreshAfterDrawHelperCard(helperCard: HelperCard) {

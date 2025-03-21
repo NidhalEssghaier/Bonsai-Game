@@ -8,7 +8,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.assertNotEquals
 
-
+/**
+ * Unit tests for the [PlayerActionService] `Meditate` function.
+ */
 class MeditateTest {
 
     private lateinit var rootService: RootService
@@ -85,7 +87,10 @@ class MeditateTest {
         assertTrue { currentPlayer.supply.map { it.type }.contains(TileType.LEAF) }
         assertTrue { testRefreshable.refreshAfterDrawCardCalled }
     }
-
+    /**
+     * Tests meditating with a `MasterCard` and with GENERICTile.
+     * Ensures it is added to the hidden deck and its tiles are correctly added to the player's supply.
+     */
     @Test
     fun testMeditateWithMasterCardGENERICTile() {
         val masterCard = MasterCard(tiles = listOf(TileType.WOOD, TileType.GENERIC), id = 2)
@@ -96,18 +101,41 @@ class MeditateTest {
         assertTrue { currentPlayer.hiddenDeck.contains(masterCard) }
         assertTrue { testRefreshable.refreshAfterDrawCardCalled }
     }
+
     /**
-     * Tests meditating with a `GrowthCard`.
-     * Ensures it is correctly added to the player's growth stack.
+     * Tests that meditating with a GrowthCard correctly adds it to the player's seishiGrowth stack.
      */
     @Test
-    fun testMeditateWithGrowthCard() {
-        val growthCard = GrowthCard(type = TileType.FLOWER, id = 3)
-        game.currentState.openCards[3] = growthCard
-        playerActionService.meditate(growthCard)
-        assertTrue { currentPlayer.seishiGrowth.contains(growthCard) }
-        assertTrue { testRefreshable.refreshAfterDrawCardCalled }
-    }
+       fun testMeditateWithGrowthCard() {
+         val growthCard = GrowthCard(type = TileType.FLOWER, id = 3)
+         game.currentState.openCards[3] = growthCard
+         playerActionService.meditate(growthCard)
+         assertTrue { currentPlayer.seishiGrowth.contains(growthCard) }
+         assertTrue { testRefreshable.refreshAfterDrawCardCalled }
+      }
+
+    /**
+     * Tests that the tree tile limit increases by 1 when playing a GrowthCard.
+     */
+   @Test
+     fun testTreeTilelimiteIncreasesWhenPlayingGrowthCard() {
+         // Arrange: Setup game, player, and GrowthCard
+
+         val initialTileType = TileType.LEAF
+         val growthCard = GrowthCard(initialTileType, 3)
+            game.currentState.openCards[0] = growthCard
+
+            // Ensure the player has the `treeTileLimit` map initialized
+            currentPlayer.treeTileLimit[initialTileType] = 2
+
+            val rootService = RootService()
+            rootService.currentGame = game
+
+            playerActionService.meditate(growthCard)
+
+            // Assert: Verify tree tile limit increased
+            assertEquals(3, currentPlayer.treeTileLimit[initialTileType], "Tree tile limit should have increased by 1")
+     }
 
     /**
      * Tests meditating with a `ToolCard`.
@@ -124,8 +152,7 @@ class MeditateTest {
     }
 
     /**
-     * Tests meditating with a `ToolCard`.
-     * Ensures it is correctly added to the player's tool stack and increases the player's tile limit.
+     * Tests meditating with a `PlaceholderCard`.
      */
     @Test
     fun testMeditateWithPlaceholderCard() {
@@ -166,7 +193,7 @@ class MeditateTest {
     fun testMeditateWithEmptyOpenCards() {
         game.currentState.openCards.clear()
         val toolCard = ToolCard(id = 1)
-        assertThrows<IllegalStateException> { playerActionService.meditate(toolCard) }
+        assertThrows<IllegalArgumentException> { playerActionService.meditate(toolCard) }
     }
 
     /**
@@ -192,7 +219,7 @@ class MeditateTest {
         game.currentState.openCards[1] = anotherCard
 
         // The player has already drawn a card, so this should fail
-        assertThrows<IllegalStateException> { playerActionService.meditate(anotherCard) }
+        assertThrows<IllegalArgumentException> { playerActionService.meditate(anotherCard) }
     }
 
     /**

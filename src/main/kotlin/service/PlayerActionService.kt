@@ -1,10 +1,9 @@
 package service
 import entity.*
-import gui.*
 import helper.*
 import kotlin.math.ceil
 import kotlin.math.floor
-import service.bot.BotService
+
 
 /**
  * The [PlayerActionService] class is responsible for handling player actions in the game.
@@ -624,7 +623,7 @@ class PlayerActionService(
 
     /**
      * Executes the "meditate" action, allowing the player to remove tiles and draw a card from the
-     * [BonsaiGame] [openCards].
+     * [BonsaiGame] openCards.
      * Based on the card position, a [Player] receives bonsai tiles from the common supply and keep
      * them in his [Player.supply].
      * Based on the card type, a player can play a tile, recieve tiles or get a bonus
@@ -635,7 +634,7 @@ class PlayerActionService(
      * - the Board must have at least one card
      *
      * Postconditions:
-     * - [HelperCard], [MasterCard] and [ParchmentCard] will be added to [Player] [hiddenDeck].
+     * - [HelperCard], [MasterCard] and [ParchmentCard] will be added to [Player] hiddenDeck.
      * - [ToolCard] will be added to [Player.seishiTool].
      * - [GrowthCard] will be added to [Player.seishiGrowth].
      * - The player's turn will end.
@@ -651,25 +650,14 @@ class PlayerActionService(
         val game = rootService.currentGame ?: throw IllegalStateException("No active game")
         val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
 
-        // Bug fix ensure player cant meditate after cultivating
-        check(!currentPlayer.hasCultivated){"cant meditate after cultivate"}
+        validateMeditationState(currentPlayer,game, card)
 
-        // Ensure the player has not already drawn a card this turn
-        if (currentPlayer.hasDrawnCard) {
-            throw IllegalStateException("The player has already drawn a card this turn")
-        }
         // Mark the player as having drawn a card
         currentPlayer.hasDrawnCard = true
 
-        // Ensure there are available cards in openCards
-        if (game.currentState.openCards.isEmpty()) throw IllegalStateException("No available cards to draw")
-
-        // Validate that the selected card exists in openCards
-        require(card in game.currentState.openCards) { "The selected card is not in openCards" }
-
         // Find the selected card's position in openCards
         val cardIndex = game.currentState.openCards.indexOf(card)
-        if (cardIndex == -1) throw IllegalStateException("The selected card is not in openCards")
+        require(cardIndex != -1) { "The selected card is not in openCards" }
 
         // Draw the card and mark its position as taken
         val receivedTiles = drawCard(cardIndex)
@@ -729,6 +717,25 @@ class PlayerActionService(
 
         // refresh to show draw card animation & choose tiles optionally based on drawn card & chosen stack
         onAllRefreshables { refreshAfterDrawCard(card, cardIndex, chooseTilesByBoard, chooseTilesByCard) }
+    }
+
+    /**
+     * Validates whether the player can perform a meditation action.
+     */
+    private fun validateMeditationState(currentPlayer: Player, game: BonsaiGame, card: ZenCard) {
+
+        // Bug fix ensure player cant meditate after cultivating
+        check(!currentPlayer.hasCultivated){"cant meditate after cultivate"}
+
+        // Ensure the player has not already drawn a card this turn
+        require(!currentPlayer.hasDrawnCard) { "The player has already drawn a card this turn" }
+
+        // Ensure there are available cards in openCards
+        require(game.currentState.openCards.isNotEmpty()) { "No available cards to draw" }
+
+        // Validate that the selected card exists in openCards
+        require(card in game.currentState.openCards) { "The selected card is not in openCards" }
+
     }
 
     /**
