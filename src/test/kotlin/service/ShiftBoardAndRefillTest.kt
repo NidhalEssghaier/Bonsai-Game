@@ -7,9 +7,6 @@ import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Unit tests for the [PlayerActionService] `ShiftBoardAndRefill` function.
- */
 class ShiftBoardAndRefillTest {
     private lateinit var rootService: RootService
     private lateinit var gameService: GameService

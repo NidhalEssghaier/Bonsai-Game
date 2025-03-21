@@ -2,10 +2,6 @@ package entity.bot
 
 import entity.BonsaiGame
 
-/**
- * Represents a node in the game tree for AI decision-making.
- */
-
 class Node(
     var move: PlayerAction? = null,
     var children: MutableList<Node?> = mutableListOf(),

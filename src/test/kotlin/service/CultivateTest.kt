@@ -9,10 +9,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.assertFalse
 
-
-/**
- * Unit tests for the [PlayerActionService] `cultivate` function.
- */
 class CultivateTest {
 
     private lateinit var rootService: RootService
