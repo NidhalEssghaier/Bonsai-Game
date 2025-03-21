@@ -79,7 +79,7 @@ class BonsaiApplication :
     ) {
         when (newState) {
             ConnectionState.WAITING_FOR_INIT -> {
-                lobbyScene.playerName1Label.text = string ?: ""
+                lobbyScene.playerName1Label.text = string!!
                 if (!list.isNullOrEmpty()) lobbyScene.playerName2Label.text = list[0]
                 if (list != null && list.size > 1) lobbyScene.playerName3Label.text = list[1]
                 if (list != null && list.size > 2) lobbyScene.playerName4Label.text = list[2]
@@ -89,9 +89,9 @@ class BonsaiApplication :
 
             ConnectionState.WAITING_FOR_GUEST -> {
                 when (playerCount) {
-                    1 -> lobbyScene.playerName2Label.text = string ?: ""
-                    2 -> lobbyScene.playerName3Label.text = string ?: ""
-                    3 -> lobbyScene.playerName4Label.text = string ?: ""
+                    1 -> lobbyScene.playerName2Label.text = string!!
+                    2 -> lobbyScene.playerName3Label.text = string!!
+                    3 -> lobbyScene.playerName4Label.text = string!!
                 }
                 playerCount++
             }

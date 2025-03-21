@@ -562,7 +562,7 @@ class OnlineGameScene(
             visual = ColorVisual(256, 107, 62),
         ).apply {
             onMouseClicked = {
-                repeat(100) {
+                for (i in 1..100) {
                     val randomNumber = listOf(1, 2, 3).random()
                     when (randomNumber) {
                         1 -> swap1()

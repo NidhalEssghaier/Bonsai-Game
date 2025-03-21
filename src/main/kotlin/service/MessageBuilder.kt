@@ -23,9 +23,6 @@ class MessageBuilder {
     /** Used to convert between entity classes and ntf classes. */
     private val converter: MessageConverter = MessageConverter()
 
-    //Error message
-    private val errorMessage = "Internal error: it shouldn't be null"
-
     /**
      * Add a tile that was removed from the bonsai to the message.
      *
@@ -34,12 +31,10 @@ class MessageBuilder {
     fun addRemovedTile(coordinates: Pair<Int, Int>) {
         if (removedTilesAxialCoordinates == null) {
             removedTilesAxialCoordinates = mutableListOf()
+            removedTilesAxialCoordinates!!.add(coordinates)
+        } else {
+            removedTilesAxialCoordinates!!.add(coordinates)
         }
-
-        val checkedRemovedTilesAxialCoordinates = removedTilesAxialCoordinates
-        checkNotNull(checkedRemovedTilesAxialCoordinates) { errorMessage }
-
-        checkedRemovedTilesAxialCoordinates.add(coordinates)
     }
 
     /**
@@ -51,12 +46,10 @@ class MessageBuilder {
     fun addPlacedTile(tileType: TileType, coordinates: Pair<Int, Int>) {
         if (playedTiles == null) {
             playedTiles = mutableListOf()
+            playedTiles!!.add(Pair(converter.fromTileType(tileType), coordinates))
+        } else {
+            playedTiles!!.add(Pair(converter.fromTileType(tileType), coordinates))
         }
-
-        val checkedPlayedTiles = playedTiles
-        checkNotNull(checkedPlayedTiles) {errorMessage}
-
-        checkedPlayedTiles.add(Pair(converter.fromTileType(tileType), coordinates))
     }
 
     /**
@@ -67,12 +60,10 @@ class MessageBuilder {
     fun addClaimedGoal(goalCard: GoalCard) {
         if (claimedGoals == null) {
             claimedGoals = mutableListOf()
+            claimedGoals!!.add(converter.fromGoal(goalCard))
+        } else {
+            claimedGoals!!.add(converter.fromGoal(goalCard))
         }
-
-        val checkedClaimedGoals = claimedGoals
-        checkNotNull(checkedClaimedGoals)
-
-        checkedClaimedGoals.add(converter.fromGoal(goalCard))
     }
 
     /**
@@ -83,12 +74,10 @@ class MessageBuilder {
     fun addRenouncedGoal(goalCard: GoalCard) {
         if (renouncedGoals == null) {
             renouncedGoals = mutableListOf()
+            renouncedGoals!!.add(converter.fromGoal(goalCard))
+        } else {
+            renouncedGoals!!.add(converter.fromGoal(goalCard))
         }
-
-        val checkedRenouncedGoals = renouncedGoals
-        checkNotNull(checkedRenouncedGoals)
-
-        checkedRenouncedGoals.add(converter.fromGoal(goalCard))
     }
 
     /**
@@ -108,12 +97,10 @@ class MessageBuilder {
     fun addDrawnTile(tileType: TileType) {
         if (drawnTiles == null) {
             drawnTiles = mutableListOf()
+            drawnTiles!!.add(converter.fromTileType(tileType))
+        } else {
+            drawnTiles!!.add(converter.fromTileType(tileType))
         }
-
-        val checkedDrawnTiles = drawnTiles
-        checkNotNull(checkedDrawnTiles)
-
-        checkedDrawnTiles.add(converter.fromTileType(tileType))
     }
 
     /**
@@ -124,12 +111,10 @@ class MessageBuilder {
     fun addDiscardedTile(tileType: TileType) {
         if (discardedTiles == null) {
             discardedTiles = mutableListOf()
+            discardedTiles!!.add(converter.fromTileType(tileType))
+        } else {
+            discardedTiles!!.add(converter.fromTileType(tileType))
         }
-
-        val checkedDiscardedTiles = discardedTiles
-        checkNotNull(checkedDiscardedTiles)
-
-        checkedDiscardedTiles.add(converter.fromTileType(tileType))
     }
 
     /**
@@ -153,23 +138,12 @@ class MessageBuilder {
             renouncedGoals = mutableListOf()
         }
 
-        //Add checks to make kotlin compiler happy
-        val checkedRemovedTilesAxialCoordinates = removedTilesAxialCoordinates
-        val checkedPlayedTiles = playedTiles
-        val checkedClaimedGoals = claimedGoals
-        val checkedRenouncedGoals = renouncedGoals
-
-        checkNotNull(checkedRemovedTilesAxialCoordinates) {errorMessage}
-        checkNotNull(checkedPlayedTiles) {errorMessage}
-        checkNotNull(checkedClaimedGoals) {errorMessage}
-        checkNotNull(checkedRenouncedGoals) {errorMessage}
-
         if (chosenCardPosition == null) {
             val message = CultivateMessage(
-                checkedRemovedTilesAxialCoordinates,
-                checkedPlayedTiles,
-                checkedClaimedGoals,
-                checkedRenouncedGoals
+                removedTilesAxialCoordinates!!,
+                playedTiles!!,
+                claimedGoals!!,
+                renouncedGoals!!
             )
             reset()
             return Pair(message, null)
@@ -185,22 +159,14 @@ class MessageBuilder {
                 discardedTiles = mutableListOf()
             }
 
-            //Add checks to make kotlin compiler happy
-            val checkedDrawnTiles = drawnTiles
-            val checkedChosenCardPosition = chosenCardPosition
-            val checkedDiscardedTiles = discardedTiles
-            checkNotNull(checkedChosenCardPosition) {errorMessage}
-            checkNotNull(checkedDrawnTiles) {errorMessage}
-            checkNotNull(checkedDiscardedTiles) {errorMessage}
-
             val message = MeditateMessage(
-                checkedRemovedTilesAxialCoordinates,
-                checkedChosenCardPosition,
-                checkedPlayedTiles,
-                checkedDrawnTiles,
-                checkedClaimedGoals,
-                checkedRenouncedGoals,
-                checkedDiscardedTiles
+                removedTilesAxialCoordinates!!,
+                chosenCardPosition!!,
+                playedTiles!!,
+                drawnTiles!!,
+                claimedGoals!!,
+                renouncedGoals!!,
+                discardedTiles!!
             )
             reset()
             return Pair(null, message)
@@ -216,4 +182,5 @@ class MessageBuilder {
         renouncedGoals = null
         discardedTiles = null
     }
+
 }

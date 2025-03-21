@@ -15,8 +15,6 @@ class Bonsai private constructor(
     val tileCount: MutableMap<TileType,Int>
 )
 {
-    val tiles = grid.tilesList
-
     /**
      * Public secondary constructor for external usage
      */
@@ -24,6 +22,8 @@ class Bonsai private constructor(
         grid = HexGrid(20),
         tileCount = TileType.entries.associateWith{ type -> if (type == TileType.WOOD) 1 else 0 }.toMutableMap()
     )
+
+    val tiles = grid.tilesList
 
     /**
      * Method to deep copy the bonsai
