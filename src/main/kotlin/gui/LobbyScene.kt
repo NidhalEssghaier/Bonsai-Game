@@ -7,8 +7,8 @@ import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
 
 /**
- * [MenuScene] that gets displayed when the player joined an online game.
- * Shows the players in the lobby and waits until the host starts the game.
+ * [MenuScene] that gets displayed when the player joined an online game. Shows the players in the lobby and waits until
+ * the host starts the game.
  */
 class LobbyScene :
     MenuScene(1920, 1080),
@@ -22,7 +22,7 @@ class LobbyScene :
             text = "Lobby",
             font = Font(size = 100, fontWeight = Font.FontWeight.BOLD),
         )
-    private val mainMenuButton =
+    val mainMenuButton =
         Button(width = 300, height = 80, posX = 1550, posY = 160, text = "Main Menu", font = Font(35)).apply {
             visual = ColorVisual(256, 107, 62)
         }

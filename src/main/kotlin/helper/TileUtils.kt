@@ -3,7 +3,16 @@ import entity.BonsaiTile
 import entity.HexGrid
 import entity.TileType
 
+/**
+ * Object to provide helper functions for tiles
+ */
 object TileUtils {
+    /**
+     * Returns the minimum List of tiles that need to be removed from the Bonsai to maintain the rules
+     * @param tiles The list of [BonsaiTile] to be checked
+     * @param grid The [HexGrid] to check the tiles against
+     * @return The list of [BonsaiTile] that need to be removed
+     */
     fun leastGroupOfTilesToBeRemoved(tiles: List<BonsaiTile>, grid: HexGrid?): List<BonsaiTile> {
         checkNotNull(grid) { "Grid cannot be null" }
 
@@ -36,6 +45,12 @@ object TileUtils {
         }
     }
 
+    /**
+     * Checks if the give list of leaf tiles has an adjacent pair
+     * @param leafTiles The list of leaf [BonsaiTile] to check
+     * @param grid The [HexGrid] to check the tiles against
+     * @return True if the list of leaf tiles has at least an adjacent pair, false otherwise
+     */
     fun hasAdjacentPair(leafTiles: List<BonsaiTile>, grid: HexGrid?): Boolean {
         checkNotNull(grid) { "Grid cannot be null" }
 

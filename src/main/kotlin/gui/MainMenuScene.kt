@@ -8,9 +8,8 @@ import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
 
 /**
- * [MenuScene] that gets displayed when starting the [BonsaiApplication].
- * Allows selecting the game mode, loading a save game or exiting the
- * application.
+ * [MenuScene] that gets displayed when starting the [BonsaiApplication]. Allows selecting the game mode, loading a save
+ * game or exiting the application.
  *
  * @param rootService The [RootService] to access the other services
  * @param application The running application
@@ -41,7 +40,9 @@ class MainMenuScene(
             .apply {
                 visual = ColorVisual(256, 107, 62)
             }.apply {
-                onMouseClicked = { application.showMenuScene(application.onlineGameScene) }
+                onMouseClicked = {
+                    application.showMenuScene(application.onlineGameScene)
+                }
             }
     private val resumeGameButton =
         Button(width = 300, height = 80, posX = 850, posY = 470, text = "Resume Game", font = Font(35))

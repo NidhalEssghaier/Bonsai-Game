@@ -2,12 +2,15 @@ package service
 
 import entity.*
 import helper.*
-import java.io.File
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
+import java.io.File
 import java.io.IOException
+import java.util.*
+import kotlin.collections.ArrayDeque
+import kotlin.concurrent.timerTask
 
 /**
  * @property dirPath The path to the directory where the save file is located.
@@ -17,32 +20,34 @@ import java.io.IOException
 class GameService(
     private val rootService: RootService,
 ) : AbstractRefreshingService() {
-
-    val dirPath = File("data").apply {
-        if (!exists()) mkdirs() // Ensure the directory exists
-    }
+    val dirPath =
+        File("data").apply {
+            if (!exists()) mkdirs() // Ensure the directory exists
+        }
     private val saveFilePath = File(dirPath, "save.json")
 
-    private val jsonSerializer = Json {
-        serializersModule = SerializersModule {
-            allowStructuredMapKeys = true
-            polymorphic(ZenCard::class) {
-                subclass(ToolCard::class)
-                subclass(MasterCard::class)
-                subclass(HelperCard::class)
-                subclass(GrowthCard::class)
-                subclass(ParchmentCard::class)
-                subclass(PlaceholderCard::class)
-            }
+    private val jsonSerializer =
+        Json {
+            serializersModule =
+                SerializersModule {
+                    allowStructuredMapKeys = true
+                    polymorphic(ZenCard::class) {
+                        subclass(ToolCard::class)
+                        subclass(MasterCard::class)
+                        subclass(HelperCard::class)
+                        subclass(GrowthCard::class)
+                        subclass(ParchmentCard::class)
+                        subclass(PlaceholderCard::class)
+                    }
 
-            polymorphic(Player::class) {
-                subclass(LocalPlayer::class)
-                subclass(NetworkPlayer::class)
-                subclass(RandomBot::class)
-                subclass(SmartBot::class)
-            }
+                    polymorphic(Player::class) {
+                        subclass(LocalPlayer::class)
+                        subclass(NetworkPlayer::class)
+                        subclass(RandomBot::class)
+                        subclass(SmartBot::class)
+                    }
+                }
         }
-    }
 
     /**
      * Starts a new game and prepares different game elements
@@ -101,18 +106,26 @@ class GameService(
         val currentGame = rootService.currentGame
         checkNotNull(currentGame) { "Internal error! currentGame is null, it shouldn't happened here." }
 
-        //add start tiles
+        // add start tiles
         val startTiles = mutableListOf(BonsaiTile(TileType.WOOD))
-        currentGame.currentState.players[0].supply.addAll(startTiles)
+        currentGame.currentState.players[0]
+            .supply
+            .addAll(startTiles)
         startTiles.add(BonsaiTile(TileType.LEAF))
-        currentGame.currentState.players[1].supply.addAll(startTiles)
-        if(currentGame.currentState.players.size>2) {
+        currentGame.currentState.players[1]
+            .supply
+            .addAll(startTiles)
+        if (currentGame.currentState.players.size > 2) {
             startTiles.add(BonsaiTile(TileType.FLOWER))
-            currentGame.currentState.players[2].supply.addAll(startTiles)
+            currentGame.currentState.players[2]
+                .supply
+                .addAll(startTiles)
         }
-        if(currentGame.currentState.players.size>3) {
+        if (currentGame.currentState.players.size > 3) {
             startTiles.add(BonsaiTile(TileType.FRUIT))
-            currentGame.currentState.players[3].supply.addAll(startTiles)
+            currentGame.currentState.players[3]
+                .supply
+                .addAll(startTiles)
         }
 
         // Push the initial state to the undo stack
@@ -123,13 +136,21 @@ class GameService(
     }
 
     private fun startNewGameBot() {
-        println("start new game bot")
         val game = rootService.currentGame
         checkNotNull(game)
         val player0 = game.currentState.players[game.currentState.currentPlayer]
-        if(player0 is RandomBot) {
+        if (player0 is RandomBot) {
             val botService = rootService.botService
-            botService.playRandomMove()
+            val speed = 1000 * game.currentState.gameSpeed
+            val timer = Timer()
+            timer.schedule(timerTask { botService.playRandomMove(false) }, speed.toLong())
+        }
+        if (player0 is SmartBot) {
+            val botService = rootService.botService
+
+            val speed = 1000 * game.currentState.gameSpeed
+            val timer = Timer()
+            timer.schedule(timerTask { botService.playRandomMove(true) }, speed.toLong())
         }
     }
 
@@ -218,32 +239,51 @@ class GameService(
             when (goalColor) {
                 GoalColor.BROWN -> {
                     goals.add(GoalCard(5, goalColor, GoalDifficulty.LOW))
-                    if (playerCount > 2) goals.add(GoalCard(10, goalColor, GoalDifficulty.INTERMEDIATE))
-                    else goals.add(null)
+                    if (playerCount > 2) {
+                        goals.add(GoalCard(10, goalColor, GoalDifficulty.INTERMEDIATE))
+                    } else {
+                        goals.add(null)
+                    }
                     goals.add(GoalCard(15, goalColor, GoalDifficulty.HARD))
                 }
+
                 GoalColor.ORANGE -> {
                     goals.add(GoalCard(9, goalColor, GoalDifficulty.LOW))
-                    if (playerCount > 2) goals.add(GoalCard(11, goalColor, GoalDifficulty.INTERMEDIATE))
-                    else goals.add(null)
+                    if (playerCount > 2) {
+                        goals.add(GoalCard(11, goalColor, GoalDifficulty.INTERMEDIATE))
+                    } else {
+                        goals.add(null)
+                    }
                     goals.add(GoalCard(13, goalColor, GoalDifficulty.HARD))
                 }
+
                 GoalColor.GREEN -> {
                     goals.add(GoalCard(6, goalColor, GoalDifficulty.LOW))
-                    if (playerCount > 2) goals.add(GoalCard(9, goalColor, GoalDifficulty.INTERMEDIATE))
-                    else goals.add(null)
+                    if (playerCount > 2) {
+                        goals.add(GoalCard(9, goalColor, GoalDifficulty.INTERMEDIATE))
+                    } else {
+                        goals.add(null)
+                    }
                     goals.add(GoalCard(12, goalColor, GoalDifficulty.HARD))
                 }
+
                 GoalColor.RED -> {
                     goals.add(GoalCard(8, goalColor, GoalDifficulty.LOW))
-                    if (playerCount > 2) goals.add(GoalCard(12, goalColor, GoalDifficulty.INTERMEDIATE))
-                    else goals.add(null)
+                    if (playerCount > 2) {
+                        goals.add(GoalCard(12, goalColor, GoalDifficulty.INTERMEDIATE))
+                    } else {
+                        goals.add(null)
+                    }
                     goals.add(GoalCard(16, goalColor, GoalDifficulty.HARD))
                 }
+
                 GoalColor.BLUE -> {
                     goals.add(GoalCard(7, goalColor, GoalDifficulty.LOW))
-                    if (playerCount > 2) goals.add(GoalCard(10, goalColor, GoalDifficulty.INTERMEDIATE))
-                    else goals.add(null)
+                    if (playerCount > 2) {
+                        goals.add(GoalCard(10, goalColor, GoalDifficulty.INTERMEDIATE))
+                    } else {
+                        goals.add(null)
+                    }
                     goals.add(GoalCard(14, goalColor, GoalDifficulty.HARD))
                 }
             }
@@ -296,9 +336,13 @@ class GameService(
                     TileType.LEAF -> numberOfLeafTiles += 1
                     TileType.FLOWER -> {
                         numberOfFlowerTiles += 1
-                        sumOfFlowerPoints += 6 - bonsai.grid.getNeighbors(tile)
-                            .filter { neighbor->neighbor.type!=TileType.UNPLAYABLE  }.size
+                        sumOfFlowerPoints += 6 -
+                            bonsai.grid
+                                .getNeighbors(tile)
+                                .filter { neighbor -> neighbor.type != TileType.UNPLAYABLE }
+                                .size
                     }
+
                     TileType.FRUIT -> numberOfFruitTiles += 1
                     else -> {}
                 }
@@ -323,11 +367,11 @@ class GameService(
             val cardLeafPoints = numberOfLeafTiles * cardPoints.getValue(ParchmentCardType.LEAF)
             val fruitPoints = numberOfFruitTiles * 7
             val cardFruitPoints = numberOfFruitTiles * cardPoints.getValue(ParchmentCardType.FRUIT)
-            //sumOfFlowerPoints
+            // sumOfFlowerPoints
             val cardFlowerPoints = numberOfFlowerTiles * cardPoints.getValue(ParchmentCardType.FLOWER)
 
             val sumCardPoints = cardWoodPoints + cardLeafPoints + cardFruitPoints + cardFlowerPoints
-            //val tilePoints = finalWoodPoints + finalLeafPoints + finalFruitPoints + finalFlowerPoints
+            // val tilePoints = finalWoodPoints + finalLeafPoints + finalFruitPoints + finalFlowerPoints
 
             var goalPoints = 0
             for (goal in player.acceptedGoals) {
@@ -337,12 +381,13 @@ class GameService(
             val sumOfPoints = leafPoints + sumOfFlowerPoints + fruitPoints + sumCardPoints + goalPoints
 
             pointsPerPlayer[player] =
-                mutableListOf(leafPoints,sumOfFlowerPoints,fruitPoints,sumCardPoints,goalPoints,sumOfPoints)
+                mutableListOf(leafPoints, sumOfFlowerPoints, fruitPoints, sumCardPoints, goalPoints, sumOfPoints)
         }
         val scoreList = pointsPerPlayer.toList().sortedByDescending { pair -> pair.second.last() }.toMap()
         // a tie situation is already handled via sortedByDescending, because equal values stay in the same order
 
         onAllRefreshables { refreshAfterEndGame(scoreList) }
+        rootService.networkService.disconnect()
 
         return scoreList
     }
@@ -400,7 +445,7 @@ class GameService(
         checkNotNull(game) { "No game has been started yet." }
 
         saveFilePath.writeText(
-            jsonSerializer.encodeToString(BonsaiGame.serializer(), game)
+            jsonSerializer.encodeToString(BonsaiGame.serializer(), game),
         )
     }
 }

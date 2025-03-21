@@ -10,8 +10,8 @@ import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
 
 /**
- * [MenuScene] that gets displayed when the player wants to join an online
- * game. To join, a player name and the Session-ID can be entered.
+ * [MenuScene] that gets displayed when the player wants to join an online game. To join, a player name and the
+ * Session-ID can be entered.
  *
  * @property rootService The [RootService] to access the other services
  * @property application The running application
@@ -22,6 +22,7 @@ class JoinGameScene(
 ) : MenuScene(1920, 1080),
     Refreshable {
     private var localplayerMode = 0
+    private var gameSpeed = 10
     private val headlineLabel =
         Label(
             width = 550,
@@ -55,10 +56,15 @@ class JoinGameScene(
     private val joinGameButton =
         Button(width = 300, height = 80, posX = 850, posY = 600, text = "Join Game", font = Font(35)).apply {
             visual = ColorVisual(256, 107, 62)
-            onMouseClicked={
-                if(playerNameInput.text.isBlank()) throw IllegalStateException("Gib einen Namen ein")
+            onMouseClicked = {
+                if (playerNameInput.text.isBlank()) throw IllegalStateException("Gib einen Namen ein")
                 if (sessionIDInput.text.isBlank()) throw IllegalStateException("Gib eine gültige Session Id an")
-                rootService.networkService.joinGame(playerNameInput.text, localplayerMode,10, sessionIDInput.text)
+                rootService.networkService.joinGame(
+                    playerNameInput.text,
+                    localplayerMode,
+                    gameSpeed,
+                    sessionIDInput.text,
+                )
             }
         }
     private val mainMenuButton =
@@ -80,6 +86,49 @@ class JoinGameScene(
                     localplayerMode = 0
                     player1HardBox.isDisabled = false
                 }
+            }
+        }
+
+    private val gameSpeedLabel: Label =
+        Label(
+            width = 300,
+            height = 80,
+            posX = 1550,
+            posY = 595,
+            text = "Game Speed :$gameSpeed",
+            font = Font(30),
+            visual = ColorVisual(255, 113, 113),
+        )
+    private val addGameSpeedButton =
+        Button(
+            width = 80,
+            height = 30,
+            posX = 1560,
+            posY = 700,
+            text = "+",
+            font = Font(30),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
+            onMouseClicked = {
+                if (gameSpeed == 100) throw IllegalStateException("Speed is at allready at 100")
+                gameSpeed++
+                gameSpeedLabel.text = "Game Speed : $gameSpeed"
+            }
+        }
+    private val subGameSpeedButton =
+        Button(
+            width = 80,
+            height = 30,
+            posX = 1680,
+            posY = 700,
+            text = "-",
+            font = Font(30),
+            visual = ColorVisual(256, 107, 62),
+        ).apply {
+            onMouseClicked = {
+                if (gameSpeed == 1) throw IllegalStateException("Speed is at allready at 1")
+                gameSpeed--
+                gameSpeedLabel.text = "Game Speed : $gameSpeed"
             }
         }
 
@@ -106,6 +155,9 @@ class JoinGameScene(
             sessionIDInput,
             player1HardBox,
             player1EasyBox,
+            addGameSpeedButton,
+            subGameSpeedButton,
+            gameSpeedLabel,
         )
     }
 }

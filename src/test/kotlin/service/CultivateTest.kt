@@ -3,8 +3,6 @@ package service
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import entity.*
-import helper.pop
-import helper.push
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
@@ -146,12 +144,14 @@ class CultivateTest {
 
 
         //  Generic tile should allow placing any tile
-        val FlowerTile = BonsaiTile(TileType.FLOWER) // Any tile is valid
-        testPlayer.supply.add(FlowerTile)
+        val flowerTile = BonsaiTile(TileType.FLOWER) // Any tile is valid
+        testPlayer.supply.add(flowerTile)
         val exception = assertThrows<IllegalStateException> {
-            playerActionService.cultivate(FlowerTile, 2, -1)
+            playerActionService.cultivate(flowerTile, 2, -1)
         }
-        assertEquals("Tile placement not allowed based on Seishi StartingTile ans Growth Cards.",exception.message)
+        assertEquals(
+            "Tile placement not allowed based on Seishi StartingTile ans Growth Cards.",exception.message
+        )
 
 
     }
@@ -193,7 +193,9 @@ class CultivateTest {
         val gameService = GameService(mc)
         val playerActionService = PlayerActionService(mc)
         gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE),
-            Triple("Iyed",1,PotColor.PURPLE)),5, listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
+            Triple("Iyed",1,PotColor.PURPLE)),5, listOf(
+            GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE)
+        )
 
         //check game not null
         val game = mc.currentGame
@@ -310,7 +312,9 @@ class CultivateTest {
         val gameService = GameService(mc)
         val playerActionService = PlayerActionService(mc)
         gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE),
-            Triple("Iyed",1,PotColor.PURPLE)),5, listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
+            Triple("Iyed",1,PotColor.PURPLE)),5, listOf(
+            GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE)
+        )
 
         //check game not null
         val game = mc.currentGame
@@ -424,7 +428,9 @@ class CultivateTest {
         val gameService = GameService(mc)
         val playerActionService = PlayerActionService(mc)
         gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE),
-            Triple("Iyed",1,PotColor.PURPLE)),5, listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
+            Triple("Iyed",1,PotColor.PURPLE)),5, listOf(
+            GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE)
+        )
 
         //check game not null
         val game = mc.currentGame
@@ -552,7 +558,9 @@ class CultivateTest {
         val mc = RootService()
         val gameService = GameService(mc)
         val playerActionService = PlayerActionService(mc)
-        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
+        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE),
+            Triple("Iyed",1,PotColor.PURPLE)),
+            5, listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
 
         //check game not null
         val game = mc.currentGame
@@ -593,7 +601,9 @@ class CultivateTest {
         val gameService = GameService(mc)
         val playerActionService = PlayerActionService(mc)
         gameService.startNewGame(listOf(
-            Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
+            Triple("Anas",0,PotColor.PURPLE),
+            Triple("Iyed",1,PotColor.PURPLE)),5,
+            listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
         //   allowed tiles (Seishi or Growth)
         val game = mc.currentGame
         checkNotNull(game)

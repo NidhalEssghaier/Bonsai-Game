@@ -6,6 +6,7 @@ import service.ConnectionState
 import service.RootService
 import tools.aqua.bgw.core.BoardGameApplication
 
+/** Implementation of the BGW [BoardGameApplication] for the game "Bonsai" */
 class BonsaiApplication :
     BoardGameApplication("Bonsai"),
     Refreshable {
@@ -17,14 +18,23 @@ class BonsaiApplication :
     var localGameScene = LocalGameScene(rootService, this)
     val onlineGameScene = OnlineGameScene(rootService, this)
     val joinGameScene = JoinGameScene(rootService, this)
-    val lobbyScene = LobbyScene()
+    private val lobbyScene = LobbyScene()
     var chooseTileScene = ChooseTileScene(rootService, this, chooseByBoard = false, chooseByCard = false)
     private var playerCount = 0
 
     private var gameScene = GameScene(rootService, this)
 
     init {
-        // all scenes and the application itself need too
+        // bind disconnect & return to main menu function
+        lobbyScene.mainMenuButton
+            .apply {
+                onMouseClicked =
+                    {
+                        rootService.networkService.disconnect()
+                        this@BonsaiApplication.showMenuScene(mainMenuScene)
+                    }
+            }
+        // all scenes and the application itself need to
         // react to changes done in the service layer
         rootService.addRefreshables(
             this,
@@ -45,14 +55,6 @@ class BonsaiApplication :
     override fun refreshAfterStartNewGame() {
         this.hideMenuScene()
         this.showGameScene(gameScene)
-    }
-
-    override fun refreshToPromptTileChoice(
-        chooseByBoard: Boolean,
-        chooseByCard: Boolean,
-    ) {
-        chooseTileScene = ChooseTileScene(rootService, this, chooseByBoard, chooseByCard)
-        this.showMenuScene(chooseTileScene)
     }
 
     override fun refreshAfterReachGoals(reachedGoals: List<GoalCard>) {

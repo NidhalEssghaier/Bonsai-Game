@@ -1,6 +1,5 @@
 package gui
 
-import entity.GoalCard
 import entity.GoalColor
 import entity.PotColor
 import gui.utility.*
@@ -17,8 +16,7 @@ import tools.aqua.bgw.visual.Visual
 import kotlin.random.Random
 
 /**
- * [MenuScene] that gets displayed to configure a new online game including
- * the goals, player order and player colors.
+ * [MenuScene] that gets displayed to configure a new online game including the goals, player order and player colors.
  *
  * @param rootService The [RootService] to access the other services
  * @param application The running application
@@ -74,7 +72,10 @@ class OnlineGameScene(
             .apply {
                 visual = ColorVisual(256, 107, 62)
             }.apply {
-                onMouseClicked = { application.showMenuScene(application.mainMenuScene) }
+                onMouseClicked = {
+                    rootService.networkService.disconnect()
+                    application.showMenuScene(application.mainMenuScene)
+                }
             }
     private val startGameButton =
         Button(width = 300, height = 80, posX = 1550, posY = 460, text = "StartGame", font = Font(35)).apply {
@@ -82,10 +83,9 @@ class OnlineGameScene(
             onMouseClicked = {
                 if (countPlayer < 2) throw IllegalStateException("More Players Needet")
                 if (countGoals != 3) throw IllegalStateException("Select Goals")
-                var playerList: MutableList<Triple<String, Int, PotColor>> = mutableListOf()
-                var helpPotColor: PotColor = PotColor.RED
+                val playerList: MutableList<Triple<String, Int, PotColor>> = mutableListOf()
+                var helpPotColor = potColor1
                 var helpPlayermode = 1
-                helpPotColor = potColor1
                 if (playerName1Label.text == playerAddField.text) helpPlayermode = localplayerMode
                 playerList.add(Triple(playerName1Label.text, helpPlayermode, helpPotColor))
                 helpPlayermode = 1
@@ -119,7 +119,7 @@ class OnlineGameScene(
                         ),
                     )
                 }
-                rootService.networkService.startNewHostedGame(playerAddField.text, playerList, 10, listGoalColor)
+                rootService.networkService.startNewHostedGame(playerAddField.text, playerList, gameSpeed, listGoalColor)
             }
         }
 
@@ -255,8 +255,7 @@ class OnlineGameScene(
                 list.add(shakanBox)
                 list.add(kenegaiBox)
                 list.shuffle()
-                var help: CheckBox = CheckBox()
-                help = list.removeLast()
+                var help = list.removeLast()
                 help.isChecked = true
                 help = list.removeLast()
                 help.isChecked = true
@@ -452,7 +451,7 @@ class OnlineGameScene(
             visual = ColorVisual(256, 107, 62),
         ).apply {
             onMouseClicked = {
-                var randomlist: MutableList<String> = mutableListOf()
+                val randomlist: MutableList<String> = mutableListOf()
                 if (playerName1Label.text.isNotBlank()) randomlist.add(playerName1Label.text)
                 if (playerName2Label.text.isNotBlank()) randomlist.add(playerName2Label.text)
                 if (playerName3Label.text.isNotBlank()) randomlist.add(playerName3Label.text)
@@ -692,7 +691,7 @@ class OnlineGameScene(
         if (thisBox.isChecked) {
             println(countGoals)
             countGoals++
-            var colorofCard: GoalColor
+            val colorofCard: GoalColor
             when (thisBox) {
                 bunjayBox -> colorofCard = GoalColor.BROWN
                 chookanBox -> colorofCard = GoalColor.ORANGE
@@ -711,7 +710,7 @@ class OnlineGameScene(
             }
         } else {
             countGoals--
-            var colorofCard: GoalColor
+            val colorofCard: GoalColor
             when (thisBox) {
                 bunjayBox -> colorofCard = GoalColor.BROWN
                 chookanBox -> colorofCard = GoalColor.ORANGE
@@ -733,6 +732,9 @@ class OnlineGameScene(
         val helpPotColor: PotColor = potColor1
         potColor1 = potColor2
         potColor2 = helpPotColor
+        val helpPlayerMode: Int = localplayerMode
+        localplayerMode = player2Mode
+        player2Mode = helpPlayerMode
         val helpVisual: Visual = firstPotJpg.visual
         firstPotJpg.visual = secondPotJpg.visual
         secondPotJpg.visual = helpVisual
@@ -742,6 +744,9 @@ class OnlineGameScene(
         val helpPotColor: PotColor = potColor2
         potColor2 = potColor3
         potColor3 = helpPotColor
+        val helpPlayerMode: Int = player2Mode
+        player2Mode = player3Mode
+        player3Mode = helpPlayerMode
         val helpVisual: Visual = secondPotJpg.visual
         secondPotJpg.visual = thirdPotJpg.visual
         thirdPotJpg.visual = helpVisual
@@ -751,6 +756,9 @@ class OnlineGameScene(
         val helpPotColor: PotColor = potColor3
         potColor3 = potColor4
         potColor4 = helpPotColor
+        val helpPlayerMode: Int = player3Mode
+        player3Mode = player4Mode
+        player4Mode = helpPlayerMode
         val helpVisual: Visual = thirdPotJpg.visual
         thirdPotJpg.visual = fourthPotJpg.visual
         fourthPotJpg.visual = helpVisual
@@ -770,9 +778,21 @@ class OnlineGameScene(
         if (countPlayer == 4) throw IllegalStateException("Too many Players")
         countPlayer++
         when (countPlayer) {
-            2 -> playerName2Label.text = newPlayerName
-            3 -> playerName3Label.text = newPlayerName
-            4 -> playerName4Label.text = newPlayerName
+            2 -> {
+                playerName2Label.text = newPlayerName
+                player2Mode = 1
+            }
+
+            3 -> {
+                playerName3Label.text = newPlayerName
+                player3Mode = 1
+            }
+
+            4 -> {
+                playerName4Label.text = newPlayerName
+                player4Mode = 1
+            }
+
             else -> throw IllegalStateException("Error in newPlayerJoined Funktion")
         }
     }

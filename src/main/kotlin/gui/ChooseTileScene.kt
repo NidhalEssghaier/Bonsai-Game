@@ -13,26 +13,21 @@ import tools.aqua.bgw.style.Cursor
 import tools.aqua.bgw.util.Font
 import tools.aqua.bgw.visual.ColorVisual
 import tools.aqua.bgw.visual.Visual
-import java.util.*
 
 private const val BUTTON_WIDTH = 130
 private const val BUTTON_HEIGHT = 150
 private const val HORIZONTAL_SPACING = 75
 
 /**
- * [MenuScene] that gets displayed when the player needs to choose one or
- * two tiles after drawing a card. Choices are presented based on if the
- * scene was triggered by drawing a [MasterCard] with [TileType.GENERIC]
- * and / or the position from where the card was taken from gives either a
- * [TileType.WOOD] or [TileType.LEAF]
+ * [MenuScene] that gets displayed when the player needs to choose one or two tiles after drawing a card. Choices are
+ * presented based on if the scene was triggered by drawing a [MasterCard] with [TileType.GENERIC] and / or the position
+ * from where the card was taken from gives either a [TileType.WOOD] or [TileType.LEAF]
  *
  * @property rootService The [RootService] to access the other services
  * @property application The running application
- * @property chooseByBoard Determines if the scene was triggered by drawing
- *    a card from the position where they can choose between a
- *    [TileType.WOOD] or [TileType.LEAF]
- * @property chooseByCard Determines if the scene was triggered by drawing
- *    a [MasterCard] with [TileType.GENERIC]
+ * @property chooseByBoard Determines if the scene was triggered by drawing a card from the position where they can
+ *    choose between a [TileType.WOOD] or [TileType.LEAF]
+ * @property chooseByCard Determines if the scene was triggered by drawing a [MasterCard] with [TileType.GENERIC]
  */
 class ChooseTileScene(
     private val rootService: RootService,
