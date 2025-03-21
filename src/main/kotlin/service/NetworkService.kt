@@ -13,11 +13,16 @@ import kotlin.concurrent.timerTask
  */
 class NetworkService(private val rootService: RootService): AbstractRefreshingService() {
 
-    //Error message
-    private val errorMsg = "currentGame should not be null."
+    companion object {
+        /** URL of the BGW net server hosted for SoPra participants */
+        const val SERVER_ADDRESS = "sopra.cs.tu-dortmund.de:80/bgw-net/connect"
 
-    //Hostname of the game
-    private var checkedHostname: String? = null
+        /** Secret of the BGW net server hosted for SoPra participants */
+        const val SERVER_SECRET = "baum25"
+
+        /** Name of the game as registered with the server */
+        const val GAME_ID = "Bonsai"
+    }
 
     /** Network client. Nullable for offline games. */
     var client: BonsaiNetworkClient? = null
@@ -131,12 +136,7 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
             netCards
         )
 
-        val currentGame = rootService.currentGame
-        if (currentGame != null) {
-            checkedHostname = currentGame.currentState.players[0].name
-        }
-
-        if (checkedHostname == hostName) {
+        if (rootService.currentGame!!.currentState.players[0].name == hostName) {
             updateConnectionState(ConnectionState.PLAYING_MY_TURN)
         } else {
             updateConnectionState(ConnectionState.WAITING_FOR_OPPONENT)
@@ -222,12 +222,7 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
             error("Caught an IllegalStateException: ${e.message}")
         }
 
-        val currentGame = rootService.currentGame
-        if (currentGame != null) {
-            checkedHostname = currentGame.currentState.players[0].name
-        }
-
-        if (checkedHostname == playerName) {
+        if (rootService.currentGame!!.currentState.players[0].name == playerName) {
             updateConnectionState(ConnectionState.PLAYING_MY_TURN)
         } else {
             updateConnectionState(ConnectionState.WAITING_FOR_OPPONENT)
@@ -240,12 +235,10 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
      * @throws IllegalStateException if it's the opponents turn, or the message is invalid
      */
     fun sendTurn() {
-        val currentGame = rootService.currentGame
-        checkNotNull(currentGame) {errorMsg}
-        val nextPlayer = (currentGame.currentState.currentPlayer + 1) %
-                currentGame.currentState.players.size
+        val nextPlayer = (rootService.currentGame!!.currentState.currentPlayer + 1) %
+                         rootService.currentGame!!.currentState.players.size
         if (connectionState != ConnectionState.PLAYING_MY_TURN) {
-            if (currentGame.currentState.players[nextPlayer] is LocalPlayer) {
+            if (rootService.currentGame!!.currentState.players[nextPlayer] is LocalPlayer) {
                 updateConnectionState(ConnectionState.PLAYING_MY_TURN)
             } else {
                 updateConnectionState(ConnectionState.WAITING_FOR_OPPONENT)
@@ -309,8 +302,8 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
             // played tiles
             if (message.playedTiles.isNotEmpty()) {
                 for (i in message.playedTiles.indices)
-                    game.currentState.players[
-                        game.currentState.currentPlayer
+                    rootService.currentGame?.currentState!!.players[
+                        rootService.currentGame?.currentState!!.currentPlayer
                     ].supply.find { it.type == converter.toTileType(message.playedTiles[i].first) }?.let {
                         rootService.playerActionService.cultivate(
                             it,
@@ -383,7 +376,7 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
             }
 
             // draw card
-            val drawnCard = game.currentState.openCards[message.chosenCardPosition]
+            val drawnCard = rootService.currentGame!!.currentState.openCards[message.chosenCardPosition]
             rootService.playerActionService.meditate(
                 game.currentState.openCards[message.chosenCardPosition]
             )
@@ -414,8 +407,8 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
             // played tiles
             if (message.playedTiles.isNotEmpty()) {
                 for (i in message.playedTiles.indices)
-                    game.currentState.players[
-                        game.currentState.currentPlayer
+                    rootService.currentGame?.currentState!!.players[
+                        rootService.currentGame?.currentState!!.currentPlayer
                     ].supply.find { it.type == converter.toTileType(message.playedTiles[i].first) }?.let {
                         rootService.playerActionService.cultivate(
                             it,
@@ -525,20 +518,4 @@ class NetworkService(private val rootService: RootService): AbstractRefreshingSe
         }
     }
 
-    /**
-     * Companion object that holds the constants for the network service.
-     * @property SERVER_ADDRESS The address of the server
-     * @property SERVER_SECRET The secret of the server
-     * @property GAME_ID The game id
-     */
-    companion object {
-        /** URL of the BGW net server hosted for SoPra participants */
-        const val SERVER_ADDRESS = "sopra.cs.tu-dortmund.de:80/bgw-net/connect"
-
-        /** Secret of the BGW net server hosted for SoPra participants */
-        const val SERVER_SECRET = "baum25"
-
-        /** Name of the game as registered with the server */
-        const val GAME_ID = "Bonsai"
-    }
 }

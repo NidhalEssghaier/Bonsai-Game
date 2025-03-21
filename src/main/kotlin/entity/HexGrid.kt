@@ -84,6 +84,21 @@ class HexGrid private constructor(
     private val maxIndex = actualSize - 1
 
     /**
+     * Companion object to store the exceptions
+     * @property invalidCoordinate Exception for no [BonsaiTile] at the given coordinates
+     * @property invalidTile Exception for [BonsaiTile] not in the grid
+     * @property IS_POT_MSG Exception for placing [BonsaiTile] in Pot area
+     * @property outOfBounds Exception for coordinate out of bounds
+     */
+    companion object {
+        private val invalidCoordinate = NoSuchElementException("No BonsaiTile at the given coordinates")
+        private val invalidTile = NoSuchElementException("This BonsaiTile isn't in the grid")
+        private const val IS_POT_MSG = "Unable to place or get BonsaiTile in Pot area"
+        private val outOfBounds = IndexOutOfBoundsException("Coordinate out of bounds")
+        private val unplayableTile = BonsaiTile(TileType.UNPLAYABLE)
+    }
+
+    /**
      * Secondary public constructor to create a [HexGrid] with coordinates ranging from -[size] to [size]
      * @param size size of the grid
      * @throws IllegalArgumentException if the size is less than 3
@@ -477,20 +492,5 @@ class HexGrid private constructor(
         val coordinate = map[tile] ?: throw invalidTile
 
         return getNeighborsWithRawCoordinate(coordinate.first, coordinate.second)
-    }
-
-    /**
-     * Companion object to store the exceptions
-     * @property invalidCoordinate Exception for no [BonsaiTile] at the given coordinates
-     * @property invalidTile Exception for [BonsaiTile] not in the grid
-     * @property IS_POT_MSG Exception for placing [BonsaiTile] in Pot area
-     * @property outOfBounds Exception for coordinate out of bounds
-     */
-    companion object {
-        private val invalidCoordinate = NoSuchElementException("No BonsaiTile at the given coordinates")
-        private val invalidTile = NoSuchElementException("This BonsaiTile isn't in the grid")
-        private const val IS_POT_MSG = "Unable to place or get BonsaiTile in Pot area"
-        private val outOfBounds = IndexOutOfBoundsException("Coordinate out of bounds")
-        private val unplayableTile = BonsaiTile(TileType.UNPLAYABLE)
     }
 }

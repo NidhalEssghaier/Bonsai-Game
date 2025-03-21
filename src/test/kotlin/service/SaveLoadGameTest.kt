@@ -45,14 +45,7 @@ class SaveLoadGameTest {
         }
         val exception = assertThrows<IllegalStateException> {gameService.loadGame() }
         assertEquals("Save file doesn't exist.",exception.message)
-        gameService.startNewGame(
-            listOf(
-                Triple("Anas",0,PotColor.PURPLE),
-                Triple("Iyed",1,PotColor.PURPLE)
-            ),
-            5,
-            listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE)
-        )
+        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
         val currentGame = mc.currentGame
         checkNotNull(currentGame)
         gameService.saveGame()
@@ -68,14 +61,8 @@ class SaveLoadGameTest {
         val gameService = GameService(mc)
         val playerActionService = PlayerActionService(mc)
 
-        gameService.startNewGame(
-            listOf(
-                Triple("Anas",0,PotColor.PURPLE),
-                Triple("Iyed",1,PotColor.PURPLE)
-            ),
-            5,
-            listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE)
-        )
+        gameService.startNewGame(listOf(Triple("Anas",0,PotColor.PURPLE), Triple("Iyed",1,PotColor.PURPLE)),5, listOf(
+            GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE))
         val currentGame = mc.currentGame
         checkNotNull(currentGame)
 
