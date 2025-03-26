@@ -12,6 +12,10 @@ class BonsaiTile(
     val type: TileType,
 )
 {
+    /**
+     * Make a copy of the bonsai tile
+     * @return [BonsaiTile] a copy of the bonsai tile
+     */
     fun copy(): BonsaiTile {
         return BonsaiTile(type)
     }

@@ -127,45 +127,61 @@ class MessageConverter {
      */
     fun toCard(card: Pair<CardTypeMessage, Int>): ZenCard {
         return when (card.first) {
-            CardTypeMessage.GROWTH -> when (card.second) {
-                0, 1, 8, 12 -> GrowthCard(TileType.WOOD, card.second)
-                2, 3, 9, 10 -> GrowthCard(TileType.LEAF, card.second)
-                4, 5, 11 -> GrowthCard(TileType.FLOWER, card.second)
-                6, 7, 13 -> GrowthCard(TileType.FRUIT, card.second)
-                else -> throw IllegalArgumentException("invalid index")
-            }
-            CardTypeMessage.HELPER -> when (card.second) {
-                14, 15, 16 -> HelperCard(listOf(TileType.GENERIC, TileType.WOOD), card.second)
-                17, 18 -> HelperCard(listOf(TileType.GENERIC, TileType.LEAF), card.second)
-                19 -> HelperCard(listOf(TileType.GENERIC, TileType.FLOWER), card.second)
-                20 -> HelperCard(listOf(TileType.GENERIC, TileType.FRUIT), card.second)
-                else -> throw IllegalArgumentException("invalid index")
-            }
-            CardTypeMessage.MASTER -> when (card.second) {
-                21 -> MasterCard(listOf(TileType.WOOD, TileType.WOOD), card.second)
-                22, 26 -> MasterCard(listOf(TileType.LEAF, TileType.LEAF), card.second)
-                23, 29, 30 -> MasterCard(listOf(TileType.WOOD, TileType.LEAF), card.second)
-                24, 25, 28 -> MasterCard(listOf(TileType.GENERIC), card.second)
-                27 -> MasterCard(listOf(TileType.LEAF, TileType.FRUIT), card.second)
-                31 -> MasterCard(listOf(TileType.WOOD, TileType.LEAF, TileType.FLOWER), card.second)
-                32 -> MasterCard(listOf(TileType.WOOD, TileType.LEAF, TileType.FRUIT), card.second)
-                33 -> MasterCard(listOf(TileType.LEAF, TileType.FLOWER, TileType.FLOWER), card.second)
-                else -> throw IllegalArgumentException("invalid index")
-            }
-            CardTypeMessage.PARCHMENT -> when (card.second) {
-                34 -> ParchmentCard(2, ParchmentCardType.MASTER, card.second)
-                35 -> ParchmentCard(2, ParchmentCardType.GROWTH, card.second)
-                36 -> ParchmentCard(2, ParchmentCardType.HELPER, card.second)
-                37 -> ParchmentCard(2, ParchmentCardType.FLOWER, card.second)
-                38 -> ParchmentCard(2, ParchmentCardType.FRUIT, card.second)
-                39 -> ParchmentCard(1, ParchmentCardType.LEAF, card.second)
-                40 -> ParchmentCard(1, ParchmentCardType.WOOD, card.second)
-                else -> throw IllegalArgumentException("invalid index")
-            }
+            CardTypeMessage.GROWTH -> toGrowthCard(card)
+            CardTypeMessage.HELPER -> toHelperCard(card)
+            CardTypeMessage.MASTER -> toMasterCard(card)
+            CardTypeMessage.PARCHMENT -> toParchmentCard(card)
             CardTypeMessage.TOOL -> when (card.second) {
                 in (41..46) -> ToolCard(card.second)
                 else -> throw IllegalArgumentException("invalid index")
             }
+        }
+    }
+
+    private fun toGrowthCard(card: Pair<CardTypeMessage, Int>): ZenCard {
+        return when (card.second) {
+            0, 1, 8, 12 -> GrowthCard(TileType.WOOD, card.second)
+            2, 3, 9, 10 -> GrowthCard(TileType.LEAF, card.second)
+            4, 5, 11 -> GrowthCard(TileType.FLOWER, card.second)
+            6, 7, 13 -> GrowthCard(TileType.FRUIT, card.second)
+            else -> throw IllegalArgumentException("invalid index")
+        }
+    }
+
+    private fun toHelperCard(card: Pair<CardTypeMessage, Int>): ZenCard {
+        return when (card.second) {
+            14, 15, 16 -> HelperCard(listOf(TileType.GENERIC, TileType.WOOD), card.second)
+            17, 18 -> HelperCard(listOf(TileType.GENERIC, TileType.LEAF), card.second)
+            19 -> HelperCard(listOf(TileType.GENERIC, TileType.FLOWER), card.second)
+            20 -> HelperCard(listOf(TileType.GENERIC, TileType.FRUIT), card.second)
+            else -> throw IllegalArgumentException("invalid index")
+        }
+    }
+
+    private fun toMasterCard(card: Pair<CardTypeMessage, Int>): ZenCard {
+        return when (card.second) {
+            21 -> MasterCard(listOf(TileType.WOOD, TileType.WOOD), card.second)
+            22, 26 -> MasterCard(listOf(TileType.LEAF, TileType.LEAF), card.second)
+            23, 29, 30 -> MasterCard(listOf(TileType.WOOD, TileType.LEAF), card.second)
+            24, 25, 28 -> MasterCard(listOf(TileType.GENERIC), card.second)
+            27 -> MasterCard(listOf(TileType.LEAF, TileType.FRUIT), card.second)
+            31 -> MasterCard(listOf(TileType.WOOD, TileType.LEAF, TileType.FLOWER), card.second)
+            32 -> MasterCard(listOf(TileType.WOOD, TileType.LEAF, TileType.FRUIT), card.second)
+            33 -> MasterCard(listOf(TileType.LEAF, TileType.FLOWER, TileType.FLOWER), card.second)
+            else -> throw IllegalArgumentException("invalid index")
+        }
+    }
+
+    private fun toParchmentCard(card: Pair<CardTypeMessage, Int>): ZenCard {
+        return when (card.second) {
+            34 -> ParchmentCard(2, ParchmentCardType.MASTER, card.second)
+            35 -> ParchmentCard(2, ParchmentCardType.GROWTH, card.second)
+            36 -> ParchmentCard(2, ParchmentCardType.HELPER, card.second)
+            37 -> ParchmentCard(2, ParchmentCardType.FLOWER, card.second)
+            38 -> ParchmentCard(2, ParchmentCardType.FRUIT, card.second)
+            39 -> ParchmentCard(1, ParchmentCardType.LEAF, card.second)
+            40 -> ParchmentCard(1, ParchmentCardType.WOOD, card.second)
+            else -> throw IllegalArgumentException("invalid index")
         }
     }
 
@@ -194,36 +210,56 @@ class MessageConverter {
      */
     fun toGoal(goalCard: Pair<GoalTileTypeMessage, Int>): GoalCard {
         return when (goalCard.first) {
-            GoalTileTypeMessage.GREEN -> when (goalCard.second) {
-                0 -> GoalCard(6, GoalColor.GREEN, GoalDifficulty.LOW)
-                1 -> GoalCard(9, GoalColor.GREEN, GoalDifficulty.INTERMEDIATE)
-                2 -> GoalCard(12, GoalColor.GREEN, GoalDifficulty.HARD)
-                else -> { error("invalid goal tier") }
-            }
-            GoalTileTypeMessage.BROWN -> when (goalCard.second) {
-                0 -> GoalCard(5, GoalColor.BROWN, GoalDifficulty.LOW)
-                1 -> GoalCard(10, GoalColor.BROWN, GoalDifficulty.INTERMEDIATE)
-                2 -> GoalCard(15, GoalColor.BROWN, GoalDifficulty.HARD)
-                else -> { error("invalid goal tier") }
-            }
-            GoalTileTypeMessage.PINK -> when (goalCard.second) {
-                0 -> GoalCard(8, GoalColor.RED, GoalDifficulty.LOW)
-                1 -> GoalCard(12, GoalColor.RED, GoalDifficulty.INTERMEDIATE)
-                2 -> GoalCard(16, GoalColor.RED, GoalDifficulty.HARD)
-                else -> { error("invalid goal tier") }
-            }
-            GoalTileTypeMessage.ORANGE -> when (goalCard.second) {
-                0 -> GoalCard(9, GoalColor.ORANGE, GoalDifficulty.LOW)
-                1 -> GoalCard(11, GoalColor.ORANGE, GoalDifficulty.INTERMEDIATE)
-                2 -> GoalCard(13, GoalColor.ORANGE, GoalDifficulty.HARD)
-                else -> { error("invalid goal tier") }
-            }
-            GoalTileTypeMessage.BLUE -> when (goalCard.second) {
-                0 -> GoalCard(7, GoalColor.BLUE, GoalDifficulty.LOW)
-                1 -> GoalCard(10, GoalColor.BLUE, GoalDifficulty.INTERMEDIATE)
-                2 -> GoalCard(14, GoalColor.BLUE, GoalDifficulty.HARD)
-                else -> { error("invalid goal tier") }
-            }
+            GoalTileTypeMessage.GREEN -> toGreenGoal(goalCard)
+            GoalTileTypeMessage.BROWN -> toBrownGoal(goalCard)
+            GoalTileTypeMessage.PINK -> toRedGoal(goalCard)
+            GoalTileTypeMessage.ORANGE -> toOrangeGoal(goalCard)
+            GoalTileTypeMessage.BLUE -> toBlueGoal(goalCard)
+        }
+    }
+
+    private fun toGreenGoal(goalCard: Pair<GoalTileTypeMessage, Int>): GoalCard {
+        return when (goalCard.second) {
+            0 -> GoalCard(6, GoalColor.GREEN, GoalDifficulty.LOW)
+            1 -> GoalCard(9, GoalColor.GREEN, GoalDifficulty.INTERMEDIATE)
+            2 -> GoalCard(12, GoalColor.GREEN, GoalDifficulty.HARD)
+            else -> { error("invalid goal tier") }
+        }
+    }
+
+    private fun toBrownGoal(goalCard: Pair<GoalTileTypeMessage, Int>): GoalCard {
+        return when (goalCard.second) {
+            0 -> GoalCard(5, GoalColor.BROWN, GoalDifficulty.LOW)
+            1 -> GoalCard(10, GoalColor.BROWN, GoalDifficulty.INTERMEDIATE)
+            2 -> GoalCard(15, GoalColor.BROWN, GoalDifficulty.HARD)
+            else -> { error("invalid goal tier") }
+        }
+    }
+
+    private fun toRedGoal(goalCard: Pair<GoalTileTypeMessage, Int>): GoalCard {
+        return when (goalCard.second) {
+            0 -> GoalCard(8, GoalColor.RED, GoalDifficulty.LOW)
+            1 -> GoalCard(12, GoalColor.RED, GoalDifficulty.INTERMEDIATE)
+            2 -> GoalCard(16, GoalColor.RED, GoalDifficulty.HARD)
+            else -> { error("invalid goal tier") }
+        }
+    }
+
+    private fun toOrangeGoal(goalCard: Pair<GoalTileTypeMessage, Int>): GoalCard {
+        return when (goalCard.second) {
+            0 -> GoalCard(9, GoalColor.ORANGE, GoalDifficulty.LOW)
+            1 -> GoalCard(11, GoalColor.ORANGE, GoalDifficulty.INTERMEDIATE)
+            2 -> GoalCard(13, GoalColor.ORANGE, GoalDifficulty.HARD)
+            else -> { error("invalid goal tier") }
+        }
+    }
+
+    private fun toBlueGoal(goalCard: Pair<GoalTileTypeMessage, Int>): GoalCard {
+        return when (goalCard.second) {
+            0 -> GoalCard(7, GoalColor.BLUE, GoalDifficulty.LOW)
+            1 -> GoalCard(10, GoalColor.BLUE, GoalDifficulty.INTERMEDIATE)
+            2 -> GoalCard(14, GoalColor.BLUE, GoalDifficulty.HARD)
+            else -> { error("invalid goal tier") }
         }
     }
 

@@ -17,54 +17,13 @@ class ItemImageLoader {
      * @throws IllegalArgumentException If the card is unknown.
      */
     fun imageFor(goalCard: GoalCard): ImageVisual {
-        val path =
-            when {
-                goalCard.points == 5 && goalCard.color == GoalColor.BROWN && goalCard.difficulty == GoalDifficulty.LOW
-                -> "goal_cards/goal_log_low.jpg"
-                goalCard.points == 10 &&
-                    goalCard.color == GoalColor.BROWN &&
-                    goalCard.difficulty == GoalDifficulty.INTERMEDIATE
-                -> "goal_cards/goal_log_intermediate.jpg"
-                goalCard.points == 15 && goalCard.color == GoalColor.BROWN && goalCard.difficulty == GoalDifficulty.HARD
-                -> "goal_cards/goal_log_hard.jpg"
-                goalCard.points == 6 && goalCard.color == GoalColor.GREEN && goalCard.difficulty == GoalDifficulty.LOW
-                -> "goal_cards/goal_leaf_low.jpg"
-                goalCard.points == 9 &&
-                    goalCard.color == GoalColor.GREEN &&
-                    goalCard.difficulty == GoalDifficulty.INTERMEDIATE
-                -> "goal_cards/goal_leaf_intermediate.jpg"
-                goalCard.points == 12 && goalCard.color == GoalColor.GREEN && goalCard.difficulty == GoalDifficulty.HARD
-                -> "goal_cards/goal_leaf_hard.jpg"
-                goalCard.points == 9 && goalCard.color == GoalColor.ORANGE && goalCard.difficulty == GoalDifficulty.LOW
-                -> "goal_cards/goal_fruit_low.jpg"
-                goalCard.points == 11 &&
-                    goalCard.color == GoalColor.ORANGE &&
-                    goalCard.difficulty == GoalDifficulty.INTERMEDIATE
-                -> "goal_cards/goal_fruit_intermediate.jpg"
-                goalCard.points == 13 &&
-                    goalCard.color == GoalColor.ORANGE &&
-                    goalCard.difficulty == GoalDifficulty.HARD
-                -> "goal_cards/goal_fruit_hard.jpg"
-                goalCard.points == 8 && goalCard.color == GoalColor.RED && goalCard.difficulty == GoalDifficulty.LOW
-                -> "goal_cards/goal_flower_protruding_low.jpg"
-                goalCard.points == 12 &&
-                    goalCard.color == GoalColor.RED &&
-                    goalCard.difficulty == GoalDifficulty.INTERMEDIATE
-                -> "goal_cards/goal_flower_protruding_intermediate.jpg"
-                goalCard.points == 16 && goalCard.color == GoalColor.RED && goalCard.difficulty == GoalDifficulty.HARD
-                -> "goal_cards/goal_flower_protruding_hard.jpg"
-                goalCard.points == 7 && goalCard.color == GoalColor.BLUE && goalCard.difficulty == GoalDifficulty.LOW
-                -> "goal_cards/goal_universal_protruding_low.jpg"
-                goalCard.points == 10 &&
-                    goalCard.color == GoalColor.BLUE &&
-                    goalCard.difficulty == GoalDifficulty.INTERMEDIATE
-                -> "goal_cards/goal_universal_protruding_intermediate.jpg"
-                goalCard.points == 14 && goalCard.color == GoalColor.BLUE && goalCard.difficulty == GoalDifficulty.HARD
-                -> "goal_cards/goal_universal_protruding_hard.jpg"
-                else -> throw IllegalArgumentException(
-                    "Unknown goal card: ${goalCard.points}, ${goalCard.color}, ${goalCard.difficulty}",
-                )
-            }
+        val path = goalCardImagePath[Triple(
+            goalCard.color,
+            goalCard.difficulty,
+            goalCard.points
+        )] ?: throw IllegalArgumentException("Unknown goal card: ${goalCard.points}, " +
+                "${goalCard.color}, " +
+                "${goalCard.difficulty}")
         val originalWith =
             when (goalCard.difficulty) {
                 GoalDifficulty.LOW -> 125
@@ -120,4 +79,26 @@ class ItemImageLoader {
         width: Int,
         height: Int,
     ): ImageVisual = ImageVisual(path, width, height)
+
+    private companion object {
+        private val goalCardImagePath = mapOf(
+            Triple(GoalColor.BROWN, GoalDifficulty.LOW, 5) to "goal_cards/goal_log_low.jpg",
+            Triple(GoalColor.BROWN, GoalDifficulty.INTERMEDIATE, 10) to "goal_cards/goal_log_intermediate.jpg",
+            Triple(GoalColor.BROWN, GoalDifficulty.HARD, 15) to "goal_cards/goal_log_hard.jpg",
+            Triple(GoalColor.GREEN, GoalDifficulty.LOW, 6) to "goal_cards/goal_leaf_low.jpg",
+            Triple(GoalColor.GREEN, GoalDifficulty.INTERMEDIATE, 9) to "goal_cards/goal_leaf_intermediate.jpg",
+            Triple(GoalColor.GREEN, GoalDifficulty.HARD, 12) to "goal_cards/goal_leaf_hard.jpg",
+            Triple(GoalColor.ORANGE, GoalDifficulty.LOW, 9) to "goal_cards/goal_fruit_low.jpg",
+            Triple(GoalColor.ORANGE, GoalDifficulty.INTERMEDIATE, 11) to "goal_cards/goal_fruit_intermediate.jpg",
+            Triple(GoalColor.ORANGE, GoalDifficulty.HARD, 13) to "goal_cards/goal_fruit_hard.jpg",
+            Triple(GoalColor.RED, GoalDifficulty.LOW, 8) to "goal_cards/goal_flower_protruding_low.jpg",
+            Triple(GoalColor.RED, GoalDifficulty.INTERMEDIATE, 12) to
+                    "goal_cards/goal_flower_protruding_intermediate.jpg",
+            Triple(GoalColor.RED, GoalDifficulty.HARD, 16) to "goal_cards/goal_flower_protruding_hard.jpg",
+            Triple(GoalColor.BLUE, GoalDifficulty.LOW, 7) to "goal_cards/goal_universal_protruding_low.jpg",
+            Triple(GoalColor.BLUE, GoalDifficulty.INTERMEDIATE, 10) to
+                    "goal_cards/goal_universal_protruding_intermediate.jpg",
+            Triple(GoalColor.BLUE, GoalDifficulty.HARD, 14) to "goal_cards/goal_universal_protruding_hard.jpg",
+        )
+    }
 }

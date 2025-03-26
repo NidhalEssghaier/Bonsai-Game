@@ -14,16 +14,6 @@ import kotlin.concurrent.timerTask
 class NetworkService(
     private val rootService: RootService,
 ) : AbstractRefreshingService() {
-    companion object {
-        /** URL of the BGW net server hosted for SoPra participants */
-        const val SERVER_ADDRESS = "sopra.cs.tu-dortmund.de:80/bgw-net/connect"
-
-        /** Secret of the BGW net server hosted for SoPra participants */
-        const val SERVER_SECRET = "baum25"
-
-        /** Name of the game as registered with the server */
-        const val GAME_ID = "Bonsai"
-    }
 
     /** Network client. Nullable for offline games. */
     var client: BonsaiNetworkClient? = null
@@ -149,10 +139,7 @@ class NetworkService(
                 netCards,
             )
 
-        if (rootService.currentGame!!
-                .currentState.players[0]
-                .name == hostName
-        ) {
+        if (game.currentState.players[0].name == hostName) {
             updateConnectionState(ConnectionState.PLAYING_MY_TURN)
         } else {
             updateConnectionState(ConnectionState.WAITING_FOR_OPPONENT)
@@ -230,9 +217,7 @@ class NetworkService(
                 game.currentState.openCards.add(converter.toCard(message.orderedCards[i]))
             }
 
-            onAllRefreshables {
-                refreshAfterStartNewGame()
-            }
+            onAllRefreshables { refreshAfterStartNewGame() }
         } catch (e: IllegalArgumentException) {
             disconnect()
             error("Caught an IllegalArgumentException: ${e.message}")
@@ -241,10 +226,10 @@ class NetworkService(
             error("Caught an IllegalStateException: ${e.message}")
         }
 
-        if (rootService.currentGame!!
-                .currentState.players[0]
-                .name == playerName
-        ) {
+        val game = rootService.currentGame
+        checkNotNull(game) { "game should not be null right after starting it." }
+
+        if (game.currentState.players[0].name == playerName) {
             updateConnectionState(ConnectionState.PLAYING_MY_TURN)
         } else {
             updateConnectionState(ConnectionState.WAITING_FOR_OPPONENT)
@@ -257,12 +242,12 @@ class NetworkService(
      * @throws IllegalStateException if it's the opponents turn, or the message is invalid
      */
     fun sendTurn() {
-        val nextPlayer =
-            (rootService.currentGame!!.currentState.currentPlayer + 1) %
-                rootService.currentGame!!
-                    .currentState.players.size
+        val game = rootService.currentGame
+        checkNotNull(game) { "no active game" }
+
+        val nextPlayer = (game.currentState.currentPlayer + 1) % game.currentState.players.size
         if (connectionState != ConnectionState.PLAYING_MY_TURN) {
-            if (rootService.currentGame!!.currentState.players[nextPlayer] !is NetworkPlayer) {
+            if (game.currentState.players[nextPlayer] !is NetworkPlayer) {
                 updateConnectionState(ConnectionState.PLAYING_MY_TURN)
             } else {
                 updateConnectionState(ConnectionState.WAITING_FOR_OPPONENT)
@@ -283,6 +268,7 @@ class NetworkService(
 
             updateConnectionState(ConnectionState.WAITING_FOR_OPPONENT)
             client?.sendGameActionMessage(message)
+            messageBuilder.reset()
         } catch (e: IllegalStateException) {
             disconnect()
             error("Caught an IllegalStateException: ${e.message}")
@@ -317,70 +303,13 @@ class NetworkService(
 
         try {
             // remove tiles
-            if (message.removedTilesAxialCoordinates.isNotEmpty()) {
-                for (i in message.removedTilesAxialCoordinates.indices) {
-                    rootService.playerActionService.removeTile(
-                        game.currentState.players[game.currentState.currentPlayer]
-                            .bonsai.grid[
-                            message.removedTilesAxialCoordinates[i].first,
-                            message.removedTilesAxialCoordinates[i].second,
-                        ],
-                    )
-                }
-            }
+            receiveRemoveTiles(game, message.removedTilesAxialCoordinates)
 
             // played tiles
-            if (message.playedTiles.isNotEmpty()) {
-                for (i in message.playedTiles.indices) {
-                    rootService.currentGame?.currentState!!.players[
-                        rootService.currentGame?.currentState!!.currentPlayer,
-                    ].supply.find { it.type == converter.toTileType(message.playedTiles[i].first) }?.let {
-                        rootService.playerActionService.cultivate(
-                            it,
-                            message.playedTiles[i].second.first,
-                            message.playedTiles[i].second.second,
-                        )
-                    }
-                }
-            }
+            receivePlayTiles(game, message.playedTiles)
 
             // decide goals
-            if (message.claimedGoals.isNotEmpty()) {
-                for (i in message.claimedGoals.indices) {
-                    rootService.currentGame
-                        ?.currentState!!
-                        .goalCards
-                        .find {
-                            it?.color ==
-                                converter.toGoal(message.claimedGoals[i]).color &&
-                                it.difficulty ==
-                                converter.toGoal(message.claimedGoals[i]).difficulty
-                        }?.let {
-                            rootService.playerActionService.decideGoalClaim(
-                                it,
-                                true,
-                            )
-                        }
-                }
-            }
-            if (message.renouncedGoals.isNotEmpty()) {
-                for (i in message.renouncedGoals.indices) {
-                    rootService.currentGame
-                        ?.currentState!!
-                        .goalCards
-                        .find {
-                            it?.color ==
-                                converter.toGoal(message.renouncedGoals[i]).color &&
-                                it.difficulty ==
-                                converter.toGoal(message.renouncedGoals[i]).difficulty
-                        }?.let {
-                            rootService.playerActionService.decideGoalClaim(
-                                it,
-                                false,
-                            )
-                        }
-                }
-            }
+            receiveDecideGoals(game, message.claimedGoals, message.renouncedGoals)
 
             // end turn
             messageBuilder.reset()
@@ -423,20 +352,10 @@ class NetworkService(
 
         try {
             // remove tiles
-            if (message.removedTilesAxialCoordinates.isNotEmpty()) {
-                for (i in message.removedTilesAxialCoordinates.indices) {
-                    rootService.playerActionService.removeTile(
-                        game.currentState.players[game.currentState.currentPlayer]
-                            .bonsai.grid[
-                            message.removedTilesAxialCoordinates[i].first,
-                            message.removedTilesAxialCoordinates[i].second,
-                        ],
-                    )
-                }
-            }
+            receiveRemoveTiles(game, message.removedTilesAxialCoordinates)
 
             // draw card
-            val drawnCard = rootService.currentGame!!.currentState.openCards[message.chosenCardPosition]
+            val drawnCard = game.currentState.openCards[message.chosenCardPosition]
             rootService.playerActionService.meditate(
                 game.currentState.openCards[message.chosenCardPosition],
             )
@@ -447,11 +366,9 @@ class NetworkService(
             // tiles drawn from open cards
             if (drawnTiles.isNotEmpty()) {
                 when (message.chosenCardPosition) {
-                    1 ->
-                        rootService.playerActionService.applyTileChoice(
+                    1 -> rootService.playerActionService.applyTileChoice(
                             converter.toTileType(drawnTiles.removeFirst()),
-                        )
-
+                         )
                     2 -> drawnTiles.removeAll(listOf(TileTypeMessage.WOOD, TileTypeMessage.FLOWER))
                     3 -> drawnTiles.removeAll(listOf(TileTypeMessage.LEAF, TileTypeMessage.FRUIT))
                 }
@@ -469,69 +386,13 @@ class NetworkService(
             }
 
             // played tiles
-            if (message.playedTiles.isNotEmpty()) {
-                for (i in message.playedTiles.indices) {
-                    rootService.currentGame?.currentState!!.players[
-                        rootService.currentGame?.currentState!!.currentPlayer,
-                    ].supply.find { it.type == converter.toTileType(message.playedTiles[i].first) }?.let {
-                        rootService.playerActionService.cultivate(
-                            it,
-                            message.playedTiles[i].second.first,
-                            message.playedTiles[i].second.second,
-                        )
-                    }
-                }
-            }
+            receivePlayTiles(game, message.playedTiles)
 
             // decide goals
-            if (message.claimedGoals.isNotEmpty()) {
-                for (i in message.claimedGoals.indices) {
-                    rootService.currentGame
-                        ?.currentState!!
-                        .goalCards
-                        .find {
-                            it?.color ==
-                                converter.toGoal(message.claimedGoals[i]).color &&
-                                it.difficulty ==
-                                converter.toGoal(message.claimedGoals[i]).difficulty
-                        }?.let {
-                            rootService.playerActionService.decideGoalClaim(
-                                it,
-                                true,
-                            )
-                        }
-                }
-            }
-            if (message.renouncedGoals.isNotEmpty()) {
-                for (i in message.renouncedGoals.indices) {
-                    rootService.currentGame
-                        ?.currentState!!
-                        .goalCards
-                        .find {
-                            it?.color ==
-                                converter.toGoal(message.renouncedGoals[i]).color &&
-                                it.difficulty ==
-                                converter.toGoal(message.renouncedGoals[i]).difficulty
-                        }?.let {
-                            rootService.playerActionService.decideGoalClaim(
-                                it,
-                                false,
-                            )
-                        }
-                }
-            }
+            receiveDecideGoals(game, message.claimedGoals, message.renouncedGoals)
 
             // discard tiles
-            if (message.discardedTiles.isNotEmpty()) {
-                for (i in message.discardedTiles.indices) {
-                    game.currentState.players[game.currentState.currentPlayer]
-                        .supply
-                        .find { it.type == converter.toTileType(message.discardedTiles[i]) }
-                        ?.let {
-                            rootService.playerActionService.discardTile(it)
-                        }
-                }
-            }
+            receiveDiscardTiles(game, message.discardedTiles)
 
             // end turn
             messageBuilder.reset()
@@ -543,6 +404,90 @@ class NetworkService(
         } catch (e: IllegalStateException) {
             disconnect()
             error("Caught an IllegalStateException: ${e.message}")
+        }
+    }
+
+    private fun receiveRemoveTiles(
+        game: BonsaiGame,
+        removedTilesAxialCoordinates: List<Pair<Int, Int>>
+    ) {
+        if (removedTilesAxialCoordinates.isNotEmpty()) {
+            for (i in removedTilesAxialCoordinates.indices) {
+                rootService.playerActionService.removeTile(
+                    game.currentState.players[game.currentState.currentPlayer]
+                        .bonsai.grid[
+                        removedTilesAxialCoordinates[i].first,
+                        removedTilesAxialCoordinates[i].second,
+                    ],
+                )
+            }
+        }
+    }
+
+    private fun receivePlayTiles(
+        game: BonsaiGame,
+        playedTiles: List<Pair<TileTypeMessage, Pair<Int, Int>>>
+    ) {
+        if (playedTiles.isNotEmpty()) {
+            for (i in playedTiles.indices) {
+                game.currentState.players[
+                    game.currentState.currentPlayer,
+                ].supply.find { it.type == converter.toTileType(playedTiles[i].first) }?.let {
+                    rootService.playerActionService.cultivate(
+                        it,
+                        playedTiles[i].second.first,
+                        playedTiles[i].second.second,
+                    )
+                }
+            }
+        }
+    }
+
+    private fun receiveDecideGoals(
+        game: BonsaiGame,
+        claimedGoals: List<Pair<GoalTileTypeMessage, Int>>,
+        renouncedGoals: List<Pair<GoalTileTypeMessage, Int>>
+    ) {
+        if (claimedGoals.isNotEmpty()) {
+            for (i in claimedGoals.indices) {
+                game.currentState.goalCards.find {
+                    it?.color == converter.toGoal(claimedGoals[i]).color &&
+                    it.difficulty == converter.toGoal(claimedGoals[i]).difficulty
+                }?.let {
+                    rootService.playerActionService.decideGoalClaim(
+                        it,
+                        true,
+                    )
+                }
+            }
+        }
+        if (renouncedGoals.isNotEmpty()) {
+            for (i in renouncedGoals.indices) {
+                game.currentState.goalCards.find {
+                    it?.color == converter.toGoal(renouncedGoals[i]).color &&
+                    it.difficulty == converter.toGoal(renouncedGoals[i]).difficulty
+                }?.let {
+                    rootService.playerActionService.decideGoalClaim(
+                        it,
+                        false,
+                    )
+                }
+            }
+        }
+    }
+
+    private fun receiveDiscardTiles(
+        game: BonsaiGame,
+        discardedTiles: List<TileTypeMessage>,
+    ) {
+        if (discardedTiles.isNotEmpty()) {
+            for (i in discardedTiles.indices) {
+                game.currentState.players[game.currentState.currentPlayer]
+                    .supply.find { it.type == converter.toTileType(discardedTiles[i]) }
+                    ?.let {
+                        rootService.playerActionService.discardTile(it)
+                    }
+            }
         }
     }
 
@@ -612,4 +557,17 @@ class NetworkService(
             false
         }
     }
+
+    /** Stores static information needed to connect to the server */
+    companion object {
+        /** URL of the BGW net server hosted for SoPra participants */
+        const val SERVER_ADDRESS = "sopra.cs.tu-dortmund.de:80/bgw-net/connect"
+
+        /** Secret of the BGW net server hosted for SoPra participants */
+        const val SERVER_SECRET = "baum25"
+
+        /** Name of the game as registered with the server */
+        const val GAME_ID = "Bonsai"
+    }
+
 }

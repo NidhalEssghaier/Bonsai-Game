@@ -95,7 +95,7 @@ class GameService(
                 1 -> playerList.add(NetworkPlayer(triple.first, triple.third))
                 2 -> playerList.add(RandomBot(triple.first, triple.third))
                 3 -> playerList.add(SmartBot(triple.first, triple.third))
-                else -> throw IllegalArgumentException()
+                else -> throw IllegalArgumentException("Unknown player type")
             }
         }
 
@@ -154,7 +154,6 @@ class GameService(
         }
     }
 
-    @OptIn(kotlin.uuid.ExperimentalUuidApi::class)
     private fun prepareCards(playerCount: Int): ArrayDeque<ZenCard> {
         val cardStack = ArrayDeque<ZenCard>()
 
@@ -186,9 +185,7 @@ class GameService(
                 3 -> 5
                 else -> 6
             }
-        repeat(toolCardCount) {
-            cardStack.push(ToolCard(it + 41))
-        }
+        repeat(toolCardCount) { cardStack.push(ToolCard(it + 41)) }
 
         // master cards
         cardStack.push(MasterCard(listOf(TileType.WOOD, TileType.WOOD), 21))
@@ -337,10 +334,8 @@ class GameService(
                     TileType.FLOWER -> {
                         numberOfFlowerTiles += 1
                         sumOfFlowerPoints += 6 -
-                            bonsai.grid
-                                .getNeighbors(tile)
-                                .filter { neighbor -> neighbor.type != TileType.UNPLAYABLE }
-                                .size
+                            bonsai.grid.getNeighbors(tile)
+                                .filter { neighbor -> neighbor.type != TileType.UNPLAYABLE }.size
                     }
 
                     TileType.FRUIT -> numberOfFruitTiles += 1

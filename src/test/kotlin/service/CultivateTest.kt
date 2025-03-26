@@ -9,6 +9,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.assertFalse
 
+/**
+ * Class for Unit Tests for [PlayerActionService.cultivate]
+ */
 class CultivateTest {
 
     private lateinit var rootService: RootService
@@ -17,6 +20,9 @@ class CultivateTest {
     private lateinit var testPlayer: Player
     private lateinit var bonsai: Bonsai
 
+    /**
+     * Setup the test environment
+     */
     @BeforeEach
     fun setup() {
         rootService = RootService()
@@ -43,6 +49,9 @@ class CultivateTest {
         rootService.currentGame = game
     }
 
+    /**
+     * Test the [PlayerActionService.cultivate] method with a valid tile and no helper card
+     */
     @Test
     fun `test cultivate with valid tile and no helper card`() {
         val woodTile = BonsaiTile(TileType.WOOD)
@@ -54,6 +63,9 @@ class CultivateTest {
         assertFalse(testPlayer.supply.contains(woodTile))
     }
 
+    /**
+     * Test the [PlayerActionService.cultivate] method with a valid tile and a helper card
+     */
     @Test
     fun `test cultivate with valid tile using helper card`() {
         val leafTile = BonsaiTile(TileType.LEAF)
@@ -70,12 +82,11 @@ class CultivateTest {
         // Verify that the helper card was partially used
         assertTrue(testPlayer.usedHelperTiles.contains(TileType.LEAF))
         assertFalse(testPlayer.usedHelperCards.contains(helperCard)) // Not fully used yet
-
-
-
-
     }
 
+    /**
+     * Test the [PlayerActionService.cultivate] method with a generic helper tile
+     */
     @Test
     fun `test cultivate with generic helper tile`() {
         val woodTile = BonsaiTile(TileType.WOOD)
@@ -94,6 +105,9 @@ class CultivateTest {
         assertFalse(testPlayer.usedHelperCards.contains(helperCard)) // Not fully used yet
     }
 
+    /**
+     * Test the [PlayerActionService.cultivate] violates helper card rules
+     */
     @Test
     fun `test cultivate violates helper card rules`() {
         val flowerTile = BonsaiTile(TileType.FLOWER)
@@ -109,6 +123,9 @@ class CultivateTest {
         assertTrue(exception.message!!.contains("violated placing rules according to Helper Card"))
     }
 
+    /**
+     * Test the [PlayerActionService.cultivate] method with invalid tile placement
+     */
     @Test
     fun `test cultivate with invalid tile placement`() {
         val fruitTile = BonsaiTile(TileType.FRUIT)
@@ -121,6 +138,9 @@ class CultivateTest {
         assertTrue(exception.message!!.contains("A fruit tile must be placed between two adjacent leaf tiles."))
     }
 
+    /**
+     * Test the [PlayerActionService.cultivate] with tile not allowed by Seishi or Growth Cards
+     */
     @Test
     fun `test cultivate with tile not allowed by Seishi or Growth Cards`() {
         //  Seishi Starting Tiles
@@ -156,7 +176,9 @@ class CultivateTest {
 
     }
 
-
+    /**
+     * Test the [PlayerActionService.cultivate] method with a helper card and both tiles used
+     */
     @Test
     fun `test cultivate with helper card and both tiles used`() {
         val woodTile = BonsaiTile(TileType.WOOD)
@@ -175,6 +197,9 @@ class CultivateTest {
         assertTrue(testPlayer.usedHelperCards.contains(helperCard)) // Now fully used
     }
 
+    /**
+     * Test the [PlayerActionService.cultivate] method with a tile not in personal supply
+     */
     @Test
     fun `test cultivate with tile not in personal supply`() {
         val tile = BonsaiTile(TileType.WOOD)
@@ -186,7 +211,9 @@ class CultivateTest {
         assertTrue(exception.message!!.contains("this Tile is not in your personal supply"))
     }
 
-
+    /**
+     * Test the general placing rule
+     */
     @Test
     fun `test general placing rules`() {
         val mc = RootService()
@@ -305,7 +332,9 @@ class CultivateTest {
         assertTrue(exceptionInvalidTile.message!!.contains("Invalid tile type for placement."))
     }
 
-
+    /**
+     * Test cultivate triggers green, brown and orange goals
+     */
     @Test
     fun `test cultivate triggers green,brown and orange goals `() {
         val mc = RootService()
@@ -422,6 +451,9 @@ class CultivateTest {
 
     }
 
+    /**
+     * Test cultivate triggers red and blue goals for all difficulties
+     */
     @Test
     fun `test cultivate triggers red and blue goals  for all difficulties`() {
         val mc = RootService()
@@ -552,6 +584,9 @@ class CultivateTest {
 
     }
 
+    /**
+     * Test cultivate not in seishi tile
+     */
     @Test
     fun `test cultivate not in seishi tile`(){
 
@@ -594,6 +629,9 @@ class CultivateTest {
             TileType.FLOWER to 1,
             TileType.LEAF to 1),)
     }
+    /**
+     * Test [PlayerActionService.cultivate] with not allowed by Seishi or Growth Cards
+     */
     @Test
     fun `test cultivate with not allowed by Seishi or Growth Cards`() {
 
@@ -634,6 +672,4 @@ class CultivateTest {
         assertDoesNotThrow {  playerActionService.cultivate(flowerTile1, 0, -4)}  // Allowed by Seishi
 
     }
-
-
 }

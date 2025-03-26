@@ -9,7 +9,13 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
+/**
+ * Class for Unit Tests for [GameService.startNewGame]
+ */
 class StartNewGameTest {
+    /**
+     * Test the [GameService.startNewGame] method.
+     */
     @Test
     fun testStartNewGame() {
         val rootService = RootService()
@@ -56,6 +62,9 @@ class StartNewGameTest {
         assertEquals(game.currentState.drawStack.size, 43)
     }
 
+    /**
+     * Test the [GameService.startNewGame] method with wrong player amount.
+     */
     @Test
     fun `test start game with wrong player amount`() {
         val rootService = RootService()
@@ -91,6 +100,9 @@ class StartNewGameTest {
         assertFalse { testRefreshable.refreshAfterStartNewGameCalled }
     }
 
+    /**
+     * Test the [GameService.startNewGame] method with wrong goal colors selected.
+     */
     @Test
     fun `test start game with wrong goal colors selected`() {
         val rootService = RootService()

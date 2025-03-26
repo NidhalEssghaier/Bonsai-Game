@@ -263,7 +263,7 @@ class OnlineGameScene(
                 help.isChecked = true
             }
         }
-    private var playerName1Label: Label =
+    private val playerName1Label: Label =
         Label(
             width = 500,
             height = 80,
@@ -466,20 +466,9 @@ class OnlineGameScene(
         }
 
     // Boxen zum auswählen der BotSärke wenn keine aktiviert, dann local player
-    private lateinit var player1HardBox: CheckBox
+    private var player1HardBox: CheckBox
 
-    private val player1EasyBox =
-        CheckBox(posX = 870, posY = 900, text = "Easy Bot").apply {
-            onCheckedChanged = {
-                if (this.isChecked) {
-                    localplayerMode = 2
-                    player1HardBox.isDisabled = true
-                } else {
-                    localplayerMode = 0
-                    player1HardBox.isDisabled = false
-                }
-            }
-        }
+    private val player1EasyBox: CheckBox
     private val firstPotJpg =
         Label(
             width = 230,
@@ -565,7 +554,7 @@ class OnlineGameScene(
             visual = ColorVisual(256, 107, 62),
         ).apply {
             onMouseClicked = {
-                for (i in 1..100) {
+                repeat(100) {
                     val randomNumber = listOf(1, 2, 3).random()
                     when (randomNumber) {
                         1 -> swap1()
@@ -619,6 +608,7 @@ class OnlineGameScene(
         }
 
     init {
+        player1EasyBox = CheckBox(posX = 870, posY = 900, text = "Easy Bot")
         player1HardBox =
             CheckBox(posX = 1050, posY = 900, text = "Hard Bot").apply {
                 onCheckedChanged = {
@@ -631,6 +621,15 @@ class OnlineGameScene(
                     }
                 }
             }
+        player1EasyBox.onCheckedChanged = {
+            if (player1EasyBox.isChecked) {
+                localplayerMode = 2
+                player1HardBox.isDisabled = true
+            } else {
+                localplayerMode = 0
+                player1HardBox.isDisabled = false
+            }
+        }
 
         addComponents(
             headlineLabel,
@@ -684,47 +683,55 @@ class OnlineGameScene(
         )
     }
 
+    private fun checkBoxIsCheckedAction(thisBox: CheckBox) {
+        println(countGoals)
+        countGoals++
+        val colorofCard: GoalColor
+        when (thisBox) {
+            bunjayBox -> colorofCard = GoalColor.BROWN
+            chookanBox -> colorofCard = GoalColor.ORANGE
+            moyogiBox -> colorofCard = GoalColor.GREEN
+            shakanBox -> colorofCard = GoalColor.RED
+            kenegaiBox -> colorofCard = GoalColor.BLUE
+            else -> colorofCard = GoalColor.BROWN
+        }
+        listGoalColor.add(colorofCard)
+        if (countGoals == 3) {
+            if (!bunjayBox.isChecked) bunjayBox.isDisabled = true
+            if (!chookanBox.isChecked) chookanBox.isDisabled = true
+            if (!moyogiBox.isChecked) moyogiBox.isDisabled = true
+            if (!shakanBox.isChecked) shakanBox.isDisabled = true
+            if (!kenegaiBox.isChecked) kenegaiBox.isDisabled = true
+        }
+    }
+
+    private fun checkBoxIsNotCheckedAction(thisBox: CheckBox) {
+        countGoals--
+        val colorofCard: GoalColor
+        when (thisBox) {
+            bunjayBox -> colorofCard = GoalColor.BROWN
+            chookanBox -> colorofCard = GoalColor.ORANGE
+            moyogiBox -> colorofCard = GoalColor.GREEN
+            shakanBox -> colorofCard = GoalColor.RED
+            kenegaiBox -> colorofCard = GoalColor.BLUE
+            else -> colorofCard = GoalColor.BROWN
+        }
+        listGoalColor.remove(colorofCard)
+        bunjayBox.isDisabled = false
+        chookanBox.isDisabled = false
+        moyogiBox.isDisabled = false
+        shakanBox.isDisabled = false
+        kenegaiBox.isDisabled = false
+    }
+
     private fun checkBoxKlicked(thisBox: CheckBox) {
         // Prüft ob die Checkbox aktiviert oder deaktiviert wurde und
         // füght sie entweder der Liste Hinzu oder enzieht sie wieder.
 
         if (thisBox.isChecked) {
-            println(countGoals)
-            countGoals++
-            val colorofCard: GoalColor
-            when (thisBox) {
-                bunjayBox -> colorofCard = GoalColor.BROWN
-                chookanBox -> colorofCard = GoalColor.ORANGE
-                moyogiBox -> colorofCard = GoalColor.GREEN
-                shakanBox -> colorofCard = GoalColor.RED
-                kenegaiBox -> colorofCard = GoalColor.BLUE
-                else -> colorofCard = GoalColor.BROWN
-            }
-            listGoalColor.add(colorofCard)
-            if (countGoals == 3) {
-                if (!bunjayBox.isChecked) bunjayBox.isDisabled = true
-                if (!chookanBox.isChecked) chookanBox.isDisabled = true
-                if (!moyogiBox.isChecked) moyogiBox.isDisabled = true
-                if (!shakanBox.isChecked) shakanBox.isDisabled = true
-                if (!kenegaiBox.isChecked) kenegaiBox.isDisabled = true
-            }
+            checkBoxIsCheckedAction(thisBox)
         } else {
-            countGoals--
-            val colorofCard: GoalColor
-            when (thisBox) {
-                bunjayBox -> colorofCard = GoalColor.BROWN
-                chookanBox -> colorofCard = GoalColor.ORANGE
-                moyogiBox -> colorofCard = GoalColor.GREEN
-                shakanBox -> colorofCard = GoalColor.RED
-                kenegaiBox -> colorofCard = GoalColor.BLUE
-                else -> colorofCard = GoalColor.BROWN
-            }
-            listGoalColor.remove(colorofCard)
-            bunjayBox.isDisabled = false
-            chookanBox.isDisabled = false
-            moyogiBox.isDisabled = false
-            shakanBox.isDisabled = false
-            kenegaiBox.isDisabled = false
+            checkBoxIsNotCheckedAction(thisBox)
         }
     }
 
