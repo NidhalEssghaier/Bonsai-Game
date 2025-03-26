@@ -8,7 +8,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.assertNotEquals
 
-
+/**
+ * Class for Unit Tests for [PlayerActionService.meditate]
+ */
 class MeditateTest {
 
     private lateinit var rootService: RootService
@@ -18,6 +20,9 @@ class MeditateTest {
     private lateinit var game: BonsaiGame
     private lateinit var currentPlayer: Player
 
+    /**
+     * Setup the test environment
+     */
     @BeforeEach
     fun setup() {
         rootService = RootService()
@@ -86,6 +91,9 @@ class MeditateTest {
         assertTrue { testRefreshable.refreshAfterDrawCardCalled }
     }
 
+    /**
+     * Tests meditating with a [MasterCard] that has a `GENERIC` tile.
+     */
     @Test
     fun testMeditateWithMasterCardGENERICTile() {
         val masterCard = MasterCard(tiles = listOf(TileType.WOOD, TileType.GENERIC), id = 2)

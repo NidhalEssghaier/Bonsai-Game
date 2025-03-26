@@ -6,6 +6,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.*
 
+/**
+ * Class for Unit Tests for [PlayerActionService.drawCard]
+ */
 class DrawCardTest {
     private lateinit var rootService: RootService
     private lateinit var gameService: GameService
@@ -14,6 +17,9 @@ class DrawCardTest {
     private lateinit var game: BonsaiGame
     private lateinit var currentPlayer: Player
 
+    /**
+     * Setup the test environment
+     */
     @BeforeEach
     fun setup() {
         rootService = RootService()

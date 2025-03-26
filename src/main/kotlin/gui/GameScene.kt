@@ -39,7 +39,7 @@ class GameScene(
     val application: BonsaiApplication,
 ) : BoardGameScene(1920, 1080),
     Refreshable {
-    private lateinit var bonsaiGame: BonsaiGame
+    private var bonsaiGame: BonsaiGame? = null
     private val cardImageLoader = CardImageLoader()
     private val itemImageLoader = ItemImageLoader()
     private val cardMap: BidirectionalMap<ZenCard, CardView> = BidirectionalMap()
@@ -49,6 +49,8 @@ class GameScene(
     private val playerColors: MutableList<String> = mutableListOf()
     private var cardStacks: List<CardStack<CardView>> = listOf()
     private var tileToRemove: BonsaiTile? = null
+
+    private val errorMsg = "Game hasn't been started yet."
 
     // drop area to remove bonsai tiles
     private val trashInfo = Label(30, 396, 192, 50, isWrapText = true)
@@ -324,23 +326,27 @@ class GameScene(
         chooseTilesByCard: Boolean,
     ) {
         endTurnButton.isDisabled = true
-        playDrawCardAnimation(card, drawnCardIndex + 1, chooseTilesByBoard, chooseTilesByCard)
+        playDrawCardAnimation(drawnCardIndex + 1, chooseTilesByBoard, chooseTilesByCard)
     }
 
     override fun refreshAfterChooseTile() {
-        initializeSupplyTiles(bonsaiGame.currentState)
+        val checkedGame = bonsaiGame
+        checkNotNull(checkedGame) { errorMsg }
+        initializeSupplyTiles(checkedGame.currentState)
     }
 
     override fun refreshAfterEndTurn() {
-        currentPlayer = bonsaiGame.currentState.currentPlayer
+        val checkedGame = bonsaiGame
+        checkNotNull(checkedGame) { errorMsg }
+        currentPlayer = checkedGame.currentState.currentPlayer
         shownPlayer = currentPlayer
 
         cardMap.clear()
         tileMap.clear()
         tileToRemove = null
 
-        initializeGameElements(rootService, bonsaiGame)
-        initializePlayerView(bonsaiGame)
+        initializeGameElements(rootService, checkedGame)
+        initializePlayerView(checkedGame)
     }
 
     override fun refreshAfterUndoRedo() {
@@ -368,20 +374,26 @@ class GameScene(
     }
 
     override fun refreshAfterDecideGoal() {
-        initializeGoalCardGridPane(bonsaiGame)
-        initializeClaimedGoalsGridPane(bonsaiGame.currentState)
+        val checkedGame = bonsaiGame
+        checkNotNull(checkedGame) { errorMsg }
+        initializeGoalCardGridPane(checkedGame)
+        initializeClaimedGoalsGridPane(checkedGame.currentState)
     }
 
     override fun refreshAfterPlaceTile(placedTile: BonsaiTile) {
-        initializeSupplyTiles(bonsaiGame.currentState)
-        initializeBonsai(bonsaiGame.currentState)
-        initializePlayArea(bonsaiGame.currentState)
+        val checkedGame = bonsaiGame
+        checkNotNull(checkedGame) { errorMsg }
+        initializeSupplyTiles(checkedGame.currentState)
+        initializeBonsai(checkedGame.currentState)
+        initializePlayArea(checkedGame.currentState)
     }
 
     override fun refreshAfterRemoveTile(tile: BonsaiTile) {
+        val checkedGame = bonsaiGame
+        checkNotNull(checkedGame) { errorMsg }
         val tileView = tileMap.forward(tile)
         val playArea =
-            when (bonsaiGame.currentState.players[currentPlayer].potColor) {
+            when (checkedGame.currentState.players[currentPlayer].potColor) {
                 PotColor.GRAY -> playAreaGrey
                 PotColor.PURPLE -> playAreaPurple
                 PotColor.BLUE -> playAreaBlue
@@ -423,8 +435,8 @@ class GameScene(
             }
         playArea[coordinates.first, coordinates.second] = hexagon
 
-        initializeBonsai(bonsaiGame.currentState)
-        initializePlayArea(bonsaiGame.currentState)
+        initializeBonsai(checkedGame.currentState)
+        initializePlayArea(checkedGame.currentState)
     }
 
     // initializes to set up game elements according to the state of the entities
@@ -470,38 +482,48 @@ class GameScene(
         }
     }
 
-    private fun initializeGridsForPlayers(state: GameState) {
-        for (i in 0..<state.players.size) {
-            val playArea = HexagonGrid<HexagonView>(coordinateSystem = HexagonGrid.CoordinateSystem.AXIAL)
-            val bonsai = bonsaiGame.currentState.players[shownPlayer].bonsai
-            val gridSize = bonsai.grid.size
-
-            // create whole grid
-            for (row in -gridSize..gridSize) {
-                for (col in -gridSize..gridSize) {
-                    // Only add hexagons that would fit in a circle
-                    if (row + col in -gridSize..gridSize) {
-                        val hexagon =
-                            HexagonView(visual = Visual.EMPTY, size = 25)
-                                .apply {
-                                    dropAcceptor = { dragEvent ->
-                                        when (dragEvent.draggedComponent) {
-                                            is HexagonView -> true
-                                            else -> false
-                                        }
-                                    }
-                                    onDragDropped = { dragEvent ->
-                                        rootService.playerActionService.cultivate(
-                                            tileMap.backward(dragEvent.draggedComponent as HexagonView),
-                                            r = row,
-                                            q = col,
-                                        )
-                                    }
-                                }
-                        playArea[col, row] = hexagon
+    private fun createHexagonView(row: Int, col: Int): HexagonView {
+        return HexagonView(visual = Visual.EMPTY, size = 25)
+            .apply {
+                dropAcceptor = { dragEvent ->
+                    when (dragEvent.draggedComponent) {
+                        is HexagonView -> true
+                        else -> false
                     }
                 }
+                onDragDropped = { dragEvent ->
+                    rootService.playerActionService.cultivate(
+                        tileMap.backward(dragEvent.draggedComponent as HexagonView),
+                        r = row,
+                        q = col,
+                    )
+                }
             }
+    }
+
+    private fun buildHexagonGrid(gridSize: Int):HexagonGrid<HexagonView> {
+        val playArea = HexagonGrid<HexagonView>(coordinateSystem = HexagonGrid.CoordinateSystem.AXIAL)
+        // create whole grid
+        for (row in -gridSize..gridSize) {
+            for (col in -gridSize..gridSize) {
+                // Only add hexagons that would fit in a circle
+                if (row + col in -gridSize..gridSize) {
+                    val hexagon = createHexagonView(row, col)
+                    playArea[col, row] = hexagon
+                }
+            }
+        }
+        return playArea
+    }
+
+    private fun initializeGridsForPlayers(state: GameState) {
+        val checkedGame = bonsaiGame
+        checkNotNull(checkedGame) { errorMsg }
+        for (i in 0..<state.players.size) {
+            val bonsai = checkedGame.currentState.players[shownPlayer].bonsai
+            val gridSize = bonsai.grid.size
+
+            val playArea = buildHexagonGrid(gridSize)
             // match play areas by player color
             when (state.players[i].potColor) {
                 PotColor.GRAY -> playAreaGrey = playArea
@@ -513,6 +535,8 @@ class GameScene(
     }
 
     private fun initializeBonsai(state: GameState) {
+        val checkedGame = bonsaiGame
+        checkNotNull(checkedGame) { errorMsg }
         val playArea =
             when (state.players[shownPlayer].potColor) {
                 PotColor.GRAY -> playAreaGrey
@@ -521,7 +545,7 @@ class GameScene(
                 PotColor.RED -> playAreaRed
             }
 
-        val bonsai = bonsaiGame.currentState.players[shownPlayer].bonsai
+        val bonsai = checkedGame.currentState.players[shownPlayer].bonsai
         val bonsaiStructure = bonsai.grid.getCoordinateToTileMap()
 
         // create bonsai
@@ -672,6 +696,8 @@ class GameScene(
         card: ZenCard,
         number: Int = 0,
     ): CardStack<CardView> {
+        val checkedGame = bonsaiGame
+        checkNotNull(checkedGame) { errorMsg }
         val cardStackView =
             CardStack<CardView>(
                 posX = posX,
@@ -685,7 +711,7 @@ class GameScene(
                         // swap to current player to map animation after method call & refresh to correct elements
                         if (shownPlayer != currentPlayer) {
                             shownPlayer = currentPlayer
-                            initializePlayerView(bonsaiGame)
+                            initializePlayerView(checkedGame)
                         }
                         playerActionService.meditate(cardMap.backward(this.peek()))
                     }
@@ -710,6 +736,8 @@ class GameScene(
     }
 
     private fun initializeGameOptionsGridPane() {
+        val checkedGame = bonsaiGame
+        checkNotNull(checkedGame) { errorMsg }
         val iconPaths =
             listOf(
                 "icons/undo_icon.png",
@@ -740,7 +768,7 @@ class GameScene(
                 }
             gameOptionsGridPane[idx, 0] = menuOptionButton
 
-            if (idx < 3 && bonsaiGame.currentState.players.any { it is NetworkPlayer }) {
+            if (idx < 3 && checkedGame.currentState.players.any { it is NetworkPlayer }) {
                 gameOptionsGridPane[idx, 0]?.isDisabled = true
                 gameOptionsGridPane[idx, 0]?.isVisible = false
             }
@@ -846,92 +874,46 @@ class GameScene(
 
         val prevPlayerPane = Pane<LabeledUIComponent>(0, 0, 150, 40)
         val prevPlayerText =
-            if (prevPlayer == currentPlayer) {
-                "${players[prevPlayer].name} (Active)"
-            } else {
-                players[prevPlayer].name
-            }
-        val prevPlayerButton =
-            Button(0, 0, 150, 40, text = prevPlayerText).apply {
+            if (prevPlayer == currentPlayer) {"${players[prevPlayer].name} (Active)"} else {players[prevPlayer].name}
+        val prevPlayerButton = Button(0, 0, 150, 40, text = prevPlayerText).apply {
                 alignment = Alignment.CENTER_RIGHT
-                visual =
-                    ColorVisual(Color(playerColors[prevPlayer])).apply {
-                        style.borderRadius =
-                            BorderRadius.MEDIUM
-                    }
+                visual = ColorVisual(Color(playerColors[prevPlayer])).apply {style.borderRadius = BorderRadius.MEDIUM}
                 font = Font(size = 15, fontWeight = Font.FontWeight.BOLD)
                 onMouseClicked = {
                     shownPlayer = prevPlayer
-                    initializePlayerView(game)
-                }
+                    initializePlayerView(game) }
             }
         val leftArrow =
-            Label(
-                0,
-                0,
-                40,
-                40,
-                visual =
-                    itemImageLoader.imageFor(
-                        "icons/arrow_back.png",
-                        96,
-                        96,
-                    ),
-            )
+            Label(0, 0, 40, 40,
+                visual = itemImageLoader.imageFor("icons/arrow_back.png", 96,96))
         prevPlayerPane.addAll(prevPlayerButton, leftArrow)
 
         val currentPlayerPane = Pane<LabeledUIComponent>(0, 0, 400, 40)
         val currentPlayerText =
-            if (shownPlayer == currentPlayer) {
-                "${players[shownPlayer].name} (Active)"
-            } else {
-                players[shownPlayer].name
-            }
+            if (shownPlayer == currentPlayer){"${players[shownPlayer].name} (Active)"} else {players[shownPlayer].name}
         val currentPlayerLabel =
             Label(0, 0, 400, 40, text = currentPlayerText).apply {
-                visual =
-                    ColorVisual(Color(playerColors[shownPlayer])).apply {
-                        style.borderRadius =
-                            BorderRadius.MEDIUM
-                    }
+                visual = ColorVisual(Color(playerColors[shownPlayer])).apply {style.borderRadius = BorderRadius.MEDIUM}
                 font = Font(size = 24, fontWeight = Font.FontWeight.BOLD)
             }
         currentPlayerPane.add(currentPlayerLabel)
 
         val nextPlayerPane = Pane<LabeledUIComponent>(0, 0, 150, 40)
         val nextPlayerText =
-            if (nextPlayer == currentPlayer) {
-                "${players[nextPlayer].name} (Active)"
-            } else {
-                players[nextPlayer].name
-            }
+            if (nextPlayer == currentPlayer) { "${players[nextPlayer].name} (Active)" } else {players[nextPlayer].name}
         val nextPlayerButton =
             Button(0, 0, 150, 40, text = nextPlayerText).apply {
                 alignment = Alignment.CENTER_LEFT
-                visual =
-                    ColorVisual(Color(playerColors[nextPlayer])).apply {
-                        style.borderRadius =
-                            BorderRadius.MEDIUM
-                    }
+                visual = ColorVisual(Color(playerColors[nextPlayer])).apply {
+                        style.borderRadius = BorderRadius.MEDIUM }
                 font = Font(size = 15, fontWeight = Font.FontWeight.BOLD)
                 onMouseClicked = {
                     shownPlayer = nextPlayer
-                    initializePlayerView(game)
-                }
+                    initializePlayerView(game) }
             }
         val rightArrow =
-            Label(
-                110,
-                0,
-                40,
-                40,
-                visual =
-                    itemImageLoader.imageFor(
-                        "icons/arrow_forward.png",
-                        96,
-                        96,
-                    ),
-            )
+            Label(110, 0, 40, 40,
+                visual = itemImageLoader.imageFor("icons/arrow_forward.png",96, 96))
 
         nextPlayerPane.addAll(nextPlayerButton, rightArrow)
 
@@ -986,11 +968,12 @@ class GameScene(
     }
 
     private fun playDrawCardAnimation(
-        card: ZenCard,
         drawnCardIndex: Int,
         chooseTilesByBoard: Boolean,
         chooseTilesByCard: Boolean,
     ) {
+        val checkedGame = bonsaiGame
+        checkNotNull(checkedGame) { errorMsg }
         val animations = mutableListOf<Animation>()
         animations.add(getDrawnCardAnimation(drawnCardIndex))
         animations.addAll(getRefillCardsAnimation(drawnCardIndex))
@@ -1002,7 +985,7 @@ class GameScene(
                 1,
                 1,
                 1,
-                duration = ANIMATION_TIME * bonsaiGame.currentState.gameSpeed,
+                duration = ANIMATION_TIME * checkedGame.currentState.gameSpeed,
             ).apply {
                 onFinished = {
                     if (chooseTilesByBoard || chooseTilesByCard) {
@@ -1019,7 +1002,7 @@ class GameScene(
                             application.showMenuScene(chooseTileScene)
                         }
                     } else {
-                        initializeSupplyTiles(bonsaiGame.currentState)
+                        initializeSupplyTiles(checkedGame.currentState)
                     }
                     endTurnButton.isDisabled = false
                 }
@@ -1032,8 +1015,10 @@ class GameScene(
         )
     }
 
-    private fun getDrawnCardAnimation(drawnCardIndex: Int): Animation =
-        MovementAnimation
+    private fun getDrawnCardAnimation(drawnCardIndex: Int): Animation {
+        val checkedGame = bonsaiGame
+        checkNotNull(checkedGame) { errorMsg }
+        return MovementAnimation
             .toComponentView(
                 componentView = cardStacks[drawnCardIndex].peek(),
                 toComponentViewPosition =
@@ -1043,7 +1028,7 @@ class GameScene(
                         else -> drawnCardsStack
                     },
                 scene = this,
-                duration = ANIMATION_TIME * bonsaiGame.currentState.gameSpeed,
+                duration = ANIMATION_TIME * checkedGame.currentState.gameSpeed,
             ).apply {
                 onFinished = {
                     val target =
@@ -1061,8 +1046,11 @@ class GameScene(
                     }
                 }
             }
+    }
 
     private fun getRefillCardsAnimation(drawnCardIndex: Int): List<Animation> {
+        val checkedGame = bonsaiGame
+        checkNotNull(checkedGame) { errorMsg }
         var refillCardIdx = drawnCardIndex - 1
         val animations = mutableListOf<Animation>()
         var rightestEmptyCardStack = -1
@@ -1082,7 +1070,7 @@ class GameScene(
                         componentView = cardStacks[idx].peek(),
                         toComponentViewPosition = cardStacks[idx + 1],
                         scene = this@GameScene,
-                        duration = ANIMATION_TIME * bonsaiGame.currentState.gameSpeed,
+                        duration = ANIMATION_TIME * checkedGame.currentState.gameSpeed,
                     ).apply {
                         onFinished = {
                             val card = cardStacks[idx].peek()

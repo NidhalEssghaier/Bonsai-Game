@@ -7,7 +7,13 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+/**
+ * Class for Unit Tests for [GameService.endGame]
+ */
 class EndGameTest {
+    /**
+     * Test end game
+     */
     @Test
     fun testEndGame() {
         // start a game

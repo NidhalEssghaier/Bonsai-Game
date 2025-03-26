@@ -6,6 +6,9 @@ import entity.*
 import kotlin.test.assertTrue
 import kotlin.test.assertFalse
 
+/**
+ * Class for Unit Tests for [PlayerActionService.decideGoalClaim]
+ */
 class DecideGoalClaimTest {
 
     private lateinit var rootService: RootService
@@ -13,6 +16,9 @@ class DecideGoalClaimTest {
     private lateinit var game: BonsaiGame
     private lateinit var testPlayer: Player
 
+    /**
+     * Setup the test environment
+     */
     @BeforeEach
     fun setup() {
         rootService = RootService()
@@ -32,6 +38,9 @@ class DecideGoalClaimTest {
         rootService.currentGame = game
     }
 
+    /**
+     * Test the [PlayerActionService.decideGoalClaim] when claiming a goal
+     */
     @Test
     fun `test decideGoalClaim when claiming a goal`() {
         val goalCard = GoalCard(8, GoalColor.BROWN, GoalDifficulty.LOW)
@@ -50,6 +59,9 @@ class DecideGoalClaimTest {
         assertFalse(game.currentState.goalCards.contains(goalCard))
     }
 
+    /**
+     * Test the [PlayerActionService.decideGoalClaim] when renouncing a goal
+     */
     @Test
     fun `test decideGoalClaim when renouncing a goal adds it to declinedGoals`() {
         val goalCard = GoalCard(8, GoalColor.BROWN, GoalDifficulty.LOW)
@@ -67,6 +79,9 @@ class DecideGoalClaimTest {
         assertFalse(testPlayer.forbiddenGoals.contains(goalCard))
     }
 
+    /**
+     * Test the [PlayerActionService.decideGoalClaim] to ensure goals of the same color are forbidden
+     */
     @Test
     fun `test decideGoalClaim ensures goals of the same color are forbidden`() {
         val goalCard = GoalCard(8, GoalColor.BROWN, GoalDifficulty.LOW)
@@ -92,6 +107,9 @@ class DecideGoalClaimTest {
         assertTrue(testPlayer.forbiddenGoals.contains(otherBrownGoal2))
     }
 
+    /**
+     * Test the [PlayerActionService.decideGoalClaim] doesn't affect previously declined goals
+     */
     @Test
     fun `test decideGoalClaim does not affect previously declined goals`() {
         val goalCard = GoalCard(8, GoalColor.BROWN, GoalDifficulty.LOW)

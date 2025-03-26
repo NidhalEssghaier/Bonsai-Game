@@ -7,6 +7,9 @@ import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+/**
+ * Class for Unit Tests for [PlayerActionService.applyTileChoice]
+ */
 class ApplyTileChoiceTest {
 
     private lateinit var rootService: RootService
@@ -16,6 +19,9 @@ class ApplyTileChoiceTest {
     private lateinit var game: BonsaiGame
     private lateinit var currentPlayer: Player
 
+    /**
+     * Setup the test environment
+     */
     @BeforeEach
     fun setup() {
         rootService = RootService()
@@ -29,6 +35,9 @@ class ApplyTileChoiceTest {
         currentPlayer = game.currentState.players[game.currentState.currentPlayer]
     }
 
+    /**
+     * create test players
+     */
     private fun createTestPlayers(): MutableList<Triple<String, Int, PotColor>> {
         return mutableListOf(
             Triple("Alice", 0, PotColor.RED),
@@ -36,6 +45,9 @@ class ApplyTileChoiceTest {
         )
     }
 
+    /**
+     * create test goal cards
+     */
     private fun createGoalCards(): List<GoalColor> {
         return listOf(GoalColor.BROWN, GoalColor.GREEN, GoalColor.ORANGE)
     }

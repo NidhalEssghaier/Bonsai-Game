@@ -12,13 +12,13 @@ class MessageBuilder {
     /**
      * possible parameters for [CultivateMessage] and [MeditateMessage]
      */
-    private var removedTilesAxialCoordinates: MutableList<Pair<Int, Int>>? = null
-    private var chosenCardPosition: Int? = null
-    private var playedTiles: MutableList<Pair<TileTypeMessage, Pair<Int, Int>>>? = null
-    private var drawnTiles: MutableList<TileTypeMessage>? = null
-    private var claimedGoals: MutableList<Pair<GoalTileTypeMessage, Int>>? = null
-    private var renouncedGoals: MutableList<Pair<GoalTileTypeMessage, Int>>? = null
-    private var discardedTiles: MutableList<TileTypeMessage>? = null
+    private val removedTilesAxialCoordinates: MutableList<Pair<Int, Int>> = mutableListOf()
+    private var chosenCardPosition: Int = -1
+    private val playedTiles: MutableList<Pair<TileTypeMessage, Pair<Int, Int>>> = mutableListOf()
+    private val drawnTiles: MutableList<TileTypeMessage> = mutableListOf()
+    private val claimedGoals: MutableList<Pair<GoalTileTypeMessage, Int>> = mutableListOf()
+    private val renouncedGoals: MutableList<Pair<GoalTileTypeMessage, Int>> = mutableListOf()
+    private val discardedTiles: MutableList<TileTypeMessage> = mutableListOf()
 
     /** Used to convert between entity classes and ntf classes. */
     private val converter: MessageConverter = MessageConverter()
@@ -29,12 +29,7 @@ class MessageBuilder {
      * @param coordinates The position the tile was removed from.
      */
     fun addRemovedTile(coordinates: Pair<Int, Int>) {
-        if (removedTilesAxialCoordinates == null) {
-            removedTilesAxialCoordinates = mutableListOf()
-            removedTilesAxialCoordinates!!.add(coordinates)
-        } else {
-            removedTilesAxialCoordinates!!.add(coordinates)
-        }
+        removedTilesAxialCoordinates.add(coordinates)
     }
 
     /**
@@ -44,12 +39,7 @@ class MessageBuilder {
      * @param coordinates The position the tile was placed.
      */
     fun addPlacedTile(tileType: TileType, coordinates: Pair<Int, Int>) {
-        if (playedTiles == null) {
-            playedTiles = mutableListOf()
-            playedTiles!!.add(Pair(converter.fromTileType(tileType), coordinates))
-        } else {
-            playedTiles!!.add(Pair(converter.fromTileType(tileType), coordinates))
-        }
+        playedTiles.add(Pair(converter.fromTileType(tileType), coordinates))
     }
 
     /**
@@ -58,12 +48,7 @@ class MessageBuilder {
      * @param goalCard The goal card that was claimed.
      */
     fun addClaimedGoal(goalCard: GoalCard) {
-        if (claimedGoals == null) {
-            claimedGoals = mutableListOf()
-            claimedGoals!!.add(converter.fromGoal(goalCard))
-        } else {
-            claimedGoals!!.add(converter.fromGoal(goalCard))
-        }
+        claimedGoals.add(converter.fromGoal(goalCard))
     }
 
     /**
@@ -72,12 +57,7 @@ class MessageBuilder {
      * @param goalCard The goal card that was renounced.
      */
     fun addRenouncedGoal(goalCard: GoalCard) {
-        if (renouncedGoals == null) {
-            renouncedGoals = mutableListOf()
-            renouncedGoals!!.add(converter.fromGoal(goalCard))
-        } else {
-            renouncedGoals!!.add(converter.fromGoal(goalCard))
-        }
+        renouncedGoals.add(converter.fromGoal(goalCard))
     }
 
     /**
@@ -95,12 +75,7 @@ class MessageBuilder {
      * @param tileType The [TileType] of the drawn tile.
      */
     fun addDrawnTile(tileType: TileType) {
-        if (drawnTiles == null) {
-            drawnTiles = mutableListOf()
-            drawnTiles!!.add(converter.fromTileType(tileType))
-        } else {
-            drawnTiles!!.add(converter.fromTileType(tileType))
-        }
+        drawnTiles.add(converter.fromTileType(tileType))
     }
 
     /**
@@ -109,12 +84,7 @@ class MessageBuilder {
      * @param tileType The [TileType] of the discarded tile.
      */
     fun addDiscardedTile(tileType: TileType) {
-        if (discardedTiles == null) {
-            discardedTiles = mutableListOf()
-            discardedTiles!!.add(converter.fromTileType(tileType))
-        } else {
-            discardedTiles!!.add(converter.fromTileType(tileType))
-        }
+        discardedTiles.add(converter.fromTileType(tileType))
     }
 
     /**
@@ -125,62 +95,47 @@ class MessageBuilder {
      *         One of the two will be null, the other the constructed message.
      */
     fun build(): Pair<CultivateMessage?, MeditateMessage?> {
-        if (removedTilesAxialCoordinates == null) {
-            removedTilesAxialCoordinates = mutableListOf()
-        }
-        if (playedTiles == null) {
-            playedTiles = mutableListOf()
-        }
-        if (claimedGoals == null) {
-            claimedGoals = mutableListOf()
-        }
-        if (renouncedGoals == null) {
-            renouncedGoals = mutableListOf()
-        }
-
-        if (chosenCardPosition == null) {
-            val message = CultivateMessage(
-                removedTilesAxialCoordinates!!,
-                playedTiles!!,
-                claimedGoals!!,
-                renouncedGoals!!
+        if (chosenCardPosition == -1) {
+            return Pair(
+                CultivateMessage(
+                    removedTilesAxialCoordinates,
+                    playedTiles,
+                    claimedGoals,
+                    renouncedGoals
+                ),
+                null
             )
-            reset()
-            return Pair(message, null)
         } else {
-            if (drawnTiles == null) {
-                if (chosenCardPosition != 0) {
-                    error("at least one tile should have been drawn")
-                } else {
-                    drawnTiles = mutableListOf()
-                }
-            }
-            if (discardedTiles == null) {
-                discardedTiles = mutableListOf()
+            if (chosenCardPosition != 0) {
+                check(drawnTiles.isNotEmpty()) { "at least one tile should have been drawn" }
             }
 
-            val message = MeditateMessage(
-                removedTilesAxialCoordinates!!,
-                chosenCardPosition!!,
-                playedTiles!!,
-                drawnTiles!!,
-                claimedGoals!!,
-                renouncedGoals!!,
-                discardedTiles!!
+            return Pair(
+                null,
+                MeditateMessage(
+                    removedTilesAxialCoordinates,
+                    chosenCardPosition,
+                    playedTiles,
+                    drawnTiles,
+                    claimedGoals,
+                    renouncedGoals,
+                    discardedTiles
+                )
             )
-            reset()
-            return Pair(null, message)
         }
     }
 
+    /**
+     * Resets all parameters of the message builder.
+     */
     fun reset() {
-        removedTilesAxialCoordinates = null
-        chosenCardPosition = null
-        playedTiles = null
-        drawnTiles = null
-        claimedGoals = null
-        renouncedGoals = null
-        discardedTiles = null
+        removedTilesAxialCoordinates.clear()
+        chosenCardPosition = -1
+        playedTiles.clear()
+        drawnTiles.clear()
+        claimedGoals.clear()
+        renouncedGoals.clear()
+        discardedTiles.clear()
     }
 
 }

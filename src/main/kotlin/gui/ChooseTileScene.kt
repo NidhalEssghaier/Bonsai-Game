@@ -66,8 +66,12 @@ class ChooseTileScene(
         ).apply {
             isDisabled = true
             onMouseClicked = {
-                if (chooseByBoard) rootService.playerActionService.applyTileChoice(selectedTileByBoard!!.type, false)
-                if (chooseByCard) rootService.playerActionService.applyTileChoice(selectedTileByCard!!.type, true)
+                if (chooseByBoard) selectedTileByBoard?.let {
+                    rootService.playerActionService.applyTileChoice(it.type, false)
+                }
+                if (chooseByCard) selectedTileByCard?.let {
+                    rootService.playerActionService.applyTileChoice(it.type, true)
+                }
             }
         }
 
@@ -86,46 +90,51 @@ class ChooseTileScene(
         )
     }
 
+    private fun applyOnMouseClickedForTileButton(buttonToApply: Button, tile: BonsaiTile, isBoardSelection: Boolean) {
+        buttonToApply.onMouseClicked = {
+            // reset selection & select clicked tile
+            if (isBoardSelection) {
+                // reset selection visually
+                selectedButtonByBoard?.let { button ->
+                    selectedTileByBoard?.let { selectedTile ->
+                        button.visual = itemImageLoader.imageFor(selectedTile, true)
+                    }
+                }
+                // select clicked element
+                selectedTileByBoard = tile
+                selectedButtonByBoard = buttonToApply
+            } else {
+                // reset selection visually
+                selectedButtonByCard?.let { button ->
+                    selectedTileByCard?.let { selectedTile ->
+                        button.visual = itemImageLoader.imageFor(selectedTile, true)
+                    }
+                }
+                // select clicked element
+                selectedTileByCard = tile
+                selectedButtonByCard = buttonToApply
+            }
+            // update visual to show selection
+            buttonToApply.visual = itemImageLoader.imageFor(tile)
+
+            updateConfirmButtonState()
+        }
+    }
+
     private fun createTileButton(
         tile: BonsaiTile,
         isBoardSelection: Boolean,
-    ): Button =
-        Button(
+    ): Button {
+        val newButton = Button(
             0,
             0,
             BUTTON_WIDTH,
             BUTTON_HEIGHT,
             visual = itemImageLoader.imageFor(tile, true).apply { style.cursor = Cursor.POINTER },
-        ).apply {
-            onMouseClicked = {
-                // reset selection & select clicked tile
-                if (isBoardSelection) {
-                    // reset selection visually
-                    selectedButtonByBoard?.let { button ->
-                        selectedTileByBoard?.let { selectedTile ->
-                            button.visual = itemImageLoader.imageFor(selectedTile, true)
-                        }
-                    }
-                    // select clicked element
-                    selectedTileByBoard = tile
-                    selectedButtonByBoard = this
-                } else {
-                    // reset selection visually
-                    selectedButtonByCard?.let { button ->
-                        selectedTileByCard?.let { selectedTile ->
-                            button.visual = itemImageLoader.imageFor(selectedTile, true)
-                        }
-                    }
-                    // select clicked element
-                    selectedTileByCard = tile
-                    selectedButtonByCard = this
-                }
-                // update visual to show selection
-                visual = itemImageLoader.imageFor(tile)
-
-                updateConfirmButtonState()
-            }
-        }
+        )
+        applyOnMouseClickedForTileButton(newButton, tile, isBoardSelection)
+        return newButton
+    }
 
     private fun initializeBoardSelections() {
         if (!chooseByBoard) {

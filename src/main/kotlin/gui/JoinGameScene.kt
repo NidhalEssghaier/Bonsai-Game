@@ -74,20 +74,9 @@ class JoinGameScene(
             }.apply {
                 onMouseClicked = { application.showMenuScene(application.mainMenuScene) }
             }
-    private lateinit var player1HardBox: CheckBox
+    private var player1HardBox: CheckBox
 
-    private val player1EasyBox =
-        CheckBox(posX = 1170, posY = 300, text = "Easy Bot").apply {
-            onCheckedChanged = {
-                if (this.isChecked) {
-                    localplayerMode = 2
-                    player1HardBox.isDisabled = true
-                } else {
-                    localplayerMode = 0
-                    player1HardBox.isDisabled = false
-                }
-            }
-        }
+    private val player1EasyBox: CheckBox
 
     private val gameSpeedLabel: Label =
         Label(
@@ -133,18 +122,27 @@ class JoinGameScene(
         }
 
     init {
-        player1HardBox =
-            CheckBox(posX = 1170, posY = 345, text = "Hard Bot").apply {
-                onCheckedChanged = {
-                    if (this.isChecked) {
-                        localplayerMode = 3
-                        player1EasyBox.isDisabled = true
-                    } else {
-                        localplayerMode = 0
-                        player1EasyBox.isDisabled = false
-                    }
+        player1HardBox = CheckBox(posX = 1170, posY = 345, text = "Hard Bot")
+        player1EasyBox = CheckBox(posX = 1170, posY = 300, text = "Easy Bot").apply {
+            onCheckedChanged = {
+                if (this.isChecked) {
+                    localplayerMode = 2
+                    player1HardBox.isDisabled = true
+                } else {
+                    localplayerMode = 0
+                    player1HardBox.isDisabled = false
                 }
             }
+        }
+        player1HardBox.onCheckedChanged = {
+            if (player1HardBox.isChecked) {
+                localplayerMode = 3
+                player1EasyBox.isDisabled = true
+            } else {
+                localplayerMode = 0
+                player1EasyBox.isDisabled = false
+            }
+        }
         addComponents(
             headlineLabel,
             joinGameButton,

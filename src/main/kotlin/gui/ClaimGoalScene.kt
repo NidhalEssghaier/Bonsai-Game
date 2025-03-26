@@ -112,29 +112,25 @@ class ClaimGoalScene(
                     },
             )
 
-        deny.apply {
-            onMouseClicked = {
-                rootService.playerActionService.decideGoalClaim(reachedGoals[currentGoal], false)
-                // show next goal if available
-                if (currentGoal < goalCount - 1) {
-                    currentGoal++
-                    initializeComponents()
-                } else {
-                    application.hideMenuScene()
-                }
+        deny.onMouseClicked = {
+            rootService.playerActionService.decideGoalClaim(reachedGoals[currentGoal], false)
+            // show next goal if available
+            if (currentGoal < goalCount - 1) {
+                currentGoal++
+                initializeComponents()
+            } else {
+                application.hideMenuScene()
             }
         }
 
-        claim.apply {
-            onMouseClicked = {
-                rootService.playerActionService.decideGoalClaim(reachedGoals[currentGoal], true)
-                // show next goal if available
-                if (currentGoal < goalCount - 1) {
-                    currentGoal++
-                    initializeComponents()
-                } else {
-                    application.hideMenuScene()
-                }
+        claim.onMouseClicked = {
+            rootService.playerActionService.decideGoalClaim(reachedGoals[currentGoal], true)
+            // show next goal if available
+            if (currentGoal < goalCount - 1) {
+                currentGoal++
+                initializeComponents()
+            } else {
+                application.hideMenuScene()
             }
         }
     }
