@@ -822,11 +822,13 @@ class PlayerActionService(
      * @throws IllegalStateException If the Game's stacks are empty.
      * @throws IllegalArgumentException If the selected [card] is not in openCards.
      *
+     *
      */
     fun meditate(card: ZenCard) {
         val game = rootService.currentGame
         checkNotNull(game) { "No active game" }
         val currentPlayer = game.currentState.players[game.currentState.currentPlayer]
+
 
         // Bug fix ensure player cant meditate after cultivating
         check(!currentPlayer.hasCultivated) { "cant meditate after cultivate" }
@@ -837,6 +839,8 @@ class PlayerActionService(
         }
         // Mark the player as having drawn a card
         currentPlayer.hasDrawnCard = true
+
+
 
         // Ensure there are available cards in openCards
         if (game.currentState.openCards.isEmpty()) throwIlleaegalState("No available cards to draw")
