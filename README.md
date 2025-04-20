@@ -34,7 +34,7 @@
 
 - **Kotlin**
 - **IntelliJ IDEA**
-- [BoardGameWork (BGW)](https://github.com/aisbergg/bgwsdk) framework
+- [BoardGameWork (BGW)]([https://github.com/aisbergg/bgwsdk](https://tudo-aqua.github.io/bgw/)) framework
 
 ---
 
