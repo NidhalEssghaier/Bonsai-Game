@@ -67,40 +67,7 @@ class NetworkServiceTest {
         val game = rootServiceHost.currentGame
         checkNotNull(game) { "game should not be null right after starting it." }
 
-        val indices = listOf(0, 2, 1, 3, 4, 6, 7, 8 , 9, 10, 11, 12, 13, 14, 15,
-                             16, 18, 19, 20, 21, 22, 23, 24, 26, 27, 28, 29, 30,
-                             31, 32, 33, 34, 35, 36, 37, 39, 40, 41, 42, 43, 44,
-                             45, 46)
-        game.currentState.drawStack.clear()
-        for (i in indices) {
-            game.currentState.drawStack.add(when (i) {
-                0, 1, 8, 12 -> GrowthCard(TileType.WOOD, i)
-                2, 3, 9, 10 -> GrowthCard(TileType.LEAF, i)
-                4, 5, 11 -> GrowthCard(TileType.FLOWER, i)
-                6, 7, 13 -> GrowthCard(TileType.FRUIT, i)
-                14, 15, 16 -> HelperCard(listOf(TileType.GENERIC, TileType.WOOD), i)
-                17, 18 -> HelperCard(listOf(TileType.GENERIC, TileType.LEAF), i)
-                19 -> HelperCard(listOf(TileType.GENERIC, TileType.FLOWER), i)
-                20 -> HelperCard(listOf(TileType.GENERIC, TileType.FRUIT), i)
-                21 -> MasterCard(listOf(TileType.WOOD, TileType.WOOD), i)
-                22, 26 -> MasterCard(listOf(TileType.LEAF, TileType.LEAF), i)
-                23, 29, 30 -> MasterCard(listOf(TileType.WOOD, TileType.LEAF), i)
-                24, 25, 28 -> MasterCard(listOf(TileType.GENERIC), i)
-                27 -> MasterCard(listOf(TileType.LEAF, TileType.FRUIT), i)
-                31 -> MasterCard(listOf(TileType.WOOD, TileType.LEAF, TileType.FLOWER), i)
-                32 -> MasterCard(listOf(TileType.WOOD, TileType.LEAF, TileType.FRUIT), i)
-                33 -> MasterCard(listOf(TileType.LEAF, TileType.FLOWER, TileType.FLOWER), i)
-                34 -> ParchmentCard(2, ParchmentCardType.MASTER, i)
-                35 -> ParchmentCard(2, ParchmentCardType.GROWTH, i)
-                36 -> ParchmentCard(2, ParchmentCardType.HELPER, i)
-                37 -> ParchmentCard(2, ParchmentCardType.FLOWER, i)
-                38 -> ParchmentCard(2, ParchmentCardType.FRUIT, i)
-                39 -> ParchmentCard(1, ParchmentCardType.LEAF, i)
-                40 -> ParchmentCard(1, ParchmentCardType.WOOD, i)
-                in (41..46) -> ToolCard(i)
-                else -> error("Invalid index")
-            })
-        }
+        initDummyCards(game)
 
         game.currentState.openCards.clear()
         game.currentState.openCards.addAll(listOf(
@@ -141,6 +108,49 @@ class NetworkServiceTest {
         }
 
         client?.sendGameActionMessage(message)
+    }
+
+    private fun initDummyCards(
+        game: BonsaiGame
+    ) {
+        val drawStack = game.currentState.drawStack
+        drawStack.clear()
+
+        // Growth Cards
+        drawStack.add(GrowthCard(TileType.WOOD, 0))
+        drawStack.add(GrowthCard(TileType.WOOD, 1))
+        drawStack.add(GrowthCard(TileType.LEAF, 2))
+        drawStack.add(GrowthCard(TileType.LEAF, 3))
+        drawStack.add(GrowthCard(TileType.FLOWER, 4))
+        drawStack.add(GrowthCard(TileType.FRUIT, 6))
+        drawStack.add(GrowthCard(TileType.FRUIT, 7))
+
+        // Helper Cards
+        drawStack.add(HelperCard(listOf(TileType.GENERIC, TileType.WOOD), 14))
+        drawStack.add(HelperCard(listOf(TileType.GENERIC, TileType.WOOD), 15))
+        drawStack.add(HelperCard(listOf(TileType.GENERIC, TileType.WOOD), 16))
+        drawStack.add(HelperCard(listOf(TileType.GENERIC, TileType.LEAF), 18))
+        drawStack.add(HelperCard(listOf(TileType.GENERIC, TileType.FLOWER), 19))
+        drawStack.add(HelperCard(listOf(TileType.GENERIC, TileType.FRUIT), 20))
+
+        // Master Cards
+        drawStack.add(MasterCard(listOf(TileType.WOOD, TileType.WOOD), 21))
+        drawStack.add(MasterCard(listOf(TileType.LEAF, TileType.LEAF), 22))
+        drawStack.add(MasterCard(listOf(TileType.WOOD, TileType.LEAF), 23))
+        drawStack.add(MasterCard(listOf(TileType.GENERIC), 24))
+        drawStack.add(MasterCard(listOf(TileType.LEAF, TileType.LEAF), 26))
+        drawStack.add(MasterCard(listOf(TileType.LEAF, TileType.FRUIT), 27))
+
+        // Parchment Cards
+        drawStack.add(ParchmentCard(2, ParchmentCardType.MASTER, 34))
+        drawStack.add(ParchmentCard(2, ParchmentCardType.GROWTH, 35))
+        drawStack.add(ParchmentCard(2, ParchmentCardType.HELPER, 36))
+        drawStack.add(ParchmentCard(2, ParchmentCardType.FLOWER, 37))
+        drawStack.add(ParchmentCard(1, ParchmentCardType.LEAF, 39))
+        drawStack.add(ParchmentCard(1, ParchmentCardType.WOOD, 40))
+
+        // Tool Cards
+        for (i in (41..43)) { drawStack.add(ToolCard(i)) }
     }
 
     /**
@@ -315,19 +325,13 @@ class NetworkServiceTest {
         guestState.goalCards.find {
             it?.color == GoalColor.ORANGE && it.difficulty == GoalDifficulty.LOW
         }?.let {
-            rootServiceGuest.playerActionService.decideGoalClaim(
-                it,
-                true
-            )
+            rootServiceGuest.playerActionService.decideGoalClaim(it, true)
         }
 
         guestState.goalCards.find {
             it?.color == GoalColor.GREEN && it.difficulty == GoalDifficulty.LOW
         }?.let {
-            rootServiceGuest.playerActionService.decideGoalClaim(
-                it,
-                false
-            )
+            rootServiceGuest.playerActionService.decideGoalClaim(it, false)
         }
 
         rootServiceGuest.playerActionService.endTurn()
@@ -371,7 +375,6 @@ class NetworkServiceTest {
     fun meditateTurnTest() {
         rootServiceHost.networkService.startDummyGame()
 
-        rootServiceHost.waitForState(ConnectionState.WAITING_FOR_OPPONENT)
         rootServiceGuest.waitForState(ConnectionState.PLAYING_MY_TURN)
 
         assertNotNull(rootServiceHost.currentGame)
@@ -392,20 +395,8 @@ class NetworkServiceTest {
 
         rootServiceGuest.playerActionService.endTurn()
         rootServiceHost.waitForState(ConnectionState.PLAYING_MY_TURN)
-        rootServiceGuest.waitForState(ConnectionState.WAITING_FOR_OPPONENT)
 
-        assertEquals(hostState.players[0].supply.size, guestState.players[0].supply.size)
-
-        assertEquals(
-            hostState.players[0].hiddenDeck.size,
-            guestState.players[0].hiddenDeck.size
-        )
-        for (i in hostState.players[0].hiddenDeck.indices) {
-            assertEquals(
-                hostState.players[0].hiddenDeck[i].javaClass,
-                guestState.players[0].hiddenDeck[i].javaClass
-            )
-        }
+        evalGameStates(hostState, guestState, 0)
 
         rootServiceHost.playerActionService.removeTile(
             hostState.players[1].bonsai.grid[0, -1]
@@ -416,24 +407,9 @@ class NetworkServiceTest {
         )
 
         rootServiceHost.playerActionService.endTurn()
-        rootServiceHost.waitForState(ConnectionState.WAITING_FOR_OPPONENT)
         rootServiceGuest.waitForState(ConnectionState.PLAYING_MY_TURN)
 
-        assertEquals(hostState.players[1].supply.size, guestState.players[1].supply.size)
-        for (i in hostState.players[1].supply.indices) {
-            assertEquals(hostState.players[1].supply[i].type , guestState.players[1].supply[i].type)
-        }
-
-        assertEquals(
-            hostState.players[1].hiddenDeck.size,
-            guestState.players[1].hiddenDeck.size
-        )
-        for (i in hostState.players[1].hiddenDeck.indices) {
-            assertEquals(
-                hostState.players[1].hiddenDeck[i].javaClass,
-                guestState.players[1].hiddenDeck[i].javaClass
-            )
-        }
+        evalGameStates(hostState, guestState, 1)
 
         rootServiceGuest.playerActionService.meditate(
             guestState.openCards[3]
@@ -447,40 +423,21 @@ class NetworkServiceTest {
         guestState.goalCards.find {
             it?.color == GoalColor.ORANGE && it.difficulty == GoalDifficulty.LOW
         }?.let {
-            rootServiceGuest.playerActionService.decideGoalClaim(
-                it,
-                true
-            )
+            rootServiceGuest.playerActionService.decideGoalClaim(it, true)
         }
 
         guestState.goalCards.find {
             it?.color == GoalColor.GREEN && it.difficulty == GoalDifficulty.LOW
         }?.let {
-            rootServiceGuest.playerActionService.decideGoalClaim(
-                it,
-                false
-            )
+            rootServiceGuest.playerActionService.decideGoalClaim(it, false)
         }
 
         rootServiceGuest.playerActionService.discardTile(guestState.players[0].supply[1])
 
         rootServiceGuest.playerActionService.endTurn()
         rootServiceHost.waitForState(ConnectionState.PLAYING_MY_TURN)
-        rootServiceGuest.waitForState(ConnectionState.WAITING_FOR_OPPONENT)
 
-        assertEquals(hostState.players[0].supply.size, guestState.players[0].supply.size)
-
-        assertEquals(
-            hostState.players[0].hiddenDeck.size,
-            guestState.players[0].hiddenDeck.size
-        )
-        for (i in hostState.players[0].hiddenDeck.indices) {
-            assertEquals(
-                hostState.players[0].hiddenDeck[i].javaClass,
-                guestState.players[0].hiddenDeck[i].javaClass
-            )
-        }
-
+        evalGameStates(hostState, guestState, 0)
         assertEquals(
             hostState.players[0].bonsai.grid[-1, -2].type,
             guestState.players[0].bonsai.grid[-1 , -2].type
@@ -488,6 +445,28 @@ class NetworkServiceTest {
 
         rootServiceHost.networkService.disconnect()
         rootServiceGuest.networkService.disconnect()
+    }
+
+    private fun evalGameStates(
+        hostState: GameState,
+        guestState: GameState,
+        player: Int
+    ) {
+        assertEquals(hostState.players[player].supply.size, guestState.players[player].supply.size)
+        for (i in hostState.players[1].supply.indices) {
+            assertEquals(hostState.players[1].supply[i].type , guestState.players[1].supply[i].type)
+        }
+
+        assertEquals(
+            hostState.players[player].hiddenDeck.size,
+            guestState.players[player].hiddenDeck.size
+        )
+        for (i in hostState.players[player].hiddenDeck.indices) {
+            assertEquals(
+                hostState.players[player].hiddenDeck[i].javaClass,
+                guestState.players[player].hiddenDeck[i].javaClass
+            )
+        }
     }
 
 }

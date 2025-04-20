@@ -16,6 +16,25 @@ class BotService(
 ) : AbstractRefreshingService() {
     private val playerActionService = rootService.playerActionService
 
+    private fun playMoveWhenPlayerSupplyLeq2(smart: Boolean, move: PlayerAction){
+        if (smart) {
+            when (move) {
+                PlayerAction.MEDITATE -> meditateLogic(smart)
+                PlayerAction.CULTIVATE -> {
+                    val possibilities = cultivateLogic(smart)
+                    if (!possibilities) {
+                        meditateLogic(true)
+                    }
+                }
+            }
+        } else {
+            when (move) {
+                PlayerAction.MEDITATE -> meditateLogic(smart)
+                PlayerAction.CULTIVATE -> cultivateLogic(smart)
+            }
+        }
+    }
+
     /**
      * Is used to decide whether to play cultivate or meditate
      * @param smart If the smartBot is calling the method
@@ -34,22 +53,7 @@ class BotService(
                 possibilities = cultivateLogic(true)
             }
         } else {
-            if (smart) {
-                when (move) {
-                    PlayerAction.MEDITATE -> meditateLogic(smart)
-                    PlayerAction.CULTIVATE -> {
-                        val possibilities = cultivateLogic(smart)
-                        if (!possibilities) {
-                            meditateLogic(true)
-                        }
-                    }
-                }
-            } else {
-                when (move) {
-                    PlayerAction.MEDITATE -> meditateLogic(smart)
-                    PlayerAction.CULTIVATE -> cultivateLogic(smart)
-                }
-            }
+            playMoveWhenPlayerSupplyLeq2(smart, move)
         }
 
         val timer = Timer()
@@ -72,6 +76,111 @@ class BotService(
         playerActionService.meditate(selectedCard)
     }
 
+    private fun tryPlaceTileWhenAllowed(
+        supplyTile: BonsaiTile,
+        bonsaiGrid: HexGrid,
+        bonsaiTile: BonsaiTile,
+        randomFreeSpace: Pair<Int, Int>,
+        emptySpaces: List<Pair<Int, Int>>
+    ): Triple<BonsaiTile?, Pair<Int, Int>, Boolean> {
+        var tile: BonsaiTile? = null
+        var q = -1
+        var r = -1
+        var completed = false
+
+        when (supplyTile.type) {
+            TileType.WOOD, TileType.LEAF -> {
+                if (bonsaiTile.type == TileType.WOOD) {
+                    tile = supplyTile
+                    q = randomFreeSpace.first
+                    r = randomFreeSpace.second
+                    completed = true
+                }
+            }
+
+            TileType.FLOWER -> {
+                if (bonsaiTile.type == TileType.LEAF) {
+                    tile = supplyTile
+                    q = randomFreeSpace.first
+                    r = randomFreeSpace.second
+                    completed = true
+                }
+            }
+
+            TileType.FRUIT -> {
+                val neighbors = bonsaiGrid.getNeighbors(bonsaiTile)
+                val leafNeighbor = neighbors.firstOrNull { it.type == TileType.LEAF }
+                if (bonsaiTile.type == TileType.LEAF && leafNeighbor != null) {
+                    val freeSpacesOfLeaf = bonsaiGrid.getEmptySpace(leafNeighbor).toSet()
+                    val combinedFreeSpaces = emptySpaces.intersect(freeSpacesOfLeaf)
+                    if (combinedFreeSpaces.isNotEmpty()) {
+                        val fruitPlace = combinedFreeSpaces.random()
+                        tile = supplyTile
+                        q = fruitPlace.first
+                        r = fruitPlace.second
+                        completed = true
+                    }
+                }
+            }
+
+            else -> {}
+        }
+        return Triple(tile, Pair(q, r), completed)
+    }
+
+    private fun tryPlaceTile(
+        player: Player,
+        smart: Boolean,
+        possibleMoves: MutableList<Triple<BonsaiTile, Pair<Int, Int>, List<Pair<Int, Int>>>>,
+        supplyTile: BonsaiTile,
+        bonsaiGrid: HexGrid,
+        tileList: List<BonsaiTile>
+    ): Triple<BonsaiTile?, Pair<Int, Int>, Boolean> {
+        var tile: BonsaiTile? = null
+        var q = -1
+        var r = -1
+        var completed = false
+
+        for (bonsaiTile in tileList) {
+            val emptySpaces = bonsaiGrid.getEmptySpace(bonsaiTile)
+            if (emptySpaces.isNotEmpty()) {
+                val randomFreeSpace = emptySpaces.random()
+
+                val seishiAllowedTiles = player.treeTileLimit.keys // The 3 permanent Seishi tile types
+                // Tile types granted by Growth Cards
+                val growthAllowedTiles = player.seishiGrowth.map { (it as? GrowthCard)?.type }
+
+                val allowedTiles = seishiAllowedTiles + growthAllowedTiles
+                val isPlacementAllowed = supplyTile.type in allowedTiles
+
+                if (isPlacementAllowed) {
+                    val result = tryPlaceTileWhenAllowed(
+                        supplyTile,
+                        bonsaiGrid,
+                        bonsaiTile,
+                        randomFreeSpace,
+                        emptySpaces
+                    )
+                    if (result.third) {
+                        tile = result.first
+                        q = result.second.first
+                        r = result.second.second
+                        completed = true
+                    }
+                }
+            }
+            if (completed) {
+                if (smart) {
+                    checkNotNull(tile)
+                    possibleMoves.add(Triple(tile, Pair(q, r), emptySpaces))
+                } else {
+                    break
+                }
+            }
+        }
+        return Triple(tile, Pair(q, r), completed)
+    }
+
     /**
      * The bot guidelines for cultivate
      * @param smart If the smartBot is calling the method
@@ -87,70 +196,17 @@ class BotService(
         var q = -1
         var r = -1
         var tile: BonsaiTile? = null
+        val tileList = bonsaiGrid.tilesList()
         for (supplyTile in player.supply) {
             // completed = false
             possibleMoves = mutableListOf()
-            // removeTileLogic(supplyTile, player)
-            for (bonsaiTile in bonsaiGrid.getInternalMap().keys) {
-                val emptySpaces = bonsaiGrid.getEmptySpace(bonsaiTile)
-                if (emptySpaces.isNotEmpty()) {
-                    val randomFreeSpace = emptySpaces.random()
-
-                    val seishiAllowedTiles = player.treeTileLimit.keys // The 3 permanent Seishi tile types
-                    // Tile types granted by Growth Cards
-                    val growthAllowedTiles = player.seishiGrowth.map { (it as? GrowthCard)?.type }
-
-                    val allowedTiles = seishiAllowedTiles + growthAllowedTiles
-                    val isPlacementAllowed = supplyTile.type in allowedTiles
-
-                    if (isPlacementAllowed) {
-                        when (supplyTile.type) {
-                            TileType.WOOD, TileType.LEAF -> {
-                                if (bonsaiTile.type == TileType.WOOD) {
-                                    tile = supplyTile
-                                    q = randomFreeSpace.first
-                                    r = randomFreeSpace.second
-                                    completed = true
-                                }
-                            }
-
-                            TileType.FLOWER -> {
-                                if (bonsaiTile.type == TileType.LEAF) {
-                                    tile = supplyTile
-                                    q = randomFreeSpace.first
-                                    r = randomFreeSpace.second
-                                    completed = true
-                                }
-                            }
-
-                            TileType.FRUIT -> {
-                                val neighbors = bonsaiGrid.getNeighbors(bonsaiTile)
-                                val leafNeighbor = neighbors.firstOrNull { it.type == TileType.LEAF }
-                                if (bonsaiTile.type == TileType.LEAF && leafNeighbor != null) {
-                                    val freeSpacesOfLeaf = bonsaiGrid.getEmptySpace(leafNeighbor).toSet()
-                                    val combinedFreeSpaces = emptySpaces.intersect(freeSpacesOfLeaf)
-                                    if (combinedFreeSpaces.isNotEmpty()) {
-                                        val fruitPlace = combinedFreeSpaces.random()
-                                        tile = supplyTile
-                                        q = fruitPlace.first
-                                        r = fruitPlace.second
-                                        completed = true
-                                    }
-                                }
-                            }
-
-                            else -> {}
-                        }
-                    }
-                }
-                if (completed) {
-                    if (smart) {
-                        checkNotNull(tile)
-                        possibleMoves.add(Triple(tile, Pair(q, r), emptySpaces))
-                    } else {
-                        break
-                    }
-                }
+            removeTileLogic(supplyTile, player)
+            val result = tryPlaceTile(player, smart, possibleMoves, supplyTile, bonsaiGrid, tileList)
+            if(result.third) {
+                tile = result.first
+                q = result.second.first
+                r = result.second.second
+                completed = result.third
             }
         }
         if (!completed) {
@@ -168,6 +224,53 @@ class BotService(
         }
     }
 
+    private fun chooseMoveByTileType(tile: BonsaiTile, coord: Pair<Int, Int>,
+                                     move: Triple<BonsaiTile, Pair<Int, Int>, List<Pair<Int, Int>>>): Boolean {
+        var finished = false
+        when (tile.type) {
+            TileType.WOOD -> {
+                try {
+                    playerActionService.cultivate(tile, coord.first, coord.second)
+                    finished = true
+                } catch (_: IllegalStateException) {
+                }
+            }
+
+            TileType.LEAF -> {
+                val emptySpaces = move.third
+                if (emptySpaces.size > 1) {
+                    try {
+                        playerActionService.cultivate(tile, coord.first, coord.second)
+                        finished = true
+                    } catch (_: IllegalStateException) {
+                    }
+                }
+            }
+
+            TileType.FLOWER -> {
+                try {
+                    playerActionService.cultivate(tile, coord.first, coord.second)
+                    finished = true
+                } catch (_: IllegalStateException) {
+                }
+            }
+
+            TileType.FRUIT -> {
+                try {
+                    playerActionService.cultivate(tile, coord.first, coord.second)
+                    finished = true
+                } catch (ex: Exception) {
+                    when (ex) {
+                        is IllegalStateException, is IllegalArgumentException -> {}
+                    }
+                }
+            }
+
+            else -> {}
+        }
+        return finished
+    }
+
     /**
      * SmartBot method to execute the found possibilities for cultivate
      * @param possibleMoves The possibilities for cultivate
@@ -177,47 +280,7 @@ class BotService(
         for (move in possibleMoves) {
             val tile = move.first
             val coord = move.second
-            when (tile.type) {
-                TileType.WOOD -> {
-                    try {
-                        playerActionService.cultivate(tile, coord.first, coord.second)
-                        finished = true
-                    } catch (_: IllegalStateException) {
-                    }
-                }
-
-                TileType.LEAF -> {
-                    val emptySpaces = move.third
-                    if (emptySpaces.size > 1) {
-                        try {
-                            playerActionService.cultivate(tile, coord.first, coord.second)
-                            finished = true
-                        } catch (_: IllegalStateException) {
-                        }
-                    }
-                }
-
-                TileType.FLOWER -> {
-                    try {
-                        playerActionService.cultivate(tile, coord.first, coord.second)
-                        finished = true
-                    } catch (_: IllegalStateException) {
-                    }
-                }
-
-                TileType.FRUIT -> {
-                    try {
-                        playerActionService.cultivate(tile, coord.first, coord.second)
-                        finished = true
-                    } catch (ex: Exception) {
-                        when (ex) {
-                            is IllegalStateException, is IllegalArgumentException -> {}
-                        }
-                    }
-                }
-
-                else -> {}
-            }
+            finished = chooseMoveByTileType(tile, coord, move)
             if (finished) break
         }
         return finished

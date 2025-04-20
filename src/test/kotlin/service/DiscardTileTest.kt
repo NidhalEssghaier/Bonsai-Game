@@ -7,7 +7,6 @@ import kotlin.test.*
  * Class for testing the endTurn method of the PlayerActionService class.
  */
 class DiscardTileTest {
-
     /** Test with no running game */
     @Test
     fun illegalStateTest() {
@@ -16,9 +15,10 @@ class DiscardTileTest {
         val playerActionService = rootService.playerActionService
 
         // Test
-        val exception = assertFailsWith(exceptionClass = IllegalStateException::class, block = {
-            playerActionService.discardTile(BonsaiTile(TileType.UNPLAYABLE))
-        })
+        val exception =
+            assertFailsWith(exceptionClass = IllegalStateException::class, block = {
+                playerActionService.discardTile(BonsaiTile(TileType.UNPLAYABLE))
+            })
         assertEquals("No game is currently active.", exception.message)
     }
 
@@ -34,24 +34,25 @@ class DiscardTileTest {
         gameService.startNewGame(
             listOf(
                 Triple("Tim", 0, PotColor.RED),
-                Triple("Tom", 0, PotColor.BLUE)
+                Triple("Tom", 0, PotColor.BLUE),
             ),
             1,
             listOf(
                 GoalColor.ORANGE,
                 GoalColor.BROWN,
-                GoalColor.GREEN
-            )
+                GoalColor.GREEN,
+            ),
         )
         assertNotNull(rootService.currentGame)
 
         // Test
-        val exception = assertFailsWith(exceptionClass = IllegalArgumentException::class, block = {
-            playerActionService.discardTile(BonsaiTile(TileType.FRUIT))
-        })
+        val exception =
+            assertFailsWith(exceptionClass = IllegalArgumentException::class, block = {
+                playerActionService.discardTile(BonsaiTile(TileType.FRUIT))
+            })
         assertEquals(
             "The given tile is not in the active players supply.",
-            exception.message
+            exception.message,
         )
     }
 
@@ -67,29 +68,35 @@ class DiscardTileTest {
         gameService.startNewGame(
             listOf(
                 Triple("Tim", 0, PotColor.RED),
-                Triple("Tom", 0, PotColor.BLUE)
+                Triple("Tom", 0, PotColor.BLUE),
             ),
             1,
             listOf(
                 GoalColor.ORANGE,
                 GoalColor.BROWN,
-                GoalColor.GREEN
-            )
+                GoalColor.GREEN,
+            ),
         )
         assertNotNull(rootService.currentGame)
-        val tile = BonsaiTile(TileType.FRUIT)
-        rootService.currentGame!!.currentState.players[0].supply.add(tile)
+        val tile =
+            rootService.currentGame!!
+                .currentState.players[0]
+                .supply[0]
 
         // Test
-        val exception = assertFailsWith(exceptionClass = IllegalArgumentException::class, block = {
-            playerActionService.discardTile(tile)
-        })
+        val exception =
+            assertFailsWith(exceptionClass = IllegalArgumentException::class, block = {
+                playerActionService.discardTile(tile)
+            })
         assertEquals(
             "The current supply size is equal to or lower than the supply tile limit.",
-            exception.message
+            exception.message,
         )
     }
 
+    /**
+     * Test tile discard
+     */
     @Test
     fun tileDiscardedTest() {
         // Services to test with
@@ -103,28 +110,30 @@ class DiscardTileTest {
         gameService.startNewGame(
             listOf(
                 Triple("Tim", 0, PotColor.RED),
-                Triple("Tom", 0, PotColor.BLUE)
+                Triple("Tom", 0, PotColor.BLUE),
             ),
             1,
             listOf(
                 GoalColor.ORANGE,
                 GoalColor.BROWN,
-                GoalColor.GREEN
-            )
+                GoalColor.GREEN,
+            ),
         )
         assertNotNull(rootService.currentGame)
-        repeat (5) {
+        repeat(5) {
             rootService.currentGame!!.currentState.players[0].supply.add(
-                BonsaiTile(TileType.WOOD)
+                BonsaiTile(TileType.WOOD),
             )
         }
         val tile = BonsaiTile(TileType.FRUIT)
-        rootService.currentGame!!.currentState.players[0].supply.add(tile)
+        rootService.currentGame!!
+            .currentState.players[0]
+            .supply
+            .add(tile)
 
         // Test
         assertFalse { testRefreshable.refreshAfterDiscardTileCalled }
         playerActionService.discardTile(tile)
         assertTrue { testRefreshable.refreshAfterDiscardTileCalled }
     }
-
 }

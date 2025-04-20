@@ -1,8 +1,14 @@
 import helper.*
 import kotlin.test.*
 
+/**
+ * Class for Unit Tests for the stack emulation.
+ */
 class StackTest {
 
+    /**
+     * Test the push method.
+     */
     @Test
     fun `push should add an element to the top of the stack`() {
         val stack = ArrayDeque<Int>()
@@ -11,6 +17,9 @@ class StackTest {
         assertEquals(1, stack.size)
     }
 
+    /**
+     * Test the pushAll method with a collection.
+     */
     @Test
     fun `test collection pushAll`() {
         val stack = ArrayDeque<Int>()
@@ -18,6 +27,9 @@ class StackTest {
         assertEquals(listOf(3, 2, 1), stack.toList())
     }
 
+    /**
+     * Test the pushAll method with varargs.
+     */
     @Test
     fun `test varrag pushAll`() {
         val stack = ArrayDeque<Int>()
@@ -25,6 +37,9 @@ class StackTest {
         assertEquals(listOf(3, 2, 1), stack.toList())
     }
 
+    /**
+     * Test the pop method.
+     */
     @Test
     fun `test pop`() {
         var stack = ArrayDeque(listOf(1, 2, 3))
@@ -36,6 +51,9 @@ class StackTest {
     }
 
 
+    /**
+     * Test the popAll method.
+     */
     @Test
     fun `test popAll`() {
         var stack = ArrayDeque(listOf(1, 2, 3))
@@ -49,6 +67,9 @@ class StackTest {
         assertFailsWith<IllegalArgumentException> { stack.popAll(5) }
     }
 
+    /**
+     * Test the peek method.
+     */
     @Test
     fun `test peek`() {
         var stack = ArrayDeque(listOf(1, 2, 3))
@@ -58,7 +79,9 @@ class StackTest {
         assertFailsWith<NoSuchElementException> { stack.peek() }
     }
 
-
+    /**
+     * Test the peekAll method.
+     */
     @Test
     fun `test peekAll`() {
         val stack = ArrayDeque(listOf(1, 2, 3))
@@ -68,6 +91,9 @@ class StackTest {
         assertFailsWith<IllegalArgumentException> { stack.peekAll(5) }
     }
 
+    /**
+     * Test the popOrNull method.
+     */
     @Test
     fun `popOrNull should return the top element or null`() {
         val stack = ArrayDeque(listOf(1, 2))
@@ -76,6 +102,9 @@ class StackTest {
         assertNull(stack.popOrNull())
     }
 
+    /**
+     * Test the peekOrNull method.
+     */
     @Test
     fun `peekOrNull should return the top element or null`() {
         val stack = ArrayDeque(listOf(1))

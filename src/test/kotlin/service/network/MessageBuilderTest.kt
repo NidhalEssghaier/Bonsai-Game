@@ -135,7 +135,7 @@ class MessageBuilderTest {
     }
 
     /**
-     * Test that the message builder is reset properly after building a message
+     * Test resetting the message builder after building a message
      */
     @Test
     fun resettingTest() {
@@ -184,6 +184,7 @@ class MessageBuilderTest {
         assertNull(build.first)
 
         // Prepare second Test
+        messageBuilder.reset()
         build = messageBuilder.build()
 
         // second Test
